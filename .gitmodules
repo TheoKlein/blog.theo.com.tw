@@ -1,0 +1,3 @@
+[submodule "themes/TK"]
+	path = themes/TK
+	url = git@github.com:TheoKlein/Tranquilpeak_ver.TK.git
