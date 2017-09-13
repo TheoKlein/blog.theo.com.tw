@@ -14,7 +14,7 @@ keywords:
 	- String SQL Injection
 gallery:
 tags:
-    - Wrtieups
+    - Writeups
 ---
 這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。
 <!-- more -->

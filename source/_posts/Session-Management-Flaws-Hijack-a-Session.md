@@ -14,7 +14,7 @@ keywords:
 	- Hijack a Session
 gallery:
 tags:
-    - Wrtieups
+    - Writeups
 ---
 這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。
 <!-- more -->

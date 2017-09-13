@@ -14,7 +14,7 @@ keywords:
 	- Log Spoofing
 gallery:
 tags:
-    - Wrtieups
+    - Writeups
 ---
 這題要我們嘗試「看起來」用admin的身份成功登入，下方灰色的區塊就是伺服器記錄檔的內容。 廢話不多說，先嘗試登入看看。
 <!-- more -->

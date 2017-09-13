@@ -14,7 +14,7 @@ keywords:
 	- Numeric SQL Injection
 gallery:
 tags:
-    - Wrtieups
+    - Writeups
 ---
 這題也是HTML網頁中常見的select表單，但下方特別寫出了後端呼叫資料庫的SQL語句。
 <!-- more -->
