@@ -74,5 +74,5 @@ sitemap:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
     type: git
-    repo: https://github.com/TheoKlein/blog.theo.com.tw.git
+    repo: git@github.com:TheoKlein/blog.theo.com.tw.git
     branch: gh-pages
