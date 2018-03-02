@@ -6,7 +6,7 @@ thumbnailImagePosition: left
 date: 2017-06-25 00:21:19
 categories:
 	- Writeups
-	- TMCTF2017
+	- TMCTF
 thumbnailImage: cover.jpg
 keywords:
     - TMCTF2017

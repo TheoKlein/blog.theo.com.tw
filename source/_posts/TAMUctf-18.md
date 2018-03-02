@@ -6,7 +6,7 @@ thumbnailImagePosition: left
 date: 2018-02-27 21:38:45
 categories:
 	- Writeups
-	- TAMUctf18
+	- TAMUctf
 thumbnailImage: cover.png
 keywords:
     - TAMUctf18

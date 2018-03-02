@@ -6,7 +6,7 @@ thumbnailImagePosition: left
 date: 2017-06-05 14:21:37
 categories:
     - Writeups 
-    - picoCTF2017
+    - picoCTF
 thumbnailImage: picoctf.jpg
 keywords:
     - picoCTF
