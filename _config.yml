@@ -76,3 +76,12 @@ deploy:
     type: git
     repo: git@github.com:TheoKlein/blog.theo.com.tw.git
     branch: gh-pages
+
+feed:
+  type: rss2
+  path: rss2.xml
+  limit: 20
+  content: false
+  content_limit: 300
+  content_limit_delim: ' '
+  order_by: -date
