@@ -79,6 +79,8 @@ logstash:
 
 After T-Pot complete the whole installation, we can now install WireGuard on each server and set the right config. On the central server, make sure you forward 0.0.0.0:64298 to 127.0.0.1:64298 because the default docker-compose setting only listen on localhost for security issue. Double check your firewall or iptables setting to prevent elasticsearch service expose to anyone if your central server is public.
 
+Also, we need to modify T-Pot's log backup setting because we only have 25GB disk space per VPS server. I have already written some crontab scripts to sync the data I want to central server every 10 minutes. So I modify `/opt/tpot/etc/logrotate/logrotate.conf` to only keep 2 + 1 backups, default is 30 + 1.
+
 It works! Currently, I deployed 4 sensor servers in different countries. To add a new sensor server, just install on a new server with your customize T-Pot sensor, setup the WireGuard connection, and wait for the bunch of data to send back to the central server. It costs me $25 per month for 5 VPS (4 sensors + 1 gateway server) which I think is meets my expectations. Depends on your budget, the number of sensor servers can be decided by yourself.
 
 Now I get a bunch of binaries and logs, time to do some research :)
