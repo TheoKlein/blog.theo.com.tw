@@ -21,6 +21,11 @@ In July 2019, one of our customer’s company suffering the APT attack and we st
 
 > This article is published on [Talent-Jump Technologies, Inc.](http://www.talent-jump.com/article/2020/02/17/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/) simultaneously.
 
+> The report is co-authored with [Trend Micro](https://www.trendmicro.com).
+> 
+> Kenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). Trend Micro. ["Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia"](https://www.trendmicro.com/vinfo/us/security/news/cyber-attacks/operation-drbcontrol-uncovering-a-cyberespionage-campaign-targeting-gambling-companies-in-southeast-asia)
+
+
 [中文版本](/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox)
 
 <!-- toc -->
@@ -32,21 +37,22 @@ The threat actor uses Windows Defender Core Process `MsMpEng.exe` which has a le
 During the investigation, we found a total of 8 different loader's filenames {% raw %}<sub>{% endraw %}[[Appendix 1]](#Appendix){% raw %}</sub>{% endraw %} renamed from `MsMpEng.exe` and placed at `C:\ProgramData\Microsoft` in its separated folder. The loader is just called the function `ServiceCrtMain` imported from `mpsvc.dll`.
 
 The malicious DLL file `mpsvc.dll` has two types {% raw %}<sub>{% endraw %}[[Appendix 2]](#Appendix){% raw %}</sub>{% endraw %}. The older type will try to read shellcode from payload file `English.rtf`, decode and decompress the content using `RtlDecompressBuffer` to release the final executable (Figure 1).
-![Figure 1. Older type of mpsvc.dll](clambling-01.png)
+
+{% image fancybox center clambling-01.png "Figure 1. Older type of mpsvc.dll" %}
 
 The newer one has a different way to start the infection. There is a piece of shellcode hard-coded in the `mpsvc.dll`, after decoding the shellcode from `mpsvc.dll`, it will inject and execute to load the shellcode from `mpsvc.mui` (Figure 2), which will release the final executable and inject into the process.
 
-![Figure 2. Newer type of mpsvc.dll](clambling-02.png)
+{% image fancybox center clambling-02.png "Figure 2. Newer type of mpsvc.dll" %}
 
 Both of these two types of `mpsvc.dll` will release a full functional backdoor, which can connect to the C&C server. But the final executable released by a newer type of `mpsvc.dll` has some upgrade, including the function to interact with Dropbox API. The following article will focus on the malicious executable released by the newer type of `mpsvc.dll`.
 
 The hardcoded shellcode in a newer type of `mpsvc.dll` will first allocate 0x80000 bytes of memory space. Getting the current module’s full path and replace the extension `dll` to `mui` and read the shellcode in this `mui` file, then jump to the base address of `mui` file plus its first byte. (Figure 3)
 
-![Figure 3. Decoded shellcode in mpsvc.dll](clambling-03.png)
+{% image fancybox center clambling-03.png "Figure 3. Decoded shellcode in mpsvc.dll" %}
 
 In the end, the shellcode in `mpsvc.mui` has another different piece of hard-coded bytes, which will decompress by `RtlDecompressBuffer` to the final malicious executable (Figure 4).
 
-![Figure 4. The final malicious executable in buffer.](clambling-04.png)
+{% image fancybox center clambling-04.png "Figure 4. The final malicious executable in buffer." %}
 
 ## Sample Analysis
 
@@ -55,14 +61,14 @@ The final malicious executable sample we extracted has numerous features. Here i
 ### Bypass UAC
 
 This sample can bypass UAC via .NET. It is not a new technique which was disclosed in 2017 {% raw %}<sub>{% endraw %}[[1]](#References){% raw %}</sub>{% endraw %}, the threat actor only changes the GUID to `9BA94120-7E02-46ee-ADC6-10640B04F93B` (Figure 5) and specify the location of DLL file which will load by the .NET application in the elevated process.
-![Figure 5. Code snippet of bypass UAC.](clambling-05.png)
+{% image fancybox center clambling-05.png "Figure 5. Code snippet of bypass UAC." %}
 
 ### Persistence
 
 There are two ways to persist. Register as a startup program in `HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` if it has no privileged (Figure 6). Otherwise, it will register itself as a system service (Figure 7).
 
-![Figure 6. Register as a start program.](clambling-06.png)
-![Figure 7. Register as  a system service.](clambling-07.png)
+{% image fancybox center clambling-06.png "Figure 6. Register as a start program." %}
+{% image fancybox center clambling-07.png "Figure 7. Register as  a system service." %}
 
 ### Information Gathering
 
@@ -78,19 +84,19 @@ Bit: Not Found !!!
 Exist: NO
 ```
 
-![Figure 8. Code snippet of information gathering.](clambling-08.png)
+{% image fancybox center clambling-08.png "Figure 8. Code snippet of information gathering." %}
 
 ### Recording Features
 
 This sample acquired three types of recording features, including key-log, clipboard log, and screen recording. The screen recording file naming format is `[%y-%m-%d] %H-%M-%S.avi`. The key-log and clipboard log will encode by different key and salt, then save as `<hash>.pas` for key-log and `<hash>.log` for clipboard log (Figure 9).
 
-![Figure 9. Code snippet of key log encoding.](clambling-09.png)
+{% image fancybox center clambling-09.png "Figure 9. Code snippet of key log encoding." %}
 
 ### Connect to C&C Server
 
 This sample can also connect to a specific C&C server and send back data by using a fake HTTP POST request (Figure 10).
 
-![Figure 10. Code snippet of preparing for fake POST request.](clambling-10.png)
+{% image fancybox center clambling-10.png "Figure 10. Code snippet of preparing for fake POST request." %}
 
 ### RTTI Information
 
@@ -117,11 +123,11 @@ The RTTI information remaining, here is the full class name list we got:
 
 During reverse engineering, we found that the Dropbox API token with 64 characters is hardcoded in stack string (Figure 11).
 
-![Figure 11. Code snippet for the first 24 characters of Dropbox API token.](clambling-11.png)
+{% image fancybox center clambling-11.png "Figure 11. Code snippet for the first 24 characters of Dropbox API token." %}
 
 Besides connecting to the C&C server, this sample can also upload & download with Dropbox API. Especially when the log file is uploaded, it will try to download `bin.asc` and check the file has fake `GIF` file header or not. If everything is correct, it will continue to the custom decoding phase, which will calculate with an array of bytes hard-coded in the sample, to release the inject payload (Figure 12).
 
-![Figure 12. Code snippet of interaction with Dropbox API.](clambling-12.png)
+{% image fancybox center clambling-12.png "Figure 12. Code snippet of interaction with Dropbox API." %}
 
 ## Inside of Dropbox Folder
 
@@ -142,7 +148,7 @@ Each infected victim has its folder named by unique hash `/[0-9A-z]/`, this hash
 
 Sort out the log file on Dropbox, we can get the full list of infected computers (Figure 13).
 
-![Figure 13. The list of infected computers.](clambling-13.png)
+{% image fancybox center clambling-13.png "Figure 13. The list of infected computers." %}
 
 ## Second Stage Infection
 
@@ -170,7 +176,7 @@ In these commands, there are three different files, each of these file has speci
 
 The status file `eLHgZNBH` contain the basic information about victim and timestamp, upload to Dropbox at regular intervals. Whenever status file upload succeeds, it will try to download the command file `yasHPHFJ` if it existed. Extract the command  code and arguments from `yasHPHFJ` then execute the command and upload the execution result to Dropbox as `csaujdnc` (Figure 14).
 
-![Figure 14. Flow of three files interact with Dropbox](clambling-14.png)
+{% image fancybox center clambling-14.png "Figure 14. Flow of three files interact with Dropbox" %}
 
 By using this control flow, the threat actor can use Dropbox as a C&C server to control the victim’s computer even the fixed connection between the specific C&C server’s IP address has been found and blocked. Unless we block `content.dropboxapi.com` and `api.dropboxapi.com`, otherwise we can not isolate the infected computer.
 
@@ -194,21 +200,21 @@ The Dropbox API remain the detail of each file and folder, for example this is a
 
 It contains the server_modified timestamp even with history revision file id, we can use `rev` to list the full history of this file and download it. Sort out this information and the command code mapping, we can now list the full command executed on each computer and its arguments. Here is two computers’ execution list (Figure 15 & 16).
 
-![Figure 15. Real command execution list from one victim.](clambling-15.png)
-![Figure 16. Another real command execution list.](clambling-16.png)
+{% image fancybox center clambling-15.png "Figure 15. Real command execution list from one victim." %}
+{% image fancybox center clambling-16.png "Figure 16. Another real command execution list." %}
 
 According to these record, the threat actor follows almost the same action on every infected computer. First, download additional attack programs from Dropbox, like `mimikatz` or other UAC bypass tools. Second, search the high-value file including private source code, config file, database, and the key-log / clipboard log. Upload all of these files to Dropbox for further searching. Last but not least, infiltrate the company intranet or even the cloud service.
 
 Combining all decoded `yasHPHFJ` files, we can show the threat actor’s approximate working hours (Figure 17).
 
-![Figure 17. The threat actor’s approximate working hours.](clambling-17.png)
+{% image fancybox center clambling-17.png "Figure 17. The threat actor’s approximate working hours." %}
 
 ## Conclusion
 
 We start to monitor the Dropbox for each token and parse the infected computer’s list, here we can see the infected computer’s number from July 2019 to September 2019 this two month (Figure 18 & 19).
 
-![Figure 18. Dropbox A (first token): infected computer’s number.](clambling-18.png)
-![Figure 19. Dropbox B (second token): infected computer’s number.](clambling-19.png)
+{% image fancybox center clambling-18.png "Figure 18. Dropbox A (first token): infected computer’s number." %}
+{% image fancybox center clambling-19.png "Figure 19. Dropbox B (second token): infected computer’s number." %}
 
 We got nearly 200 infected computers at the highest peak from Dropbox A, alone with nearly 80 computers from Dropbox B. Both of these static has a drop at August 21, 2019, the threat actor clear the Dropbox folder for some reason. Monitoring ends on September 20, 2019, all tokens we got are revoked by the threat actor.
 
@@ -216,7 +222,7 @@ During these two months, we got five different Dropbox token. Each of these toke
 
 From the first infection stage, established the connection between the C&C server and Dropbox at the same time. If the IP address of the C&C server been blocked, it can still have limited control from Dropbox. Once it completed the second infection stage, Dropbox is turning into a second channel C&C server which has full remote control features (Figure 20). Steal the data and infiltrate the whole company. This method is not complex but very useful.
 
-![Figure 20. The whole interaction flow from infection to interact with Dropbox.](clambling-20.png)
+{% image fancybox center clambling-20.png "Figure 20. The whole interaction flow from infection to interact with Dropbox." %}
 
 ## Appendix
 
@@ -305,7 +311,8 @@ From the first infection stage, established the connection between the C&C serve
 
 ## References
 
-1. https://offsec.provadys.com/UAC-bypass-dotnet.html
-2. https://www.dropbox.com/developers/documentation/http/overview
+1. [UAC bypass via elevated .NET applications](https://offsec.provadys.com/UAC-bypass-dotnet.html)
+2. [Dropbox for HTTP Developers](https://www.dropbox.com/developers/documentation/http/overview)
+3. [Kenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). *Trend Micro*. "Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia"](https://www.trendmicro.com/vinfo/us/security/news/cyber-attacks/operation-drbcontrol-uncovering-a-cyberespionage-campaign-targeting-gambling-companies-in-southeast-asia)
 
 > Photo by [Fotis Fotopoulos](https://unsplash.com/@ffstop) on [Unsplash](https://unsplash.com/)
