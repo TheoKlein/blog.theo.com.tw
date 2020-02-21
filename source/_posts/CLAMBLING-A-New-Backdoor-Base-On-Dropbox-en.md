@@ -9,6 +9,7 @@ thumbnailImage: thumb.jpg
 coverImage: cover.jpg
 keywords:
     - CLAMLING
+    - DRBControl
     - APT
     - Dropbox
     - DLL Side-Loading
@@ -285,29 +286,31 @@ From the first infection stage, established the connection between the C&C serve
         - `ca26a34153972cc73c63d3a9aadd3b12ba35ecdc6e39025b75be56b00c20e0ae`
         - `1951c79f280692a43b7c7cafd45c3f5d7f4f841ae104a6cad814fab4641c79f2`
         - `d5129308ee83a852e6a320ca68c8e66ed6d1eb4ec584dd0c8b5f313a56c49a15`
-  - IP
-    - `103.230.15.130`
-    - `104.168.196.80`
-    - `104.168.196.85`
-    - `104.168.196.88`
-    - `139.180.194.173`
-    - `167.179.115.228`
-    - `207.148.73.58`
-    - `43.228.126.172`
-    - `43.228.126.56`
-    - `45.32.101.238`
-    - `45.32.111.228`
-    - `45.77.41.49`
-    - `47.75.248.237`
-    - `66.42.60.107`
-  - Domains
-    - `fn.shopingchina.net`
-    - `office.support.googldevice.com`
-    - `safe.mircosofdevice.com`
-    - `server.correomasivochile.com`
-    - `srv2.mkt-app.com`
-    - `store.microsoftbetastore.com`
-    - `update.mircosotfdefender.com`
+    
+    - IP
+        - `103.230.15.130`
+        - `104.168.196.80`
+        - `104.168.196.85`
+        - `104.168.196.88`
+        - `139.180.194.173`
+        - `167.179.115.228`
+        - `207.148.73.58`
+        - `43.228.126.172`
+        - `43.228.126.56`
+        - `45.32.101.238`
+        - `45.32.111.228`
+        - `45.77.41.49`
+        - `47.75.248.237`
+        - `66.42.60.107`
+    
+    - Domains
+        - `fn.shopingchina.net`
+        - `office.support.googldevice.com`
+        - `safe.mircosofdevice.com`
+        - `server.correomasivochile.com`
+        - `srv2.mkt-app.com`
+        - `store.microsoftbetastore.com`
+        - `update.mircosotfdefender.com`
 
 ## References
 
