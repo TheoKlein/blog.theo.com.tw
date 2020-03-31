@@ -18,12 +18,15 @@ tags:
 	- Spyware
 	- Phishing
 ---
-We got a new variant of `XLoader` in mid-March 2020. It is a new version of `XLoader` using Blogspot and Pinterest to deliver C&C address and phishing sites.
+We got a new variant of `XLoader` via a link `http://wrssa[.]xyz` from scam SMS message in mid-March 2020. It is a new version of `XLoader` using Blogspot and Pinterest to deliver C&C address and phishing sites.
 <!-- more -->
 
 > Cover Photo by Rami Al-zayat on Unsplash
 
 > This article is published on [Talent-Jump Technologies, Inc](http://www.talent-jump.com/article/2020/03/31/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/). simultaneously.
+
+{% raw %}<br>{% endraw %}
+{% image fancybox center xloader-00.jpeg "Figure 1. Screenshot of scam SMS message" %}
 
 Back in 2018, Trend Micro published the [first report](https://blog.trendmicro.com/trendlabs-security-intelligence/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing/) about a new Android Spyware named `XLoader`. Since then, there are many variants of the `XLoader` sample that have been detected and labeled.
 
@@ -33,9 +36,9 @@ The sample we got (`d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af
 
 In this sample, it skips the first 4 bytes in `/assets/1a6ddg0/1ua96mi` and uses the fifth byte as a key to XOR the remaining bytes. Then decompress and Base64 decode its content to evade detection.
 
-{% image fancybox center xloader-01.png "Figure 1. The code snippet of decoding and decompressing payload file." %}
+{% image fancybox center xloader-01.png "Figure 2. The code snippet of decoding and decompressing payload file." %}
 
-{% image fancybox center xloader-02.png "Figure 2. The code snippet of writing Base64 decoded content to file." %}
+{% image fancybox center xloader-02.png "Figure 3. The code snippet of writing Base64 decoded content to file." %}
 
 ## Targeted Phishing In Japan
 Unlike other old versions of `XLoader`, this sample has some phishing sites majorly targeted on Japanese users.
@@ -50,7 +53,7 @@ Like other `Xloader` samples, it hides further payload on normal websites. This 
 |https://www.pinterest.com/ashlynfrancis7577/	|http://	|softbank	|お客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。	|The credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.	|
 {% raw %}</div>{% endraw %}
 
-{% image fancybox center xloader-03.png "Figure 3. The screenshot of one Pinterest user." %}
+{% image fancybox center xloader-03.png "Figure 4. The screenshot of one Pinterest user." %}
 
 Furthermore, there are 8 Pinterest users are used to deliver different phishing site’s URL depends on what APPs installed on the user’s device.
 
@@ -78,17 +81,17 @@ Both domains are registered at the same time at `2020-03-01T03:07:55Z` with the 
 
 For `smbc.bk-securityo[.]com`, there is a report on [urlscan.io](https://urlscan.io/result/5d2d5703-0d05-4343-b601-e7cbe66befa5/) with a screenshot submitted on Jan 5th, 2020.
 
-{% image fancybox center xloader-04.png "Figure 4. Screenshot from urlscan.io" %}
+{% image fancybox center xloader-04.png "Figure 5. Screenshot from urlscan.io" %}
 
 ## Abuse of New Social Media Accounts
 
 In the previous versions, `XLoader` has used many social media to hide its C&C address. In this sample, it used Blogspot to deliver the encoded C&C address in the username.
-{% image fancybox center xloader-05.png "Figure 5. The code snippet of default Blogspot accounts." %}
+{% image fancybox center xloader-05.png "Figure 6. The code snippet of default Blogspot accounts." %}
 
 These 3 Blogspot users can be used by different locale’s user. But currently, they all have the same encoded C&C address: `7OlknUJ8RECnMJ0O65Ah8tZJNVjStSHG`.
-{% image fancybox center xloader-06.png "Figure 6. Screenshot of Blogspot user “tuyolh”" %}
-{% image fancybox center xloader-07.png "Figure 7. Screenshot of Blogspot user “tyhdaou”" %}
-{% image fancybox center xloader-08.png "Figure 8. Screenshot of Blogspot user “ajlkhadsflg”" %}
+{% image fancybox center xloader-06.png "Figure 7. Screenshot of Blogspot user “tuyolh”" %}
+{% image fancybox center xloader-07.png "Figure 8. Screenshot of Blogspot user “tyhdaou”" %}
+{% image fancybox center xloader-08.png "Figure 9. Screenshot of Blogspot user “ajlkhadsflg”" %}
 
 {% raw %}<div style="overflow-x:auto;">{% endraw %}
 |URL	|Used By Locale	|
@@ -101,7 +104,7 @@ These 3 Blogspot users can be used by different locale’s user. But currently, 
 Once it got the encoded C&C address from Blogspot, it will first be doing the Base64 decode then decrypt by DES algorithm (DES/CBC/PKCS5Padding) with hardcoded key `Ab5d1Q32`. In the end, creating a WebSocket connection to the C&C address.
 
 Although this sample gets a C&C address from Blogspot by default, there are other sites can be used to deliver the C&C address we discovered in reversed code.
-{% image fancybox center xloader-09.png "Figure 9. The code snippet about different source." %}
+{% image fancybox center xloader-09.png "Figure 10. The code snippet about different source." %}
 
 
 Here is the list of these sources:
@@ -158,5 +161,6 @@ C&C address
 {% raw %}<div style="overflow-x:auto;">{% endraw %}
 | Protocal | IP |
 |---	|---   |
+| http:// | `wrssa[.]xyz` |
 | ws:// or wss:// | `128.1.223[.]222:38876` |
 {% raw %}</div>{% endraw %}
