@@ -42,18 +42,19 @@ Unlike other old versions of `XLoader`, this sample has some phishing sites majo
 
 Like other `Xloader` samples, it hides further payload on normal websites. This time is [Pinterest](https://www.pinterest.com). There are 3 Pinterest users containing phishing site’s URL, each one of them targeted on different carriers' users in Japan.
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |URL	|Description	|Carrier	|Alert Message	|Alert Message (EN)	|
 |---	|---	|---	|---	|---	|
 |https://www.pinterest.com/posylloyd4136/	|`http://au-hha[.]com`	|kddi	|お客様がご利用のキャリア決済が異常ログインの可能性がございます。本人認証設定で危険表示解除お願いします。	|There is a possibility that the carrier billing used by the customer is abnormal login. Please cancel the danger display in the personal authentication settings.	|
 |https://www.pinterest.com/amicenorton4874/	|`http://nttdocomo-hha[.]com`	|docomo or ntt	|お客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。	|The credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.	|
 |https://www.pinterest.com/ashlynfrancis7577/	|http://	|softbank	|お客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。	|The credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.	|
+{% raw %}</div>{% endraw %}
 
 {% image fancybox center xloader-03.png "Figure 3. The screenshot of one Pinterest user." %}
 
 Furthermore, there are 8 Pinterest users are used to deliver different phishing site’s URL depends on what APPs installed on the user’s device.
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |URL	|Description	|APP Package ID	|
 |---	|---	|---	|
 |https://www.pinterest.com/emeraldquinn4090/	|`http://smbc.bk-securityo[.]com/`	|jp.co.smbc.direct	|
@@ -64,6 +65,7 @@ Furthermore, there are 8 Pinterest users are used to deliver different phishing 
 |https://www.pinterest.com/felicitynewman8858/	|	|jp.japanpost.jp_bank.FIDOapp	|
 |https://www.pinterest.com/abigailn674/	|	|jp.co.jibunbank.jibunmain	|
 |https://www.pinterest.com/gh6855786/	|	|jp.co.sevenbank.AppPassbook	|
+{% raw %}</div>{% endraw %}
 
 At the time of our research, these links had been reported as phishing sites and not available to access. We end up searching online to see if there was some historical data or not.
 
@@ -88,12 +90,13 @@ These 3 Blogspot users can be used by different locale’s user. But currently, 
 {% image fancybox center xloader-07.png "Figure 7. Screenshot of Blogspot user “tyhdaou”" %}
 {% image fancybox center xloader-08.png "Figure 8. Screenshot of Blogspot user “ajlkhadsflg”" %}
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |URL	|Used By Locale	|
 |---	|---	|
 |https://tuyolh.blogspot.com/?m=1	|Japanese	|
 |https://ajlkhadsflg.blogspot.com/?m=1	|Korean	|
 |https://tyhdaou.blogspot.com/?m=1	|Other	|
+{% raw %}</div>{% endraw %}
 
 Once it got the encoded C&C address from Blogspot, it will first be doing the Base64 decode then decrypt by DES algorithm (DES/CBC/PKCS5Padding) with hardcoded key `Ab5d1Q32`. In the end, creating a WebSocket connection to the C&C address.
 
@@ -103,7 +106,7 @@ Although this sample gets a C&C address from Blogspot by default, there are othe
 
 Here is the list of these sources:
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |Source	|URL	|Regular Expression	|
 |---	|---	|---	|
 |vk	|`https://m.vk.com/%s?act=info`	|`</dt><dd>([\\w_-]+?)</dd></dl></div></div></div>`	|
@@ -123,14 +126,15 @@ Since `XLoader` was named in 2018, it has continuously evolved its hidden method
 
 Sample
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |SHA256	|Package	|Label	|
 |---	|---	|---	|
 |`d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98`	|com.njyi.tvwb	|Chrome	|
+{% raw %}</div>{% endraw %}
 
 Malicious Accounts
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 |URL	|
 |---	|
 |https://www.pinterest.com/posylloyd4136/	|
@@ -147,10 +151,11 @@ Malicious Accounts
 |https://tuyolh.blogspot.com/?m=1	|
 |https://ajlkhadsflg.blogspot.com/?m=1	|
 |https://tyhdaou.blogspot.com/?m=1	|
+{% raw %}</div>{% endraw %}
 
 C&C address
 
-
+{% raw %}<div style="overflow-x:auto;">{% endraw %}
 | Protocal | IP |
 |---	|---   |
 | ws:// or wss:// | `128.1.223[.]222:38876` |
