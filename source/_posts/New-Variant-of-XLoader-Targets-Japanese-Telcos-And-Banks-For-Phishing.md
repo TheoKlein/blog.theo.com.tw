@@ -23,6 +23,8 @@ We got a new variant of `XLoader` in mid-March 2020. It is a new version of `XLo
 
 > Cover Photo by Rami Al-zayat on Unsplash
 
+> This article is published on [Talent-Jump Technologies, Inc](http://www.talent-jump.com/article/2020/03/31/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/). simultaneously.
+
 Back in 2018, Trend Micro published the [first report](https://blog.trendmicro.com/trendlabs-security-intelligence/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing/) about a new Android Spyware named `XLoader`. Since then, there are many variants of the `XLoader` sample that have been detected and labeled.
 
 The sample we got (`d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98`) seems like a new variant of `XLoader`. These are the things we found different from the old version.
