@@ -23,6 +23,8 @@ tags:
 
 > Cover Photo by Rami Al-zayat on Unsplash
 
+> 本文同步發表在 詮睿科技 [Talent-Jump Technologies, Inc](http://www.talent-jump.com/article/2020/03/31/新-XLoader-變種瞄準日本電信商及銀行進行網路釣魚/).
+
 在 2018 年時，趨勢科技發佈了一篇 [報告](https://blog.trendmicro.com/trendlabs-security-intelligence/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing/) 描述一種全新的 Android 間諜程式並將其命名為 `XLoader`。從那之後，`XLoader` 持續不斷的有新變種出現並且持續在進行攻擊。
 
 我們得到的樣本（`d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98`）看起似乎是新的 `XLoader` 變種，這些是我們發現跟過去已知版本的 `XLoader` 有所不同的地方。
