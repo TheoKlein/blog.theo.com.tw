@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。\n使用工具\nWebScarab\nJHijack\n\n\n既然如此，我們就用WebScarab攔截request來看看。開啟WebScarab之後再嘗試登入一次，可以看到WebScarab中已經有資料被列出來了。\n\n\nWebScarab切換到SessionID Analysis的頁面，Previous Request的欄位選擇URL:/WebGoat/attack，下方Raw的部分可以看見request詳細的內容，其中有一個特別的參數「WEAKID」，參數名字就這麼大剌剌的說這是一個“弱弱的ID”，那我們就針對這個來做分析，試著找出產生WEAKID的規律。\n\n這時我們可以把Raw裡的WEAKID刪除，按下方的test嘗試送出給伺服器，發現伺服器會再產生一個新的WEAKID！\n\n這時我們可以利用WebScarab送出多筆test來拿到多筆WEAKID，下方Samples輸入要測試多少資料後點選Fetch。\n\n\n這時候我們就可以從一整串伺服器傳回來的WEKID中，尋找被「跳過」的WEAKID，代表這個WEAKID是存在並且屬於其他使用者的。這裡我們找到「17109-」和「17112-」，中間少了「17110-」和「17111-」，我們只要挑其中一個就好。在更仔細看，後半段只有倒數三位數字在變化。\n\n這時候開啟JHijack來準備嘗試所有可能，上方的路徑參數請依照自己的環境設定，特別的是Grep的部分，我們知道WebGoat如果解題成功畫面上會有「Congratulations」的字，這個欄位就是在每次嘗試以後去尋找頁面中有無此字串。SESSION就填入攔截到的「JSESSIONID」、HijackID就是重點，這個欄位是我們想要多次嘗試不同可能的參數，此題我們要是的就是WEAKID，前面我們可以確定的部分直接填上，最後三碼不確定打上「$」，「$」的範圍就是下方的Range，剛剛有看到後三碼也是有規律的生成，所以範圍一定會介於前後兩者中間，若不確定也可以直接從「001」跑到「999」，直接把所有的可能試一遍。\n\n都設定好之後就可以按下Hijack，程式會把我們設定WEAKID的所有可能都送到伺服器嘗試，馬上就找到正確的WEAKID了！\n這時我們再回到WebScarab開啟監聽攔截request並把WEAKID直接修改成我們剛剛猜到的值之後送出就可以成功以他人的WEAKID登入了！\n\n\n\n","dateCreated":"2016-03-22T13:28:36+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2016-03-22T13:28:36+08:00","description":"這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。","headline":"Session Management Flaws - Hijack a Session","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。\n\n使用工具\nWebScarab\nJHijack\n\n\n\n既然如此，我們就用WebScarab攔截request來看看。開啟WebScarab之後再嘗試登入一次，可以看到WebScarab中已經有資料被列出來了。\n\n\n\n\nWebScarab切換到SessionID Analysis的頁面，Previous Request的欄位選擇URL:/WebGoat/attack，下方Raw的部分可以看見request詳細的內容，其中有一個特別的參數「WEAKID」，參數名字就這麼大剌剌的說這是一個“弱弱的ID”，那我們就針對這個來做分析，試著找出產生WEAKID的規律。\n\n\n這時我們可以把Raw裡的WEAKID刪除，按下方的test嘗試送出給伺服器，發現伺服器會再產生一個新的WEAKID！\n\n\n這時我們可以利用WebScarab送出多筆test來拿到多筆WEAKID，下方Samples輸入要測試多少資料後點選Fetch。\n\n\n\n\n這時候我們就可以從一整串伺服器傳回來的WEKID中，尋找被「跳過」的WEAKID，代表這個WEAKID是存在並且屬於其他使用者的。這裡我們找到「17109-」和「17112-」，中間少了「17110-」和「17111-」，我們只要挑其中一個就好。在更仔細看，後半段只有倒數三位數字在變化。\n\n\n這時候開啟JHijack來準備嘗試所有可能，上方的路徑參數請依照自己的環境設定，特別的是Grep的部分，我們知道WebGoat如果解題成功畫面上會有「Congratulations」的字，這個欄位就是在每次嘗試以後去尋找頁面中有無此字串。SESSION就填入攔截到的「JSESSIONID」、HijackID就是重點，這個欄位是我們想要多次嘗試不同可能的參數，此題我們要是的就是WEAKID，前面我們可以確定的部分直接填上，最後三碼不確定打上「$」，「$」的範圍就是下方的Range，剛剛有看到後三碼也是有規律的生成，所以範圍一定會介於前後兩者中間，若不確定也可以直接從「001」跑到「999」，直接把所有的可能試一遍。\n\n\n都設定好之後就可以按下Hijack，程式會把我們設定WEAKID的所有可能都送到伺服器嘗試，馬上就找到正確的WEAKID了！\n這時我們再回到WebScarab開啟監聽攔截request並把WEAKID直接修改成我們剛剛猜到的值之後送出就可以成功以他人的WEAKID登入了！\n\n\n\n\n\n","dateCreated":"2016-03-22T13:28:36+08:00","dateModified":"2020-11-04T12:58:44+08:00","datePublished":"2016-03-22T13:28:36+08:00","description":"這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。","headline":"Session Management Flaws - Hijack a Session","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
     
     <meta name="description" content="這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。">
-<meta name="keywords" content="WebGoat,Session Management Flaws,Hijack a Session">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Session Management Flaws - Hijack a Session">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/logo.jpg">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.226Z">
+<meta property="article:published_time" content="2016-03-22T05:28:36.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:44.894Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Session Management Flaws - Hijack a Session">
-<meta name="twitter:description" content="這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/logo.jpg">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,31 +328,43 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。<br><a id="more"></a></p>
+            <p>這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。</p>
+<a id="more"></a>
 <h2 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h2><ul>
 <li>WebScarab</li>
 <li>JHijack</li>
 </ul>
-<div class="figure center" style="width:;"><a class="fancybox" href="01.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="01.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="01.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="01.jpg" alt=""></a></div>
+
 <p>既然如此，我們就用WebScarab攔截request來看看。開啟WebScarab之後再嘗試登入一次，可以看到WebScarab中已經有資料被列出來了。</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="02.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="02.jpg" alt></a></div>
-<div class="figure center" style="width:;"><a class="fancybox" href="03.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="03.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="02.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="02.jpg" alt=""></a></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="03.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="03.jpg" alt=""></a></div>
+
 <p>WebScarab切換到SessionID Analysis的頁面，Previous Request的欄位選擇URL:/WebGoat/attack，下方Raw的部分可以看見request詳細的內容，其中有一個特別的參數「WEAKID」，參數名字就這麼大剌剌的說這是一個“弱弱的ID”，那我們就針對這個來做分析，試著找出產生WEAKID的規律。</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="04.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="04.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="04.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="04.jpg" alt=""></a></div>
+
 <p>這時我們可以把Raw裡的WEAKID刪除，按下方的test嘗試送出給伺服器，發現伺服器會再產生一個新的WEAKID！</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="05.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="05.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="05.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="05.jpg" alt=""></a></div>
+
 <p>這時我們可以利用WebScarab送出多筆test來拿到多筆WEAKID，下方Samples輸入要測試多少資料後點選Fetch。</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="06.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="06.jpg" alt></a></div>
-<div class="figure center" style="width:;"><a class="fancybox" href="07.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="07.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="06.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="06.jpg" alt=""></a></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="07.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="07.jpg" alt=""></a></div>
+
 <p>這時候我們就可以從一整串伺服器傳回來的WEKID中，尋找被「跳過」的WEAKID，代表這個WEAKID是存在並且屬於其他使用者的。這裡我們找到「17109-」和「17112-」，中間少了「17110-」和「17111-」，我們只要挑其中一個就好。在更仔細看，後半段只有倒數三位數字在變化。</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="08.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="08.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="08.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="08.jpg" alt=""></a></div>
+
 <p>這時候開啟JHijack來準備嘗試所有可能，上方的路徑參數請依照自己的環境設定，特別的是Grep的部分，我們知道WebGoat如果解題成功畫面上會有「Congratulations」的字，這個欄位就是在每次嘗試以後去尋找頁面中有無此字串。SESSION就填入攔截到的「JSESSIONID」、HijackID就是重點，這個欄位是我們想要多次嘗試不同可能的參數，此題我們要是的就是WEAKID，前面我們可以確定的部分直接填上，最後三碼不確定打上「$」，「$」的範圍就是下方的Range，剛剛有看到後三碼也是有規律的生成，所以範圍一定會介於前後兩者中間，若不確定也可以直接從「001」跑到「999」，直接把所有的可能試一遍。</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="09.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="09.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="09.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="09.jpg" alt=""></a></div>
+
 <p>都設定好之後就可以按下Hijack，程式會把我們設定WEAKID的所有可能都送到伺服器嘗試，馬上就找到正確的WEAKID了！</p>
 <p>這時我們再回到WebScarab開啟監聽攔截request並把WEAKID直接修改成我們剛剛猜到的值之後送出就可以成功以他人的WEAKID登入了！</p>
-<div class="figure center" style="width:;"><a class="fancybox" href="11.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="11.jpg" alt></a></div>
-<div class="figure center" style="width:;"><a class="fancybox" href="12.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="12.jpg" alt></a></div>
-<div class="figure center" style="width:;"><a class="fancybox" href="13.jpg" title data-caption data-fancybox="default"><img class="fig-img" src="13.jpg" alt></a></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="11.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="11.jpg" alt=""></a></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="12.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="12.jpg" alt=""></a></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="13.jpg" title="" data-caption="" data-fancybox="default"><img class="fig-img" src="13.jpg" alt=""></a></div>
 
             
 
@@ -362,7 +376,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -465,7 +479,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -476,7 +490,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -655,7 +669,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

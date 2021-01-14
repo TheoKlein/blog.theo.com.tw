@@ -19,21 +19,24 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.\n\nCover Photo by Rami Al-zayat on Unsplash\n\n\nThis article is published on Talent-Jump Technologies, Inc. simultaneously.\n\n\nFigure 1. Screenshot of scam SMS message\nBack in 2018, Trend Micro published the first report about a new Android Spyware named XLoader. Since then, there are many variants of the XLoader sample that have been detected and labeled.\nThe sample we got (d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98) seems like a new variant of XLoader. These are the things we found different from the old version.\nPayload EncodingIn this sample, it skips the first 4 bytes in /assets/1a6ddg0/1ua96mi and uses the fifth byte as a key to XOR the remaining bytes. Then decompress and Base64 decode its content to evade detection.\nFigure 2. The code snippet of decoding and decompressing payload file.\nFigure 3. The code snippet of writing Base64 decoded content to file.\nTargeted Phishing In JapanUnlike other old versions of XLoader, this sample has some phishing sites majorly targeted on Japanese users.\nLike other Xloader samples, it hides further payload on normal websites. This time is Pinterest. There are 3 Pinterest users containing phishing site’s URL, each one of them targeted on different carriers’ users in Japan.\n\n\n\n\nURL\nDescription\nCarrier\nAlert Message\nAlert Message (EN)\n\n\n\n\nhttps://www.pinterest.com/posylloyd4136/\nhttp://au-hha[.]com\nkddi\nお客様がご利用のキャリア決済が異常ログインの可能性がございます。本人認証設定で危険表示解除お願いします。\nThere is a possibility that the carrier billing used by the customer is abnormal login. Please cancel the danger display in the personal authentication settings.\n\n\nhttps://www.pinterest.com/amicenorton4874/\nhttp://nttdocomo-hha[.]com\ndocomo or ntt\nお客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。\nThe credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.\n\n\nhttps://www.pinterest.com/ashlynfrancis7577/\nhttp://\nsoftbank\nお客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。\nThe credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.\n\n\n\n\nFigure 4. The screenshot of one Pinterest user.\nFurthermore, there are 8 Pinterest users are used to deliver different phishing site’s URL depends on what APPs installed on the user’s device.\n\n\n\n\nURL\nDescription\nAPP Package ID\n\n\n\n\nhttps://www.pinterest.com/emeraldquinn4090/\nhttp://smbc.bk-securityo[.]com/\njp.co.smbc.direct\n\n\nhttps://www.pinterest.com/kelliemarshall9518/\n\njp.co.rakuten_bank.rakutenbank\n\n\nhttps://www.pinterest.com/shonabutler10541/\n\njp.mufg.bk.applisp.app\n\n\nhttps://www.pinterest.com/norahspencer9/\n\njp.co.japannetbank.smtapp.balance\n\n\nhttps://www.pinterest.com/singletonabigail/\n\njp.co.netbk.smartkey.SSNBSmartkey\n\n\nhttps://www.pinterest.com/felicitynewman8858/\n\njp.japanpost.jp_bank.FIDOapp\n\n\nhttps://www.pinterest.com/abigailn674/\n\njp.co.jibunbank.jibunmain\n\n\nhttps://www.pinterest.com/gh6855786/\n\njp.co.sevenbank.AppPassbook\n\n\n\n\nAt the time of our research, these links had been reported as phishing sites and not available to access. We end up searching online to see if there was some historical data or not.\nWe found these Pastebin uploaded on Feb 29th, 2020 at 23:34 (UTC-4), they are whois info about au-hha[.]com and nttdocomo-hha[.]com.\n\nhttps://pastebin.com/5yBLXbQ4\nhttps://pastebin.com/sKuGuG2B\n\nBoth domains are registered at the same time at 2020-03-01T03:07:55Z with the same registrant email `netsusohutsure198720@yahoo.co[.]jpand phone number+86.15263254125` from China.\nFor smbc.bk-securityo[.]com, there is a report on urlscan.io with a screenshot submitted on Jan 5th, 2020.\nFigure 5. Screenshot from urlscan.io\nAbuse of New Social Media AccountsIn the previous versions, XLoader has used many social media to hide its C&amp;C address. In this sample, it used Blogspot to deliver the encoded C&amp;C address in the username.Figure 6. The code snippet of default Blogspot accounts.\nThese 3 Blogspot users can be used by different locale’s user. But currently, they all have the same encoded C&amp;C address: 7OlknUJ8RECnMJ0O65Ah8tZJNVjStSHG.Figure 7. Screenshot of Blogspot user “tuyolh”Figure 8. Screenshot of Blogspot user “tyhdaou”Figure 9. Screenshot of Blogspot user “ajlkhadsflg”\n\n\n\n\nURL\nUsed By Locale\n\n\n\n\nhttps://tuyolh.blogspot.com/?m=1\nJapanese\n\n\nhttps://ajlkhadsflg.blogspot.com/?m=1\nKorean\n\n\nhttps://tyhdaou.blogspot.com/?m=1\nOther\n\n\n\n\nOnce it got the encoded C&amp;C address from Blogspot, it will first be doing the Base64 decode then decrypt by DES algorithm (DES/CBC/PKCS5Padding) with hardcoded key Ab5d1Q32. In the end, creating a WebSocket connection to the C&amp;C address.\nAlthough this sample gets a C&amp;C address from Blogspot by default, there are other sites can be used to deliver the C&amp;C address we discovered in reversed code.Figure 10. The code snippet about different source.\nHere is the list of these sources:\n\n\n\n\nSource\nURL\nRegular Expression\n\n\n\n\nvk\nhttps://m.vk.com/%s?act=info\n&lt;/dt&gt;&lt;dd&gt;([\\\\w_-]+?)&lt;/dd&gt;&lt;/dl&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\n\nyoutube\nhttps://m.youtube.com/channel/%s/about\n\\\\{\\&quot;description\\&quot;:\\\\{\\&quot;runs\\&quot;:\\\\[\\\\{\\&quot;text\\&quot;:\\&quot;([\\\\w_-]+?)\\&quot;\\\\}\n\n\nins\nhttps://www.instagram.com/%s/\nbiography\\&quot;:\\&quot;([\\\\w_-]+?)\\&quot;\n\n\nGoogleDoc\nhttps://docs.google.com/document/d/%s/mobilebasic\n&lt;title&gt;([\\\\w_-]+?)&lt;\n\n\nGoogleDoc2\nhttps://docs.google.com/document/d/%s/mobilebasic\n&lt;title&gt;([\\\\w_-]+?)/\n\n\nblogger\nhttps://www.blogger.com/profile/%s\ntitle=\\&quot;([\\\\w_-]+?)&amp;\n\n\nblogspot\nhttps://%s.blogspot.com/?m=1\nauthor nofollow&#39;&gt;\\\\n(.+?)\\\\n\n\n\n\n\nConclusionSince XLoader was named in 2018, it has continuously evolved its hidden methods and continued phishing attacks against different users. Users must be cautious, pay attention to the legality of URL links before entering sensitive information, or confirm whether relevant announcements have been posted on the company’s website. Avoid downloading and installing APPs from unknown sources.\n\nIoCsSample\n\n\n\n\nSHA256\nPackage\nLabel\n\n\n\n\nd9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98\ncom.njyi.tvwb\nChrome\n\n\n\n\nMalicious Accounts\n\n\n\n\nURL\n\n\n\n\nhttps://www.pinterest.com/posylloyd4136/\n\n\nhttps://www.pinterest.com/amicenorton4874/\n\n\nhttps://www.pinterest.com/ashlynfrancis7577/\n\n\nhttps://www.pinterest.com/emeraldquinn4090/\n\n\nhttps://www.pinterest.com/kelliemarshall9518/\n\n\nhttps://www.pinterest.com/shonabutler10541/\n\n\nhttps://www.pinterest.com/norahspencer9/\n\n\nhttps://www.pinterest.com/singletonabigail/\n\n\nhttps://www.pinterest.com/felicitynewman8858/\n\n\nhttps://www.pinterest.com/abigailn674/\n\n\nhttps://www.pinterest.com/gh6855786/\n\n\nhttps://tuyolh.blogspot.com/?m=1\n\n\nhttps://ajlkhadsflg.blogspot.com/?m=1\n\n\nhttps://tyhdaou.blogspot.com/?m=1\n\n\n\n\nC&amp;C address\n\n\n\n\nProtocal\nIP\n\n\n\n\nhttp://\nwrssa[.]xyz\n\n\nws:// or wss://\n128.1.223[.]222:38876\n\n\n\n","dateCreated":"2020-03-31T15:16:02+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2020-03-31T15:16:02+08:00","description":"We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.","headline":"New Variant of XLoader Targets Japanese Telcos And Banks For Phishing","image":["thumb.jpg","cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/","keywords":"XLoader, Android, Spyware, Phishing","thumbnailUrl":"thumb.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.\n\n\n\nCover Photo by Rami Al-zayat on Unsplash\n\n\nThis article is published on Talent-Jump Technologies, Inc. simultaneously.\n\n\nFigure 1. Screenshot of scam SMS message\n\nBack in 2018, Trend Micro published the first report about a new Android Spyware named XLoader. Since then, there are many variants of the XLoader sample that have been detected and labeled.\nThe sample we got (d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98) seems like a new variant of XLoader. These are the things we found different from the old version.\nPayload EncodingIn this sample, it skips the first 4 bytes in /assets/1a6ddg0/1ua96mi and uses the fifth byte as a key to XOR the remaining bytes. Then decompress and Base64 decode its content to evade detection.\nFigure 2. The code snippet of decoding and decompressing payload file.\n\nFigure 3. The code snippet of writing Base64 decoded content to file.\n\nTargeted Phishing In JapanUnlike other old versions of XLoader, this sample has some phishing sites majorly targeted on Japanese users.\nLike other Xloader samples, it hides further payload on normal websites. This time is Pinterest. There are 3 Pinterest users containing phishing site’s URL, each one of them targeted on different carriers’ users in Japan.\n\n\n\n\nURL\nDescription\nCarrier\nAlert Message\nAlert Message (EN)\n\n\n\nhttps://www.pinterest.com/posylloyd4136/\nhttp://au-hha[.]com\nkddi\nお客様がご利用のキャリア決済が異常ログインの可能性がございます。本人認証設定で危険表示解除お願いします。\nThere is a possibility that the carrier billing used by the customer is abnormal login. Please cancel the danger display in the personal authentication settings.\n\n\nhttps://www.pinterest.com/amicenorton4874/\nhttp://nttdocomo-hha[.]com\ndocomo or ntt\nお客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。\nThe credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.\n\n\nhttps://www.pinterest.com/ashlynfrancis7577/\nhttp://\nsoftbank\nお客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。\nThe credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.\n\n\n\n\nFigure 4. The screenshot of one Pinterest user.\n\nFurthermore, there are 8 Pinterest users are used to deliver different phishing site’s URL depends on what APPs installed on the user’s device.\n\n\n\n\nURL\nDescription\nAPP Package ID\n\n\n\nhttps://www.pinterest.com/emeraldquinn4090/\nhttp://smbc.bk-securityo[.]com/\njp.co.smbc.direct\n\n\nhttps://www.pinterest.com/kelliemarshall9518/\n\njp.co.rakuten_bank.rakutenbank\n\n\nhttps://www.pinterest.com/shonabutler10541/\n\njp.mufg.bk.applisp.app\n\n\nhttps://www.pinterest.com/norahspencer9/\n\njp.co.japannetbank.smtapp.balance\n\n\nhttps://www.pinterest.com/singletonabigail/\n\njp.co.netbk.smartkey.SSNBSmartkey\n\n\nhttps://www.pinterest.com/felicitynewman8858/\n\njp.japanpost.jp_bank.FIDOapp\n\n\nhttps://www.pinterest.com/abigailn674/\n\njp.co.jibunbank.jibunmain\n\n\nhttps://www.pinterest.com/gh6855786/\n\njp.co.sevenbank.AppPassbook\n\n\n\n\nAt the time of our research, these links had been reported as phishing sites and not available to access. We end up searching online to see if there was some historical data or not.\nWe found these Pastebin uploaded on Feb 29th, 2020 at 23:34 (UTC-4), they are whois info about au-hha[.]com and nttdocomo-hha[.]com.\n\nhttps://pastebin.com/5yBLXbQ4\nhttps://pastebin.com/sKuGuG2B\n\nBoth domains are registered at the same time at 2020-03-01T03:07:55Z with the same registrant email netsusohutsure198720@yahoo.co[.]jp and phone number +86.15263254125 from China.\nFor smbc.bk-securityo[.]com, there is a report on urlscan.io with a screenshot submitted on Jan 5th, 2020.\nFigure 5. Screenshot from urlscan.io\n\nAbuse of New Social Media AccountsIn the previous versions, XLoader has used many social media to hide its C&amp;C address. In this sample, it used Blogspot to deliver the encoded C&amp;C address in the username.\nFigure 6. The code snippet of default Blogspot accounts.\n\nThese 3 Blogspot users can be used by different locale’s user. But currently, they all have the same encoded C&amp;C address: 7OlknUJ8RECnMJ0O65Ah8tZJNVjStSHG.\nFigure 7. Screenshot of Blogspot user “tuyolh”\nFigure 8. Screenshot of Blogspot user “tyhdaou”\nFigure 9. Screenshot of Blogspot user “ajlkhadsflg”\n\n\n\n\n\nURL\nUsed By Locale\n\n\n\nhttps://tuyolh.blogspot.com/?m=1\nJapanese\n\n\nhttps://ajlkhadsflg.blogspot.com/?m=1\nKorean\n\n\nhttps://tyhdaou.blogspot.com/?m=1\nOther\n\n\n\n\nOnce it got the encoded C&amp;C address from Blogspot, it will first be doing the Base64 decode then decrypt by DES algorithm (DES/CBC/PKCS5Padding) with hardcoded key Ab5d1Q32. In the end, creating a WebSocket connection to the C&amp;C address.\nAlthough this sample gets a C&amp;C address from Blogspot by default, there are other sites can be used to deliver the C&amp;C address we discovered in reversed code.\nFigure 10. The code snippet about different source.\n\n\nHere is the list of these sources:\n\n\n\n\nSource\nURL\nRegular Expression\n\n\n\nvk\nhttps://m.vk.com/%s?act=info\n&lt;/dt&gt;&lt;dd&gt;([\\\\w_-]+?)&lt;/dd&gt;&lt;/dl&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;\n\n\nyoutube\nhttps://m.youtube.com/channel/%s/about\n\\\\&#123;\\&quot;description\\&quot;:\\\\&#123;\\&quot;runs\\&quot;:\\\\[\\\\&#123;\\&quot;text\\&quot;:\\&quot;([\\\\w_-]+?)\\&quot;\\\\&#125;\n\n\nins\nhttps://www.instagram.com/%s/\nbiography\\&quot;:\\&quot;([\\\\w_-]+?)\\&quot;\n\n\nGoogleDoc\nhttps://docs.google.com/document/d/%s/mobilebasic\n&lt;title&gt;([\\\\w_-]+?)&lt;\n\n\nGoogleDoc2\nhttps://docs.google.com/document/d/%s/mobilebasic\n&lt;title&gt;([\\\\w_-]+?)/\n\n\nblogger\nhttps://www.blogger.com/profile/%s\ntitle=\\&quot;([\\\\w_-]+?)&amp;\n\n\nblogspot\nhttps://%s.blogspot.com/?m=1\nauthor nofollow&#39;&gt;\\\\n(.+?)\\\\n\n\n\n\n\nConclusionSince XLoader was named in 2018, it has continuously evolved its hidden methods and continued phishing attacks against different users. Users must be cautious, pay attention to the legality of URL links before entering sensitive information, or confirm whether relevant announcements have been posted on the company’s website. Avoid downloading and installing APPs from unknown sources.\n\nIoCsSample\n\n\n\n\nSHA256\nPackage\nLabel\n\n\n\nd9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98\ncom.njyi.tvwb\nChrome\n\n\n\n\nMalicious Accounts\n\n\n\n\nURL\n\n\n\nhttps://www.pinterest.com/posylloyd4136/\n\n\nhttps://www.pinterest.com/amicenorton4874/\n\n\nhttps://www.pinterest.com/ashlynfrancis7577/\n\n\nhttps://www.pinterest.com/emeraldquinn4090/\n\n\nhttps://www.pinterest.com/kelliemarshall9518/\n\n\nhttps://www.pinterest.com/shonabutler10541/\n\n\nhttps://www.pinterest.com/norahspencer9/\n\n\nhttps://www.pinterest.com/singletonabigail/\n\n\nhttps://www.pinterest.com/felicitynewman8858/\n\n\nhttps://www.pinterest.com/abigailn674/\n\n\nhttps://www.pinterest.com/gh6855786/\n\n\nhttps://tuyolh.blogspot.com/?m=1\n\n\nhttps://ajlkhadsflg.blogspot.com/?m=1\n\n\nhttps://tyhdaou.blogspot.com/?m=1\n\n\n\n\nC&amp;C address\n\n\n\n\nProtocal\nIP\n\n\n\nhttp://\nwrssa[.]xyz\n\n\nws:// or wss://\n128.1.223[.]222:38876\n\n\n","dateCreated":"2020-03-31T15:16:02+08:00","dateModified":"2020-11-04T12:58:43+08:00","datePublished":"2020-03-31T15:16:02+08:00","description":"We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.","headline":"New Variant of XLoader Targets Japanese Telcos And Banks For Phishing","image":["thumb.jpg","cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/","keywords":"XLoader, Android, Spyware, Phishing","thumbnailUrl":"thumb.jpg"}</script>
     
-    <meta name="description" content="We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;amp;C address and phishi">
-<meta name="keywords" content="XLoader,Android,Spyware,Phishing">
+    <meta name="description" content="We got a new variant of XLoader via a link http:&#x2F;&#x2F;wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishi">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="New Variant of XLoader Targets Japanese Telcos And Banks For Phishing">
 <meta property="og:url" content="https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
-<meta property="og:description" content="We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;amp;C address and phishi">
-<meta property="og:locale" content="en">
+<meta property="og:description" content="We got a new variant of XLoader via a link http:&#x2F;&#x2F;wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;C address and phishi">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/cover.jpg">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.182Z">
+<meta property="article:published_time" content="2020-03-31T07:16:02.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:43.986Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="XLoader">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="Spyware">
+<meta property="article:tag" content="Phishing">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="New Variant of XLoader Targets Japanese Telcos And Banks For Phishing">
-<meta name="twitter:description" content="We got a new variant of XLoader via a link http://wrssa[.]xyz from scam SMS message in mid-March 2020. It is a new version of XLoader using Blogspot and Pinterest to deliver C&amp;amp;C address and phishi">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/cover.jpg">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -51,7 +54,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -337,22 +342,27 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>We got a new variant of <code>XLoader</code> via a link <code>http://wrssa[.]xyz</code> from scam SMS message in mid-March 2020. It is a new version of <code>XLoader</code> using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.<br><a id="more"></a></p>
+            <p>We got a new variant of <code>XLoader</code> via a link <code>http://wrssa[.]xyz</code> from scam SMS message in mid-March 2020. It is a new version of <code>XLoader</code> using Blogspot and Pinterest to deliver C&amp;C address and phishing sites.</p>
+<a id="more"></a>
+
 <blockquote>
 <p>Cover Photo by Rami Al-zayat on Unsplash</p>
 </blockquote>
 <blockquote>
-<p>This article is published on <a href="http://www.talent-jump.com/article/2020/03/31/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/" target="_blank" rel="noopener">Talent-Jump Technologies, Inc</a>. simultaneously.</p>
+<p>This article is published on <a target="_blank" rel="noopener" href="http://www.talent-jump.com/article/2020/03/31/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/">Talent-Jump Technologies, Inc</a>. simultaneously.</p>
 </blockquote>
 <br>
 <div class="figure center" style="width:;"><a class="fancybox" href="xloader-00.jpeg" title="Figure 1. Screenshot of scam SMS message" data-caption="Figure 1. Screenshot of scam SMS message" data-fancybox="default"><img class="fig-img" src="xloader-00.jpeg" alt="Figure 1. Screenshot of scam SMS message"></a><span class="caption">Figure 1. Screenshot of scam SMS message</span></div>
-<p>Back in 2018, Trend Micro published the <a href="https://blog.trendmicro.com/trendlabs-security-intelligence/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing/" target="_blank" rel="noopener">first report</a> about a new Android Spyware named <code>XLoader</code>. Since then, there are many variants of the <code>XLoader</code> sample that have been detected and labeled.</p>
+
+<p>Back in 2018, Trend Micro published the <a target="_blank" rel="noopener" href="https://blog.trendmicro.com/trendlabs-security-intelligence/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing/">first report</a> about a new Android Spyware named <code>XLoader</code>. Since then, there are many variants of the <code>XLoader</code> sample that have been detected and labeled.</p>
 <p>The sample we got (<code>d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98</code>) seems like a new variant of <code>XLoader</code>. These are the things we found different from the old version.</p>
 <h2 id="Payload-Encoding"><a href="#Payload-Encoding" class="headerlink" title="Payload Encoding"></a>Payload Encoding</h2><p>In this sample, it skips the first 4 bytes in <code>/assets/1a6ddg0/1ua96mi</code> and uses the fifth byte as a key to XOR the remaining bytes. Then decompress and Base64 decode its content to evade detection.</p>
 <div class="figure center" style="width:;"><a class="fancybox" href="xloader-01.png" title="Figure 2. The code snippet of decoding and decompressing payload file." data-caption="Figure 2. The code snippet of decoding and decompressing payload file." data-fancybox="default"><img class="fig-img" src="xloader-01.png" alt="Figure 2. The code snippet of decoding and decompressing payload file."></a><span class="caption">Figure 2. The code snippet of decoding and decompressing payload file.</span></div>
+
 <div class="figure center" style="width:;"><a class="fancybox" href="xloader-02.png" title="Figure 3. The code snippet of writing Base64 decoded content to file." data-caption="Figure 3. The code snippet of writing Base64 decoded content to file." data-fancybox="default"><img class="fig-img" src="xloader-02.png" alt="Figure 3. The code snippet of writing Base64 decoded content to file."></a><span class="caption">Figure 3. The code snippet of writing Base64 decoded content to file.</span></div>
+
 <h2 id="Targeted-Phishing-In-Japan"><a href="#Targeted-Phishing-In-Japan" class="headerlink" title="Targeted Phishing In Japan"></a>Targeted Phishing In Japan</h2><p>Unlike other old versions of <code>XLoader</code>, this sample has some phishing sites majorly targeted on Japanese users.</p>
-<p>Like other <code>Xloader</code> samples, it hides further payload on normal websites. This time is <a href="https://www.pinterest.com" target="_blank" rel="noopener">Pinterest</a>. There are 3 Pinterest users containing phishing site’s URL, each one of them targeted on different carriers’ users in Japan.</p>
+<p>Like other <code>Xloader</code> samples, it hides further payload on normal websites. This time is <a target="_blank" rel="noopener" href="https://www.pinterest.com/">Pinterest</a>. There are 3 Pinterest users containing phishing site’s URL, each one of them targeted on different carriers’ users in Japan.</p>
 <div style="overflow-x:auto;">
 <table>
 <thead>
@@ -364,32 +374,32 @@
 <th>Alert Message (EN)</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td><a href="https://www.pinterest.com/posylloyd4136/" target="_blank" rel="noopener">https://www.pinterest.com/posylloyd4136/</a></td>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/posylloyd4136/">https://www.pinterest.com/posylloyd4136/</a></td>
 <td><code>http://au-hha[.]com</code></td>
 <td>kddi</td>
 <td>お客様がご利用のキャリア決済が異常ログインの可能性がございます。本人認証設定で危険表示解除お願いします。</td>
 <td>There is a possibility that the carrier billing used by the customer is abnormal login. Please cancel the danger display in the personal authentication settings.</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/amicenorton4874/" target="_blank" rel="noopener">https://www.pinterest.com/amicenorton4874/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/amicenorton4874/">https://www.pinterest.com/amicenorton4874/</a></td>
 <td><code>http://nttdocomo-hha[.]com</code></td>
 <td>docomo or ntt</td>
 <td>お客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。</td>
 <td>The credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/ashlynfrancis7577/" target="_blank" rel="noopener">https://www.pinterest.com/ashlynfrancis7577/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/ashlynfrancis7577/">https://www.pinterest.com/ashlynfrancis7577/</a></td>
 <td>http://</td>
 <td>softbank</td>
 <td>お客様がキャリア決済にご登録のクレジットカードが外部によるアクセスを検知しました、セキュリティ強化更新手続きをお願いいたします。</td>
 <td>The credit card registered by the customer for carrier billing has detected an external access. Please update your security procedure.</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
+
 <div class="figure center" style="width:;"><a class="fancybox" href="xloader-03.png" title="Figure 4. The screenshot of one Pinterest user." data-caption="Figure 4. The screenshot of one Pinterest user." data-fancybox="default"><img class="fig-img" src="xloader-03.png" alt="Figure 4. The screenshot of one Pinterest user."></a><span class="caption">Figure 4. The screenshot of one Pinterest user.</span></div>
+
 <p>Furthermore, there are 8 Pinterest users are used to deliver different phishing site’s URL depends on what APPs installed on the user’s device.</p>
 <div style="overflow-x:auto;">
 <table>
@@ -400,61 +410,67 @@
 <th>APP Package ID</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td><a href="https://www.pinterest.com/emeraldquinn4090/" target="_blank" rel="noopener">https://www.pinterest.com/emeraldquinn4090/</a></td>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/emeraldquinn4090/">https://www.pinterest.com/emeraldquinn4090/</a></td>
 <td><code>http://smbc.bk-securityo[.]com/</code></td>
 <td>jp.co.smbc.direct</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/kelliemarshall9518/" target="_blank" rel="noopener">https://www.pinterest.com/kelliemarshall9518/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/kelliemarshall9518/">https://www.pinterest.com/kelliemarshall9518/</a></td>
 <td></td>
 <td>jp.co.rakuten_bank.rakutenbank</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/shonabutler10541/" target="_blank" rel="noopener">https://www.pinterest.com/shonabutler10541/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/shonabutler10541/">https://www.pinterest.com/shonabutler10541/</a></td>
 <td></td>
 <td>jp.mufg.bk.applisp.app</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/norahspencer9/" target="_blank" rel="noopener">https://www.pinterest.com/norahspencer9/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/norahspencer9/">https://www.pinterest.com/norahspencer9/</a></td>
 <td></td>
 <td>jp.co.japannetbank.smtapp.balance</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/singletonabigail/" target="_blank" rel="noopener">https://www.pinterest.com/singletonabigail/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/singletonabigail/">https://www.pinterest.com/singletonabigail/</a></td>
 <td></td>
 <td>jp.co.netbk.smartkey.SSNBSmartkey</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/felicitynewman8858/" target="_blank" rel="noopener">https://www.pinterest.com/felicitynewman8858/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/felicitynewman8858/">https://www.pinterest.com/felicitynewman8858/</a></td>
 <td></td>
 <td>jp.japanpost.jp_bank.FIDOapp</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/abigailn674/" target="_blank" rel="noopener">https://www.pinterest.com/abigailn674/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/abigailn674/">https://www.pinterest.com/abigailn674/</a></td>
 <td></td>
 <td>jp.co.jibunbank.jibunmain</td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/gh6855786/" target="_blank" rel="noopener">https://www.pinterest.com/gh6855786/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/gh6855786/">https://www.pinterest.com/gh6855786/</a></td>
 <td></td>
 <td>jp.co.sevenbank.AppPassbook</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
+
 <p>At the time of our research, these links had been reported as phishing sites and not available to access. We end up searching online to see if there was some historical data or not.</p>
 <p>We found these Pastebin uploaded on Feb 29th, 2020 at 23:34 (UTC-4), they are whois info about <code>au-hha[.]com</code> and <code>nttdocomo-hha[.]com</code>.</p>
 <ul>
-<li><a href="https://pastebin.com/5yBLXbQ4" target="_blank" rel="noopener">https://pastebin.com/5yBLXbQ4</a></li>
-<li><a href="https://pastebin.com/sKuGuG2B" target="_blank" rel="noopener">https://pastebin.com/sKuGuG2B</a></li>
+<li><a target="_blank" rel="noopener" href="https://pastebin.com/5yBLXbQ4">https://pastebin.com/5yBLXbQ4</a></li>
+<li><a target="_blank" rel="noopener" href="https://pastebin.com/sKuGuG2B">https://pastebin.com/sKuGuG2B</a></li>
 </ul>
-<p>Both domains are registered at the same time at <code>2020-03-01T03:07:55Z</code> with the same registrant email <a href="mailto:`netsusohutsure198720@yahoo.co" target="_blank" rel="noopener">`netsusohutsure198720@yahoo.co</a>[.]jp<code>and phone number</code>+86.15263254125` from China.</p>
-<p>For <code>smbc.bk-securityo[.]com</code>, there is a report on <a href="https://urlscan.io/result/5d2d5703-0d05-4343-b601-e7cbe66befa5/" target="_blank" rel="noopener">urlscan.io</a> with a screenshot submitted on Jan 5th, 2020.</p>
+<p>Both domains are registered at the same time at <code>2020-03-01T03:07:55Z</code> with the same registrant email <code>netsusohutsure198720@yahoo.co[.]jp</code> and phone number <code>+86.15263254125</code> from China.</p>
+<p>For <code>smbc.bk-securityo[.]com</code>, there is a report on <a target="_blank" rel="noopener" href="https://urlscan.io/result/5d2d5703-0d05-4343-b601-e7cbe66befa5/">urlscan.io</a> with a screenshot submitted on Jan 5th, 2020.</p>
 <div class="figure center" style="width:;"><a class="fancybox" href="xloader-04.png" title="Figure 5. Screenshot from urlscan.io" data-caption="Figure 5. Screenshot from urlscan.io" data-fancybox="default"><img class="fig-img" src="xloader-04.png" alt="Figure 5. Screenshot from urlscan.io"></a><span class="caption">Figure 5. Screenshot from urlscan.io</span></div>
-<h2 id="Abuse-of-New-Social-Media-Accounts"><a href="#Abuse-of-New-Social-Media-Accounts" class="headerlink" title="Abuse of New Social Media Accounts"></a>Abuse of New Social Media Accounts</h2><p>In the previous versions, <code>XLoader</code> has used many social media to hide its C&amp;C address. In this sample, it used Blogspot to deliver the encoded C&amp;C address in the username.<br><div class="figure center" style="width:;"><a class="fancybox" href="xloader-05.png" title="Figure 6. The code snippet of default Blogspot accounts." data-caption="Figure 6. The code snippet of default Blogspot accounts." data-fancybox="default"><img class="fig-img" src="xloader-05.png" alt="Figure 6. The code snippet of default Blogspot accounts."></a><span class="caption">Figure 6. The code snippet of default Blogspot accounts.</span></div></p>
-<p>These 3 Blogspot users can be used by different locale’s user. But currently, they all have the same encoded C&amp;C address: <code>7OlknUJ8RECnMJ0O65Ah8tZJNVjStSHG</code>.<br><div class="figure center" style="width:;"><a class="fancybox" href="xloader-06.png" title="Figure 7. Screenshot of Blogspot user “tuyolh”" data-caption="Figure 7. Screenshot of Blogspot user “tuyolh”" data-fancybox="default"><img class="fig-img" src="xloader-06.png" alt="Figure 7. Screenshot of Blogspot user “tuyolh”"></a><span class="caption">Figure 7. Screenshot of Blogspot user “tuyolh”</span></div><br><div class="figure center" style="width:;"><a class="fancybox" href="xloader-07.png" title="Figure 8. Screenshot of Blogspot user “tyhdaou”" data-caption="Figure 8. Screenshot of Blogspot user “tyhdaou”" data-fancybox="default"><img class="fig-img" src="xloader-07.png" alt="Figure 8. Screenshot of Blogspot user “tyhdaou”"></a><span class="caption">Figure 8. Screenshot of Blogspot user “tyhdaou”</span></div><br><div class="figure center" style="width:;"><a class="fancybox" href="xloader-08.png" title="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”" data-caption="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”" data-fancybox="default"><img class="fig-img" src="xloader-08.png" alt="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”"></a><span class="caption">Figure 9. Screenshot of Blogspot user “ajlkhadsflg”</span></div></p>
+
+<h2 id="Abuse-of-New-Social-Media-Accounts"><a href="#Abuse-of-New-Social-Media-Accounts" class="headerlink" title="Abuse of New Social Media Accounts"></a>Abuse of New Social Media Accounts</h2><p>In the previous versions, <code>XLoader</code> has used many social media to hide its C&amp;C address. In this sample, it used Blogspot to deliver the encoded C&amp;C address in the username.</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="xloader-05.png" title="Figure 6. The code snippet of default Blogspot accounts." data-caption="Figure 6. The code snippet of default Blogspot accounts." data-fancybox="default"><img class="fig-img" src="xloader-05.png" alt="Figure 6. The code snippet of default Blogspot accounts."></a><span class="caption">Figure 6. The code snippet of default Blogspot accounts.</span></div>
+
+<p>These 3 Blogspot users can be used by different locale’s user. But currently, they all have the same encoded C&amp;C address: <code>7OlknUJ8RECnMJ0O65Ah8tZJNVjStSHG</code>.</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="xloader-06.png" title="Figure 7. Screenshot of Blogspot user “tuyolh”" data-caption="Figure 7. Screenshot of Blogspot user “tuyolh”" data-fancybox="default"><img class="fig-img" src="xloader-06.png" alt="Figure 7. Screenshot of Blogspot user “tuyolh”"></a><span class="caption">Figure 7. Screenshot of Blogspot user “tuyolh”</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="xloader-07.png" title="Figure 8. Screenshot of Blogspot user “tyhdaou”" data-caption="Figure 8. Screenshot of Blogspot user “tyhdaou”" data-fancybox="default"><img class="fig-img" src="xloader-07.png" alt="Figure 8. Screenshot of Blogspot user “tyhdaou”"></a><span class="caption">Figure 8. Screenshot of Blogspot user “tyhdaou”</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="xloader-08.png" title="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”" data-caption="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”" data-fancybox="default"><img class="fig-img" src="xloader-08.png" alt="Figure 9. Screenshot of Blogspot user “ajlkhadsflg”"></a><span class="caption">Figure 9. Screenshot of Blogspot user “ajlkhadsflg”</span></div>
+
 <div style="overflow-x:auto;">
 <table>
 <thead>
@@ -463,24 +479,26 @@
 <th>Used By Locale</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td><a href="https://tuyolh.blogspot.com/?m=1" target="_blank" rel="noopener">https://tuyolh.blogspot.com/?m=1</a></td>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://tuyolh.blogspot.com/?m=1">https://tuyolh.blogspot.com/?m=1</a></td>
 <td>Japanese</td>
 </tr>
 <tr>
-<td><a href="https://ajlkhadsflg.blogspot.com/?m=1" target="_blank" rel="noopener">https://ajlkhadsflg.blogspot.com/?m=1</a></td>
+<td><a target="_blank" rel="noopener" href="https://ajlkhadsflg.blogspot.com/?m=1">https://ajlkhadsflg.blogspot.com/?m=1</a></td>
 <td>Korean</td>
 </tr>
 <tr>
-<td><a href="https://tyhdaou.blogspot.com/?m=1" target="_blank" rel="noopener">https://tyhdaou.blogspot.com/?m=1</a></td>
+<td><a target="_blank" rel="noopener" href="https://tyhdaou.blogspot.com/?m=1">https://tyhdaou.blogspot.com/?m=1</a></td>
 <td>Other</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
+
 <p>Once it got the encoded C&amp;C address from Blogspot, it will first be doing the Base64 decode then decrypt by DES algorithm (DES/CBC/PKCS5Padding) with hardcoded key <code>Ab5d1Q32</code>. In the end, creating a WebSocket connection to the C&amp;C address.</p>
-<p>Although this sample gets a C&amp;C address from Blogspot by default, there are other sites can be used to deliver the C&amp;C address we discovered in reversed code.<br><div class="figure center" style="width:;"><a class="fancybox" href="xloader-09.png" title="Figure 10. The code snippet about different source." data-caption="Figure 10. The code snippet about different source." data-fancybox="default"><img class="fig-img" src="xloader-09.png" alt="Figure 10. The code snippet about different source."></a><span class="caption">Figure 10. The code snippet about different source.</span></div></p>
+<p>Although this sample gets a C&amp;C address from Blogspot by default, there are other sites can be used to deliver the C&amp;C address we discovered in reversed code.</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="xloader-09.png" title="Figure 10. The code snippet about different source." data-caption="Figure 10. The code snippet about different source." data-fancybox="default"><img class="fig-img" src="xloader-09.png" alt="Figure 10. The code snippet about different source."></a><span class="caption">Figure 10. The code snippet about different source.</span></div>
+
+
 <p>Here is the list of these sources:</p>
 <div style="overflow-x:auto;">
 <table>
@@ -491,8 +509,7 @@
 <th>Regular Expression</th>
 </tr>
 </thead>
-<tbody>
-<tr>
+<tbody><tr>
 <td>vk</td>
 <td><code>https://m.vk.com/%s?act=info</code></td>
 <td><code>&lt;/dt&gt;&lt;dd&gt;([\\w_-]+?)&lt;/dd&gt;&lt;/dl&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</code></td>
@@ -500,7 +517,7 @@
 <tr>
 <td>youtube</td>
 <td><code>https://m.youtube.com/channel/%s/about</code></td>
-<td><code>\\{\&quot;description\&quot;:\\{\&quot;runs\&quot;:\\[\\{\&quot;text\&quot;:\&quot;([\\w_-]+?)\&quot;\\}</code></td>
+<td><code>\\&#123;\&quot;description\&quot;:\\&#123;\&quot;runs\&quot;:\\[\\&#123;\&quot;text\&quot;:\&quot;([\\w_-]+?)\&quot;\\&#125;</code></td>
 </tr>
 <tr>
 <td>ins</td>
@@ -527,9 +544,9 @@
 <td><code>https://%s.blogspot.com/?m=1</code></td>
 <td><code>author nofollow&#39;&gt;\\n(.+?)\\n</code></td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div><br>
+
 <h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>Since <code>XLoader</code> was named in 2018, it has continuously evolved its hidden methods and continued phishing attacks against different users. Users must be cautious, pay attention to the legality of URL links before entering sensitive information, or confirm whether relevant announcements have been posted on the company’s website. Avoid downloading and installing APPs from unknown sources.</p>
 <hr>
 <h2 id="IoCs"><a href="#IoCs" class="headerlink" title="IoCs"></a>IoCs</h2><p>Sample</p>
@@ -542,15 +559,14 @@
 <th>Label</th>
 </tr>
 </thead>
-<tbody>
-<tr>
+<tbody><tr>
 <td><code>d9adfdd2908fe30eeecb5443787d33d2dc9c4fe5c201665058261c6330af8c98</code></td>
 <td>com.njyi.tvwb</td>
 <td>Chrome</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
+
 <p>Malicious Accounts</p>
 <div style="overflow-x:auto;">
 <table>
@@ -559,52 +575,51 @@
 <th>URL</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td><a href="https://www.pinterest.com/posylloyd4136/" target="_blank" rel="noopener">https://www.pinterest.com/posylloyd4136/</a></td>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/posylloyd4136/">https://www.pinterest.com/posylloyd4136/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/amicenorton4874/" target="_blank" rel="noopener">https://www.pinterest.com/amicenorton4874/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/amicenorton4874/">https://www.pinterest.com/amicenorton4874/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/ashlynfrancis7577/" target="_blank" rel="noopener">https://www.pinterest.com/ashlynfrancis7577/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/ashlynfrancis7577/">https://www.pinterest.com/ashlynfrancis7577/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/emeraldquinn4090/" target="_blank" rel="noopener">https://www.pinterest.com/emeraldquinn4090/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/emeraldquinn4090/">https://www.pinterest.com/emeraldquinn4090/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/kelliemarshall9518/" target="_blank" rel="noopener">https://www.pinterest.com/kelliemarshall9518/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/kelliemarshall9518/">https://www.pinterest.com/kelliemarshall9518/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/shonabutler10541/" target="_blank" rel="noopener">https://www.pinterest.com/shonabutler10541/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/shonabutler10541/">https://www.pinterest.com/shonabutler10541/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/norahspencer9/" target="_blank" rel="noopener">https://www.pinterest.com/norahspencer9/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/norahspencer9/">https://www.pinterest.com/norahspencer9/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/singletonabigail/" target="_blank" rel="noopener">https://www.pinterest.com/singletonabigail/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/singletonabigail/">https://www.pinterest.com/singletonabigail/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/felicitynewman8858/" target="_blank" rel="noopener">https://www.pinterest.com/felicitynewman8858/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/felicitynewman8858/">https://www.pinterest.com/felicitynewman8858/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/abigailn674/" target="_blank" rel="noopener">https://www.pinterest.com/abigailn674/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/abigailn674/">https://www.pinterest.com/abigailn674/</a></td>
 </tr>
 <tr>
-<td><a href="https://www.pinterest.com/gh6855786/" target="_blank" rel="noopener">https://www.pinterest.com/gh6855786/</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.pinterest.com/gh6855786/">https://www.pinterest.com/gh6855786/</a></td>
 </tr>
 <tr>
-<td><a href="https://tuyolh.blogspot.com/?m=1" target="_blank" rel="noopener">https://tuyolh.blogspot.com/?m=1</a></td>
+<td><a target="_blank" rel="noopener" href="https://tuyolh.blogspot.com/?m=1">https://tuyolh.blogspot.com/?m=1</a></td>
 </tr>
 <tr>
-<td><a href="https://ajlkhadsflg.blogspot.com/?m=1" target="_blank" rel="noopener">https://ajlkhadsflg.blogspot.com/?m=1</a></td>
+<td><a target="_blank" rel="noopener" href="https://ajlkhadsflg.blogspot.com/?m=1">https://ajlkhadsflg.blogspot.com/?m=1</a></td>
 </tr>
 <tr>
-<td><a href="https://tyhdaou.blogspot.com/?m=1" target="_blank" rel="noopener">https://tyhdaou.blogspot.com/?m=1</a></td>
+<td><a target="_blank" rel="noopener" href="https://tyhdaou.blogspot.com/?m=1">https://tyhdaou.blogspot.com/?m=1</a></td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
+
 <p>C&amp;C address</p>
 <div style="overflow-x:auto;">
 <table>
@@ -614,8 +629,7 @@
 <th>IP</th>
 </tr>
 </thead>
-<tbody>
-<tr>
+<tbody><tr>
 <td>http://</td>
 <td><code>wrssa[.]xyz</code></td>
 </tr>
@@ -623,8 +637,7 @@
 <td>ws:// or wss://</td>
 <td><code>128.1.223[.]222:38876</code></td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
             
 
@@ -636,7 +649,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Android/">Android</a> <a class="tag tag--primary tag--small t-link" href="/tags/Phishing/">Phishing</a> <a class="tag tag--primary tag--small t-link" href="/tags/Spyware/">Spyware</a> <a class="tag tag--primary tag--small t-link" href="/tags/XLoader/">XLoader</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Android/" rel="tag">Android</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Phishing/" rel="tag">Phishing</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Spyware/" rel="tag">Spyware</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/XLoader/" rel="tag">XLoader</a>
 
             </div>
         
@@ -663,7 +676,7 @@
                     
                 <a
                     class="post-action-btn btn btn--default tooltip--top"
-                    href="/Research/新-XLoader-變種瞄準日本電信商及銀行進行網路釣魚/"
+                    href="/Research/%E6%96%B0-XLoader-%E8%AE%8A%E7%A8%AE%E7%9E%84%E6%BA%96%E6%97%A5%E6%9C%AC%E9%9B%BB%E4%BF%A1%E5%95%86%E5%8F%8A%E9%8A%80%E8%A1%8C%E9%80%B2%E8%A1%8C%E7%B6%B2%E8%B7%AF%E9%87%A3%E9%AD%9A/"
                     data-tooltip="新 XLoader 變種瞄準日本電信商及銀行進行網路釣魚"
                     aria-label="NEXT: 新 XLoader 變種瞄準日本電信商及銀行進行網路釣魚"
                 >
@@ -739,7 +752,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -750,7 +763,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -779,7 +792,7 @@
                     
                 <a
                     class="post-action-btn btn btn--default tooltip--top"
-                    href="/Research/新-XLoader-變種瞄準日本電信商及銀行進行網路釣魚/"
+                    href="/Research/%E6%96%B0-XLoader-%E8%AE%8A%E7%A8%AE%E7%9E%84%E6%BA%96%E6%97%A5%E6%9C%AC%E9%9B%BB%E4%BF%A1%E5%95%86%E5%8F%8A%E9%8A%80%E8%A1%8C%E9%80%B2%E8%A1%8C%E7%B6%B2%E8%B7%AF%E9%87%A3%E9%AD%9A/"
                     data-tooltip="新 XLoader 變種瞄準日本電信商及銀行進行網路釣魚"
                     aria-label="NEXT: 新 XLoader 變種瞄準日本電信商及銀行進行網路釣魚"
                 >
@@ -929,7 +942,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

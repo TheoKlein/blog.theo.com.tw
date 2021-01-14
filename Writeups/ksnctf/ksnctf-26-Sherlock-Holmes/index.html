@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"只要看的到原始碼就無敵了～\n題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt\n\n那如果後綴就是自己呢？ ლ(◉◞౪◟◉ )ლ\n於是…http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl\n就看到原始碼啦～～不過當然不可能這麼簡單，還有一個關卡要解。\n其中只有一段原始碼是重點：\n123456789# Can you crack me? :Popen(F,'cracked.txt');my $t = &lt;F&gt;;chomp($t);if ($t eq 'h@ck3d!') &#123;print 'FLAG_****************&lt;br&gt;&lt;br&gt;';&#125;unlink('cracked.txt');####\n雖然我沒有寫過perl的經驗，但是看一看大概還是可以知道它是要開啟cracked.txt這個檔案，如果檔案內容是h@ck3d!的話就會印出FLAG。\n看了看其他地方應該沒有什麼眉腳，把焦點放回到URL上，說到URL攻擊大概就是URL injection了，既然perl本身也是個script，應該可以成功呼叫系統命令。馬上嘗試簡單的| ls(有經過URL encode)：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls\n\n結果很明顯，URL injection成功被執行了。\n原本想說看到flag.txt就在目錄底下，會不會下個| cat flag.txt破台了，結果果然沒有這麼簡單 (´_ゝ`)\n還是得回歸index.pl的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立| echo &quot;h@ck3d!&quot; &gt; cracked.txt：http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt\n\n執行以後，cracked.txt就成功被建立在目錄底下，只要再任意點選其他的一個連結，那段原始碼就會被執行並印出FLAG～～\n","dateCreated":"2017-03-28T14:06:03+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2017-03-28T14:06:03+08:00","description":"只要看的到原始碼就無敵了～","headline":"ksnctf #26 Sherlock Holmes","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"只要看的到原始碼就無敵了～\n\n\n題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt\n\n\n那如果後綴就是自己呢？ ლ(◉◞౪◟◉ )ლ\n於是…\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl\n\n就看到原始碼啦～～不過當然不可能這麼簡單，還有一個關卡要解。\n其中只有一段原始碼是重點：\n123456789# Can you crack me? :Popen(F,&#x27;cracked.txt&#x27;);my $t = &lt;F&gt;;chomp($t);if ($t eq &#x27;h@ck3d!&#x27;) &#123;print &#x27;FLAG_****************&lt;br&gt;&lt;br&gt;&#x27;;&#125;unlink(&#x27;cracked.txt&#x27;);####\n\n雖然我沒有寫過perl的經驗，但是看一看大概還是可以知道它是要開啟cracked.txt這個檔案，如果檔案內容是h@ck3d!的話就會印出FLAG。\n看了看其他地方應該沒有什麼眉腳，把焦點放回到URL上，說到URL攻擊大概就是URL injection了，既然perl本身也是個script，應該可以成功呼叫系統命令。馬上嘗試簡單的| ls(有經過URL encode)：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls\n\n\n結果很明顯，URL injection成功被執行了。\n原本想說看到flag.txt就在目錄底下，會不會下個| cat flag.txt破台了，結果果然沒有這麼簡單 (´_ゝ`)\n還是得回歸index.pl的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立| echo &quot;h@ck3d!&quot; &gt; cracked.txt：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt\n\n\n執行以後，cracked.txt就成功被建立在目錄底下，只要再任意點選其他的一個連結，那段原始碼就會被執行並印出FLAG～～\n","dateCreated":"2017-03-28T14:06:03+08:00","dateModified":"2020-11-04T12:58:46+08:00","datePublished":"2017-03-28T14:06:03+08:00","description":"只要看的到原始碼就無敵了～","headline":"ksnctf #26 Sherlock Holmes","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="只要看的到原始碼就無敵了～">
-<meta name="keywords" content="ksnctf,Sherlock Holmes">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="ksnctf #26 Sherlock Holmes">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="只要看的到原始碼就無敵了～">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.282Z">
+<meta property="article:published_time" content="2017-03-28T06:06:03.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:46.178Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ksnctf #26 Sherlock Holmes">
-<meta name="twitter:description" content="只要看的到原始碼就無敵了～">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,22 +328,32 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>只要看的到原始碼就無敵了～<br><a id="more"></a></p>
-<p>題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：<br><blockquote><p><a href="http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt" target="_blank" rel="noopener">http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt</a></p>
-</blockquote></p>
+            <p>只要看的到原始碼就無敵了～</p>
+<a id="more"></a>
+
+<p>題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt">http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt</a></p>
+</blockquote>
+
 <p>那如果後綴就是自己呢？ ლ(◉◞౪◟◉ )ლ</p>
-<p>於是…<br><blockquote><p><a href="http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl" target="_blank" rel="noopener">http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl</a></p>
-</blockquote><br>就看到原始碼啦～～<br>不過當然不可能這麼簡單，還有一個關卡要解。</p>
+<p>於是…</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl">http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl</a></p>
+</blockquote>
+<p>就看到原始碼啦～～<br>不過當然不可能這麼簡單，還有一個關卡要解。</p>
 <p>其中只有一段原始碼是重點：</p>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Can you crack me? :P</span></span><br><span class="line"><span class="keyword">open</span>(F,<span class="string">'cracked.txt'</span>);</span><br><span class="line"><span class="keyword">my</span> $t = &lt;F&gt;;</span><br><span class="line"><span class="keyword">chomp</span>($t);</span><br><span class="line"><span class="keyword">if</span> ($t eq <span class="string">'h@ck3d!'</span>) &#123;</span><br><span class="line"><span class="keyword">print</span> <span class="string">'FLAG_****************&lt;br&gt;&lt;br&gt;'</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">unlink</span>(<span class="string">'cracked.txt'</span>);</span><br><span class="line"><span class="comment">####</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Can you crack me? :P</span></span><br><span class="line"><span class="keyword">open</span>(F,<span class="string">&#x27;cracked.txt&#x27;</span>);</span><br><span class="line"><span class="keyword">my</span> $t = &lt;F&gt;;</span><br><span class="line"><span class="keyword">chomp</span>($t);</span><br><span class="line"><span class="keyword">if</span> ($t eq <span class="string">&#x27;h@ck3d!&#x27;</span>) &#123;</span><br><span class="line"><span class="keyword">print</span> <span class="string">&#x27;FLAG_****************&lt;br&gt;&lt;br&gt;&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">unlink</span>(<span class="string">&#x27;cracked.txt&#x27;</span>);</span><br><span class="line"><span class="comment">####</span></span><br></pre></td></tr></table></figure>
+
 <p>雖然我沒有寫過perl的經驗，但是看一看大概還是可以知道它是要開啟<code>cracked.txt</code>這個檔案，如果檔案內容是<code>h@ck3d!</code>的話就會印出FLAG。</p>
 <p>看了看其他地方應該沒有什麼眉腳，把焦點放回到URL上，說到URL攻擊大概就是URL injection了，既然perl本身也是個script，應該可以成功呼叫系統命令。馬上嘗試簡單的<code>| ls</code>(有經過URL encode)：</p>
-<blockquote><p><a href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls" target="_blank" rel="noopener">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls</a></p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls</a></p>
 </blockquote>
+
 <p>結果很明顯，URL injection成功被執行了。<br><img src="1.png" alt="URL"></p>
 <p>原本想說看到<code>flag.txt</code>就在目錄底下，會不會下個<code>| cat flag.txt</code>破台了，結果果然沒有這麼簡單 (´_ゝ`)<br><img src="2.png" alt="URL02"></p>
-<p>還是得回歸<code>index.pl</code>的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立<code>| echo &quot;h@ck3d!&quot; &gt; cracked.txt</code>：<br><blockquote><p><a href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt" target="_blank" rel="noopener">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt</a></p>
-</blockquote></p>
+<p>還是得回歸<code>index.pl</code>的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立<code>| echo &quot;h@ck3d!&quot; &gt; cracked.txt</code>：</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt</a></p>
+</blockquote>
+
 <p>執行以後，<code>cracked.txt</code>就成功被建立在目錄底下，只要再任意點選其他的一個連結，那段原始碼就會被執行並印出FLAG～～<br><img src="3.png" alt="URL03"></p>
 
             
@@ -354,7 +366,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -381,7 +393,7 @@
                     
                 <a
                     class="post-action-btn btn btn--default tooltip--top"
-                    href="/Online-Judge/UVa-解題紀錄/"
+                    href="/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
                     data-tooltip="UVa 解題紀錄"
                     aria-label="NEXT: UVa 解題紀錄"
                 >
@@ -457,7 +469,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -468,7 +480,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -497,7 +509,7 @@
                     
                 <a
                     class="post-action-btn btn btn--default tooltip--top"
-                    href="/Online-Judge/UVa-解題紀錄/"
+                    href="/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
                     data-tooltip="UVa 解題紀錄"
                     aria-label="NEXT: UVa 解題紀錄"
                 >
@@ -647,7 +659,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

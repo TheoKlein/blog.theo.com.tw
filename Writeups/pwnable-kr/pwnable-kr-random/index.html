@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"電腦沒有真正的亂數很簡單的一個C亂數程式：123456789101112131415161718#include &lt;stdio.h&gt;int main()&#123;\tunsigned int random;\trandom = rand();\t// random value!\tunsigned int key=0;\tscanf(\"%d\", &amp;key);\tif( (key ^ random) == 0xdeadbeef )&#123;\t\tprintf(\"Good!\\n\");\t\tsystem(\"/bin/cat flag\");\t\treturn 0;\t&#125;\tprintf(\"Wrong, maybe you should try 2^32 cases.\\n\");\treturn 0;&#125;\n只要輸入的值和隨機數做XOR運算後等於0xdeadbeef就可以拿到flag，關鍵就在rand()產生的隨機數。電腦沒有真正的亂數，是由數學計算出來接近亂數的值，也就是說它有一連串的公式計算，平常都知道若要讓亂數能夠更亂（某意義上接近真正的亂數），C語言必須指定seed，也就是亂數種子，通常會是時間。\n很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出rand()的第一個值1804289383。接下來XOR的運算有這樣的特性：12A ^ B = CA = B ^ C\n所以只要把第一個亂數值1804289383和0xdeadbeef做XOR運算就可以得到key。我用python CLI直接算出key：12&gt;&gt;&gt; print 0xdeadbeef ^ 18042893833039230856\n1234random@ubuntu:~$ ./random3039230856Good!Mommy, I thought libc random is unpredictable...","dateCreated":"2017-06-26T20:06:42+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2017-06-26T20:06:42+08:00","description":"電腦沒有真正的亂數","headline":"pwnable.kr #random","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"電腦沒有真正的亂數\n\n很簡單的一個C亂數程式：\n123456789101112131415161718#include &lt;stdio.h&gt;int main()&#123;\tunsigned int random;\trandom = rand();\t// random value!\tunsigned int key=0;\tscanf(&quot;%d&quot;, &amp;key);\tif( (key ^ random) == 0xdeadbeef )&#123;\t\tprintf(&quot;Good!\\n&quot;);\t\tsystem(&quot;/bin/cat flag&quot;);\t\treturn 0;\t&#125;\tprintf(&quot;Wrong, maybe you should try 2^32 cases.\\n&quot;);\treturn 0;&#125;\n只要輸入的值和隨機數做XOR運算後等於0xdeadbeef就可以拿到flag，關鍵就在rand()產生的隨機數。電腦沒有真正的亂數，是由數學計算出來接近亂數的值，也就是說它有一連串的公式計算，平常都知道若要讓亂數能夠更亂（某意義上接近真正的亂數），C語言必須指定seed，也就是亂數種子，通常會是時間。\n很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出rand()的第一個值1804289383。接下來XOR的運算有這樣的特性：\n12A ^ B &#x3D; CA &#x3D; B ^ C\n所以只要把第一個亂數值1804289383和0xdeadbeef做XOR運算就可以得到key。我用python CLI直接算出key：\n12&gt;&gt;&gt; print 0xdeadbeef ^ 18042893833039230856\n1234random@ubuntu:~$ .&#x2F;random3039230856Good!Mommy, I thought libc random is unpredictable...","dateCreated":"2017-06-26T20:06:42+08:00","dateModified":"2020-11-04T12:58:46+08:00","datePublished":"2017-06-26T20:06:42+08:00","description":"電腦沒有真正的亂數","headline":"pwnable.kr #random","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="電腦沒有真正的亂數">
-<meta name="keywords" content="pwnable.kr,Toddler&#39;s Bottle,random">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="pwnable.kr #random">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="電腦沒有真正的亂數">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/pwnablekr.jpg">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.286Z">
+<meta property="article:published_time" content="2017-06-26T12:06:42.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:46.274Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="pwnable.kr #random">
-<meta name="twitter:description" content="電腦沒有真正的亂數">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/pwnablekr.jpg">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,11 +328,16 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>電腦沒有真正的亂數<br><a id="more"></a><br>很簡單的一個C亂數程式：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> random;</span><br><span class="line">	random = rand();	<span class="comment">// random value!</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> key=<span class="number">0</span>;</span><br><span class="line">	<span class="built_in">scanf</span>(<span class="string">"%d"</span>, &amp;key);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>( (key ^ random) == <span class="number">0xdeadbeef</span> )&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Good!\n"</span>);</span><br><span class="line">		system(<span class="string">"/bin/cat flag"</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Wrong, maybe you should try 2^32 cases.\n"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+            <p>電腦沒有真正的亂數</p>
+<a id="more"></a>
+<p>很簡單的一個C亂數程式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> random;</span><br><span class="line">	random = rand();	<span class="comment">// random value!</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> key=<span class="number">0</span>;</span><br><span class="line">	<span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;key);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>( (key ^ random) == <span class="number">0xdeadbeef</span> )&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;Good!\n&quot;</span>);</span><br><span class="line">		system(<span class="string">&quot;/bin/cat flag&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Wrong, maybe you should try 2^32 cases.\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>只要輸入的值和隨機數做<code>XOR</code>運算後等於<code>0xdeadbeef</code>就可以拿到flag，關鍵就在<code>rand()</code>產生的隨機數。電腦沒有真正的亂數，是由數學計算出來接近亂數的值，也就是說它有一連串的公式計算，平常都知道若要讓亂數能夠更亂（某意義上接近真正的亂數），C語言必須指定<code>seed</code>，也就是亂數種子，通常會是時間。</p>
-<p>很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出<code>rand()</code>的第一個值<code>1804289383</code>。接下來<code>XOR</code>的運算有這樣的特性：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A ^ B = C</span><br><span class="line">A = B ^ C</span><br></pre></td></tr></table></figure></p>
-<p>所以只要把第一個亂數值<code>1804289383</code>和<code>0xdeadbeef</code>做<code>XOR</code>運算就可以得到<code>key</code>。我用python CLI直接算出<code>key</code>：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; print 0xdeadbeef ^ 1804289383</span><br><span class="line">3039230856</span><br></pre></td></tr></table></figure></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">random@ubuntu:~$ ./random</span><br><span class="line">3039230856</span><br><span class="line">Good!</span><br><span class="line">Mommy, I thought libc random is unpredictable...</span><br></pre></td></tr></table></figure>
+<p>很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出<code>rand()</code>的第一個值<code>1804289383</code>。接下來<code>XOR</code>的運算有這樣的特性：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A ^ B &#x3D; C</span><br><span class="line">A &#x3D; B ^ C</span><br></pre></td></tr></table></figure>
+<p>所以只要把第一個亂數值<code>1804289383</code>和<code>0xdeadbeef</code>做<code>XOR</code>運算就可以得到<code>key</code>。我用python CLI直接算出<code>key</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; print 0xdeadbeef ^ 1804289383</span><br><span class="line">3039230856</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">random@ubuntu:~$ .&#x2F;random</span><br><span class="line">3039230856</span><br><span class="line">Good!</span><br><span class="line">Mommy, I thought libc random is unpredictable...</span><br></pre></td></tr></table></figure>
             
 
 
@@ -341,7 +348,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -444,7 +451,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -455,7 +462,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -634,7 +641,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 

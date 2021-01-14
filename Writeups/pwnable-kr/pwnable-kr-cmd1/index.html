@@ -19,21 +19,21 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"環境變數的基本知識題目原始碼：12345678910111213141516#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, \"flag\")!=0;\tr += strstr(cmd, \"sh\")!=0;\tr += strstr(cmd, \"tmp\")!=0;\treturn r;&#125;int main(int argc, char* argv[], char** envp)&#123;\tputenv(\"PATH=/fuckyouverymuch\");\tif(filter(argv[1])) return 0;\tsystem( argv[1] );\treturn 0;&#125;\n可以看到filter()過濾掉argv[1]裡面不能包含的flag、sh、tmp子字串，這部分用萬用字元*就可以繞過限制。\n另外在第12行把重要的環境變數PATH給覆寫掉了，這樣如果想要直接呼叫cat把flag印出來會得到以下錯誤：12cmd1@ubuntu:~$ ./cmd1 &quot;cat fla*&quot;sh: 1: cat: not found\n所以說，在呼叫cat以前我們必須先修改環境變數：12cmd1@ubuntu:~$ ./cmd1 &quot;export PATH=/bin; cat fla*&quot;mommy now I get what PATH environment is for :)\n或是更簡單的方法，先確認cat的路徑以後使用絕對路徑呼叫即可：1234cmd1@ubuntu:~$ which cat/bin/catcmd1@ubuntu:~$ ./cmd1 &quot;/bin/cat fla*&quot;mommy now I get what PATH environment is for :)\n","dateCreated":"2017-06-26T20:35:43+08:00","dateModified":"2020-10-09T23:31:15+08:00","datePublished":"2017-06-26T20:35:43+08:00","description":"環境變數的基本知識","headline":"pwnable.kr #cmd1","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"環境變數的基本知識\n\n題目原始碼：\n12345678910111213141516#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, &quot;flag&quot;)!=0;\tr += strstr(cmd, &quot;sh&quot;)!=0;\tr += strstr(cmd, &quot;tmp&quot;)!=0;\treturn r;&#125;int main(int argc, char* argv[], char** envp)&#123;\tputenv(&quot;PATH=/fuckyouverymuch&quot;);\tif(filter(argv[1])) return 0;\tsystem( argv[1] );\treturn 0;&#125;\n可以看到filter()過濾掉argv[1]裡面不能包含的flag、sh、tmp子字串，這部分用萬用字元*就可以繞過限制。\n另外在第12行把重要的環境變數PATH給覆寫掉了，這樣如果想要直接呼叫cat把flag印出來會得到以下錯誤：\n12cmd1@ubuntu:~$ .&#x2F;cmd1 &quot;cat fla*&quot;sh: 1: cat: not found\n所以說，在呼叫cat以前我們必須先修改環境變數：\n12cmd1@ubuntu:~$ .&#x2F;cmd1 &quot;export PATH&#x3D;&#x2F;bin; cat fla*&quot;mommy now I get what PATH environment is for :)\n或是更簡單的方法，先確認cat的路徑以後使用絕對路徑呼叫即可：\n1234cmd1@ubuntu:~$ which cat&#x2F;bin&#x2F;catcmd1@ubuntu:~$ .&#x2F;cmd1 &quot;&#x2F;bin&#x2F;cat fla*&quot;mommy now I get what PATH environment is for :)","dateCreated":"2017-06-26T20:35:43+08:00","dateModified":"2020-11-04T12:58:46+08:00","datePublished":"2017-06-26T20:35:43+08:00","description":"環境變數的基本知識","headline":"pwnable.kr #cmd1","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="環境變數的基本知識">
-<meta name="keywords" content="pwnable.kr,Toddler&#39;s Bottle,cmd1">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="pwnable.kr #cmd1">
 <meta property="og:url" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/index.html">
 <meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
 <meta property="og:description" content="環境變數的基本知識">
-<meta property="og:locale" content="en">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/pwnablekr.jpg">
-<meta property="og:updated_time" content="2020-10-09T15:31:15.286Z">
+<meta property="article:published_time" content="2017-06-26T12:35:43.000Z">
+<meta property="article:modified_time" content="2020-11-04T04:58:46.250Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="pwnable.kr #cmd1">
-<meta name="twitter:description" content="環境變數的基本知識">
 <meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/pwnablekr.jpg">
 <meta name="twitter:creator" content="@The0_Klein">
     
@@ -48,7 +48,9 @@
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+    
+<link rel="stylesheet" href="/assets/css/style-gqna6m80tqyuo4rbsvslx85tbnlakaszvovy4jmzwqyb2ba9jletwpfr16vb.min.css">
+
     <!--STYLES END-->
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
@@ -326,12 +328,17 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <p>環境變數的基本知識<br><a id="more"></a><br>題目原始碼：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">filter</span><span class="params">(<span class="keyword">char</span>* cmd)</span></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> r=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">"flag"</span>)!=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">"sh"</span>)!=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">"tmp"</span>)!=<span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[], <span class="keyword">char</span>** envp)</span></span>&#123;</span><br><span class="line">	putenv(<span class="string">"PATH=/fuckyouverymuch"</span>);</span><br><span class="line">	<span class="keyword">if</span>(filter(argv[<span class="number">1</span>])) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	system( argv[<span class="number">1</span>] );</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+            <p>環境變數的基本知識</p>
+<a id="more"></a>
+<p>題目原始碼：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">filter</span><span class="params">(<span class="keyword">char</span>* cmd)</span></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> r=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">&quot;flag&quot;</span>)!=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">&quot;sh&quot;</span>)!=<span class="number">0</span>;</span><br><span class="line">	r += <span class="built_in">strstr</span>(cmd, <span class="string">&quot;tmp&quot;</span>)!=<span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[], <span class="keyword">char</span>** envp)</span></span>&#123;</span><br><span class="line">	putenv(<span class="string">&quot;PATH=/fuckyouverymuch&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(filter(argv[<span class="number">1</span>])) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	system( argv[<span class="number">1</span>] );</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>可以看到<code>filter()</code>過濾掉<code>argv[1]</code>裡面不能包含的<code>flag</code>、<code>sh</code>、<code>tmp</code>子字串，這部分用萬用字元<code>*</code>就可以繞過限制。</p>
-<p>另外在第12行把重要的環境變數<code>PATH</code>給覆寫掉了，這樣如果想要直接呼叫<code>cat</code>把flag印出來會得到以下錯誤：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ ./cmd1 &quot;cat fla*&quot;</span><br><span class="line">sh: 1: cat: not found</span><br></pre></td></tr></table></figure></p>
-<p>所以說，在呼叫<code>cat</code>以前我們必須先修改環境變數：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ ./cmd1 &quot;export PATH=/bin; cat fla*&quot;</span><br><span class="line">mommy now I get what PATH environment is for :)</span><br></pre></td></tr></table></figure></p>
-<p>或是更簡單的方法，先確認<code>cat</code>的路徑以後使用絕對路徑呼叫即可：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ which cat</span><br><span class="line">/bin/cat</span><br><span class="line">cmd1@ubuntu:~$ ./cmd1 &quot;/bin/cat fla*&quot;</span><br><span class="line">mommy now I get what PATH environment is for :)</span><br></pre></td></tr></table></figure></p>
-
+<p>另外在第12行把重要的環境變數<code>PATH</code>給覆寫掉了，這樣如果想要直接呼叫<code>cat</code>把flag印出來會得到以下錯誤：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ .&#x2F;cmd1 &quot;cat fla*&quot;</span><br><span class="line">sh: 1: cat: not found</span><br></pre></td></tr></table></figure>
+<p>所以說，在呼叫<code>cat</code>以前我們必須先修改環境變數：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ .&#x2F;cmd1 &quot;export PATH&#x3D;&#x2F;bin; cat fla*&quot;</span><br><span class="line">mommy now I get what PATH environment is for :)</span><br></pre></td></tr></table></figure>
+<p>或是更簡單的方法，先確認<code>cat</code>的路徑以後使用絕對路徑呼叫即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cmd1@ubuntu:~$ which cat</span><br><span class="line">&#x2F;bin&#x2F;cat</span><br><span class="line">cmd1@ubuntu:~$ .&#x2F;cmd1 &quot;&#x2F;bin&#x2F;cat fla*&quot;</span><br><span class="line">mommy now I get what PATH environment is for :)</span><br></pre></td></tr></table></figure>
             
 
 
@@ -342,7 +349,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">TAGGED IN</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/Writeups/">Writeups</a>
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
 
             </div>
         
@@ -445,7 +452,7 @@
         
             
                 <div id="disqus_thread">
-    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
             
         
@@ -456,7 +463,7 @@
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
-        Copyrights &copy; 2020 Theo Chen. All Rights Reserved.
+        Copyrights &copy; 2021 Theo Chen. All Rights Reserved.
     </span>
 </footer>
 
@@ -635,7 +642,9 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
+
 <script src="/assets/js/script-egfb8qyao3pygwgtb4yrcbcsu2xu3wnriezhfd12y9gzhfkjxwhhajdzrt2f.min.js"></script>
+
 <!--SCRIPTS END-->
 
 
