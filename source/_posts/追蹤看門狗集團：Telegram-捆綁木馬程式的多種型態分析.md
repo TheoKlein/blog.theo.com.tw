@@ -84,7 +84,7 @@ b15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9|2020-12-02T07:1
 ## 安裝程式的改變
 在近三個月的時間裡，光是偽造的安裝程式本身就有許多不同的型態，攻擊者積極的嘗試使用不同的安裝系統來包裝木馬程式。
 
-### Advance Installer
+### Advanced Installer
 這個型態是我在做關聯分析的時候往回找到的，使用 [Advanced Installer](https://www.advancedinstaller.com) 來打包安裝程式。從 Virustotal 的樣本上傳時間來看是在 2020 年 10 月初，大致和接下來 NSIS 打包的樣本差不多時間出現。可以透過 [UniExtract2](https://github.com/Bioruebe/UniExtract2) 將包裝內容解開，例如：
 ```
 . 
