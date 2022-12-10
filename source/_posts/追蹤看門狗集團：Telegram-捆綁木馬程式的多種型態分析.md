@@ -43,23 +43,23 @@ tags:
 - 加入 anti-debugger / anti-vm 的手法來規避分析
 
 ## 真假簽章
-CertificateName|SerialNumber|ValidFrom|ValidTo|
-:|:|:|:|
-Adobe Inc.|01|2020-07-13T12:54:42+00:00|2022-07-03T12:54:42+00:00
-Driver Information Technology Co., Ltd.|81 3b 66 fe d5 8a ab 24 d0 2b 65 a9 30 1f 61 3a|2020-09-04T00:00:00+00:00|2021-05-22T23:59:59+00:00
-OORT inc.|02 bf 32 f9 ab 47 2e d1 cf 33 a2 7c 06 f9 b3 b9|2020-09-25T00:00:00+00:00|2021-09-22T23:59:59+00:00
-OORT inc.|53 78 c5 bb eb a0 d3 30 9a 35 bb 47 f6 30 37 f7|2020-09-29T00:00:00+00:00|2021-09-22T23:59:59+00:00
-OORT inc.|98 be 45 2e da f1 46 4a 38 06 79 06 81 0b 4e b4|2020-09-30T00:00:00+00:00|2021-09-22T23:59:59+00:00
-OORT inc.|ec f1 57 7f dc f2 f9 f0 30 f9 d7 12 09 99 00 ab|2020-10-15T00:00:00+00:00|2021-10-12T23:59:59+00:00
-LOGMEIN, INC.|1c 0d 4a 65 8b eb 7c b2 e6 f9 16 d9 b0 ef f7 20|2020-11-05T00:00:00+00:00|2021-11-03T23:59:59+00:00
-LOGMEIN, INC.|d6 bb fa 3c 06 db 6f 44 7e 59 56 3d 34 9d dc b1|2020-11-12T00:00:00+00:00|2021-11-03T23:59:59+00:00
-Google LLC|01|2020-11-12T13:11:49+00:00|2021-11-12T13:11:49+00:00
-LogMeIn, Inc.|eb 6c e3 39 df c4 6c 48 ab 44 67 1b d6 38 4e 9f|2020-11-16T00:00:00+00:00|2021-11-16T23:59:59+00:00
-LogMeIn, Inc.|84 f4 2d 39 2e ab 89 6c fd c9 46 62 40 54 e0 8e|2020-11-27T00:00:00+00:00|2021-11-16T23:59:59+00:00
-Cockos Incorporated|01|2020-12-17T04:09:15+00:00|2021-12-17T04:09:15+00:00
-Beijing Baidu Netcom Science and Technology Co.,Ltd|01|2020-12-18T10:36:33+00:00|2021-12-18T10:36:33+00:00
-Beijing Kingsoft Security software Co.,Ltd|01|2020-12-18T10:51:25+00:00|2021-12-18T10:51:25+00:00
-SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.|01|2020-12-18T13:30:06+00:00|2021-12-18T13:30:06+00:00
+|CertificateName|SerialNumber|ValidFrom|ValidTo|
+|:-:|:-:|:-:|:-:|
+|Adobe Inc.|01|2020-07-13T12:54:42+00:00|2022-07-03T12:54:42+00:00
+|Driver Information Technology Co., Ltd.|81 3b 66 fe d5 8a ab 24 d0 2b 65 a9 30 1f 61 3a|2020-09-04T00:00:00+00:00|2021-05-22T23:59:59|+00:00
+|OORT inc.|02 bf 32 f9 ab 47 2e d1 cf 33 a2 7c 06 f9 b3 b9|2020-09-25T00:00:00+00:00|2021-09-22T23:59:59+00:00
+|OORT inc.|53 78 c5 bb eb a0 d3 30 9a 35 bb 47 f6 30 37 f7|2020-09-29T00:00:00+00:00|2021-09-22T23:59:59+00:00
+|OORT inc.|98 be 45 2e da f1 46 4a 38 06 79 06 81 0b 4e b4|2020-09-30T00:00:00+00:00|2021-09-22T23:59:59+00:00
+|OORT inc.|ec f1 57 7f dc f2 f9 f0 30 f9 d7 12 09 99 00 ab|2020-10-15T00:00:00+00:00|2021-10-12T23:59:59+00:00
+|LOGMEIN, INC.|1c 0d 4a 65 8b eb 7c b2 e6 f9 16 d9 b0 ef f7 20|2020-11-05T00:00:00+00:00|2021-11-03T23:59:59+00:00
+|LOGMEIN, INC.|d6 bb fa 3c 06 db 6f 44 7e 59 56 3d 34 9d dc b1|2020-11-12T00:00:00+00:00|2021-11-03T23:59:59+00:00
+|Google LLC|01|2020-11-12T13:11:49+00:00|2021-11-12T13:11:49+00:00
+|LogMeIn, Inc.|eb 6c e3 39 df c4 6c 48 ab 44 67 1b d6 38 4e 9f|2020-11-16T00:00:00+00:00|2021-11-16T23:59:59+00:00
+|LogMeIn, Inc.|84 f4 2d 39 2e ab 89 6c fd c9 46 62 40 54 e0 8e|2020-11-27T00:00:00+00:00|2021-11-16T23:59:59+00:00
+|Cockos Incorporated|01|2020-12-17T04:09:15+00:00|2021-12-17T04:09:15+00:00
+|Beijing Baidu Netcom Science and Technology Co.,Ltd|01|2020-12-18T10:36:33+00:00|2021-12-18T10:36:33+00:00
+|Beijing Kingsoft Security software Co.,Ltd|01|2020-12-18T10:51:25+00:00|2021-12-18T10:51:25+00:00
+|SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.|01|2020-12-18T13:30:06+00:00|2021-12-18T13:30:06+00:00
 
 上面表格是根據 ValidFrom 做排序，從我收集到的樣本中整理出來的。整體來看，看門狗集團除了冒用一些軟體開發商的名稱來建立簽章以外，也會使用改變大小寫的方式來混淆使用者的辨別。
 
@@ -74,12 +74,12 @@ SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.|01|2020-12-18T13:30:06+00:00|2021-
 
 使用簽章竊取手法盜用官方簽章的樣本：
 
-SHA256|Compile Time
-:|:|
-ec99947be1de325fe151edbf46535cc508ab65dd22778213c3cafcfeb9cb8c91|2020-12-30T14:24:00|
-b15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9|2020-12-02T07:12:01|
-08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3|2020-11-24T15:35:53|
-1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81|2020-11-22T09:46:10|
+|SHA256|Compile Time|
+|-|-|
+|ec99947be1de325fe151edbf46535cc508ab65dd22778213c3cafcfeb9cb8c91|2020-12-30T14:24:00|
+|b15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9|2020-12-02T07:12:01|
+|08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3|2020-11-24T15:35:53|
+|1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81|2020-11-22T09:46:10|
 
 ## 安裝程式的改變
 在近三個月的時間裡，光是偽造的安裝程式本身就有許多不同的型態，攻擊者積極的嘗試使用不同的安裝系統來包裝木馬程式。
@@ -306,44 +306,44 @@ Software Pakcer Protected
 - `fd885c0cd5dc366d27cf0deb544e7c8887007d8d9a753979793de3e7affeb7c2`
 
 
-Domain|Creation Date|
-:|:|
-bensonman.run|2020-07-07T00:10:21Z|
-telegram-vip.com|2020-09-21T06:44:59Z|
-telegramvips.com|2020-10-31T13:34:04Z|
-ii-telegram.com|2020-11-04T03:54:40Z|
-yy-telegram.com|2020-11-04T03:54:40Z|
-mm-telegram.com|2020-11-04T03:54:40Z|
-a2-telegram.com|2020-11-05T06:31:22Z|
-ak-telegram.com|2020-11-05T06:31:22Z|
-a3-telegram.com|2020-11-05T06:31:22Z|
-a1-telegram.com|2020-11-05T06:31:22Z|
-tt-telegram.com|2020-11-05T06:31:24Z|
-kk-telegram.com|2020-11-05T06:31:24Z|
-potato.fit|2020-12-01T02:06:07Z|
-a6-telegram.com|2020-12-01T08:36:30Z|
-a7-telegram.com|2020-12-03T05:55:37Z|
-potato.red|2020-12-09T10:21:14Z|
-apotato.net|2020-12-15T02:30:16Z|
-apotato.xyz|2020-12-15T02:30:17Z|
-ll-telegram.com|2020-12-16T12:11:04Z|
-c3-telegram.com|2020-12-19T03:31:02Z|
-g3telegram.com|2020-12-28T10:28:02Z|
-telecnsr.com|2020-12-30T09:00:07Z|
-dlyunsvr.com|2021-01-05T04:41:42Z|
-kelectsv.com|2021-01-05T04:41:42Z|
+|Domain|Creation Date|
+|:-:|:-:|
+|bensonman.run|2020-07-07T00:10:21Z|
+|telegram-vip.com|2020-09-21T06:44:59Z|
+|telegramvips.com|2020-10-31T13:34:04Z|
+|ii-telegram.com|2020-11-04T03:54:40Z|
+|yy-telegram.com|2020-11-04T03:54:40Z|
+|mm-telegram.com|2020-11-04T03:54:40Z|
+|a2-telegram.com|2020-11-05T06:31:22Z|
+|ak-telegram.com|2020-11-05T06:31:22Z|
+|a3-telegram.com|2020-11-05T06:31:22Z|
+|a1-telegram.com|2020-11-05T06:31:22Z|
+|tt-telegram.com|2020-11-05T06:31:24Z|
+|kk-telegram.com|2020-11-05T06:31:24Z|
+|potato.fit|2020-12-01T02:06:07Z|
+|a6-telegram.com|2020-12-01T08:36:30Z|
+|a7-telegram.com|2020-12-03T05:55:37Z|
+|potato.red|2020-12-09T10:21:14Z|
+|apotato.net|2020-12-15T02:30:16Z|
+|apotato.xyz|2020-12-15T02:30:17Z|
+|ll-telegram.com|2020-12-16T12:11:04Z|
+|c3-telegram.com|2020-12-19T03:31:02Z|
+|g3telegram.com|2020-12-28T10:28:02Z|
+|telecnsr.com|2020-12-30T09:00:07Z|
+|dlyunsvr.com|2021-01-05T04:41:42Z|
+|kelectsv.com|2021-01-05T04:41:42Z|
 
-C2 IP|ASN|Country|
-:|:|:|
-103.37.0.178|136800|CN|
-154.222.103.58|136800|HK|
-154.222.103.59|136800|HK|
-154.222.103.60|136800|HK|
-156.255.212.187|136800|HK|
-156.255.212.190|136800|HK|
-175.24.112.88|45090|CN|
-185.224.168.130|132721|HK|
-185.224.168.131|132721|HK|
-185.224.168.132|132721|HK|
-202.87.221.102|24321|MY|
-45.64.54.85|38197|HK|
+|C2 IP|ASN|Country|
+|:-:|:-:|:-:|
+|103.37.0.178|136800|CN|
+|154.222.103.58|136800|HK|
+|154.222.103.59|136800|HK|
+|154.222.103.60|136800|HK|
+|156.255.212.187|136800|HK|
+|156.255.212.190|136800|HK|
+|175.24.112.88|45090|CN|
+|185.224.168.130|132721|HK|
+|185.224.168.131|132721|HK|
+|185.224.168.132|132721|HK|
+|202.87.221.102|24321|MY|
+|45.64.54.85|38197|HK|

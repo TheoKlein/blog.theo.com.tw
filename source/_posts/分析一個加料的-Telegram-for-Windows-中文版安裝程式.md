@@ -45,10 +45,10 @@ tags:
 不過雖然已經有討論串出現，但現在看到的版本已經來到了 `2.1.10`，這讓我好奇想要來比較一下跟九月時的 `2.1.6` 版本有了什麼變化。接下來會用我手上有的 `telegram_setup.2.1.10.exe` 跟我在 ANY.RUN 這個[分析](https://app.any.run/tasks/aeb405ec-3fea-475f-9050-5ad0a5cf1c61/)找到的 `telegram_setup.2.1.6.exe` 相關檔案來做比較。
 
 ## 重新打包加料過的安裝程式
-Filename|SHA256
-:|:
-telegram_setup.2.1.6.exe|1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8
-telegram_setup.2.1.10.exe|35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba
+|Filename|SHA256|
+|-|-|
+|telegram_setup.2.1.6.exe|1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8|
+|telegram_setup.2.1.10.exe|35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba|
 
 這兩個安裝程式都是用 NSIS ([nullsoft scriptable install system](https://nsis.sourceforge.io/Main_Page)) 打包的，可以利用 7-zip 直接解壓縮就能得到還原的安裝腳本 `[NSIS].nsi`。7-zip 在 `9.33` 的版本加入了自動反編譯 NSIS 腳本的功能，但又在 `15.06` 把這個功能拿掉了，所以要注意 7-zip 版本必須介於這兩者之間。
 
@@ -116,10 +116,10 @@ ExecShell "" C:\PerfLog\AddInProcess.exe
 ## 載入器 AddInProcess.exe
 知道安裝過程動的手腳以後，目標就很明確了，`AddInProcess.exe` 跟寫入的 Registry 資料。
 
-Filename|SHA256
-:|:
-AddInProcess.exe (2.1.6)|f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063
-AddInProcess.exe (2.1.10)|379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811
+|Filename|SHA256|
+|-|-|
+|AddInProcess.exe (2.1.6)|f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063|
+|AddInProcess.exe (2.1.10)|379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811|
 
 基本上兩個的函式內容並沒有不同，僅有 metadata 改變而已，File Version 從 `1.0.0.0` 變成 `1.3.0.0`。
 {% image fancybox center p3.png "Figure 3. 兩者的檔案基本訊息" %}
@@ -133,16 +133,16 @@ AddInProcess.exe (2.1.10)|379a9fcb8701754559901029812e6614c187d114e3527dd41795aa
 ## Assembly.Load(Malware.dll)
 藉助 .NET 的 `Assembly.Load` 函式可以動態載入另一個 .NET 的 DLL，也就是 registry 的內容，我們可以提取出來進一步分析。
 
-Filename|Compile Time|SHA256
-:|:|:
-ns.reg (2.1.6)|N/A|96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22
-registry.bin (2.1.6)|2020-09-23T09:43:39|7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a
-ns.reg (2.1.10)|N/A|d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a
-registry.bin (2.1.10)|2020-09-28T18:16:01|e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef
+|Filename|Compile Time|SHA256|
+|-|-|-|
+|ns.reg (2.1.6)|N/A|96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22|
+|registry.bin (2.1.6)|2020-09-23T09:43:39|7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a|
+|ns.reg (2.1.10)|N/A|d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a|
+|registry.bin (2.1.10)|2020-09-28T18:16:01|e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef|
 
-PDB Path|
-:|
-D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb|
+|PDB Path|
+|-|
+|D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb|
 
 > 這兩個 ns.reg 都維持 "123456" 並未被修改成 computer name 前的狀態。
 
@@ -167,13 +167,13 @@ D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb|
 
 ## Hello gh0st RAT DLL
 
-Filename|Compile Time|SHA256
-:|:|:
-dlldata_2.1.6.bin|2020-09-23T06:17:16|e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0
-dlldata_2.1.10.bin|2020-09-28T18:15:16|9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db
+|Filename|Compile Time|SHA256|
+|-|-|-|
+|dlldata_2.1.6.bin|2020-09-23T06:17:16|e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0|
+|dlldata_2.1.10.bin|2020-09-28T18:15:16|9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db|
 
 |PDB Path|
-|:|
+|-|
 |D:\source\MyJob\企业远程控制\Release\ServerDll.pdb|
 
 > 這兩個 DLL 都維持 C2 ip 是 255.255.255.255，還沒被修改前寫死在 registry.bin 的原樣。
@@ -267,38 +267,38 @@ URL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/
 以上便是針對 Windows installer 的部份在分析過程中發現的一些有趣的內容，這個詐騙網站現在還在持續運作中，或許未來還能看到攻擊者對樣本有所更新，再觀察看看。~~（或是有空也來分析一下那個假的 APK）~~
 
 ## IoCs
-IP||
-:|:|
-45.114.106.2|Fake Site
-45.114.106.3|Fake Site
-45.114.106.4|Fake Site
-45.114.106.5|Fake Site
-45.114.106.6|Fake Site
-154.222.103.58|gh0st RAT C2
-185.224.168.130|gh0st RAT C2
+|IP|Description|
+|-|-|
+|45.114.106.2|Fake Site|
+|45.114.106.3|Fake Site|
+|45.114.106.4|Fake Site|
+|45.114.106.5|Fake Site|
+|45.114.106.6|Fake Site|
+|154.222.103.58|gh0st RAT C2|
+|185.224.168.130|gh0st RAT C2|
 
-Domain|Creation Date
-:|
-telegram-vip.com|2020-09-21T06:44:59Z
-telegramsvip.com|2020-10-15T08:01:05Z
-telegrcn.org|2020-05-19T02:31:56Z
+|Domain|Creation Date|
+|-|-|
+|telegram-vip.com|2020-09-21T06:44:59Z|
+|telegramsvip.com|2020-10-15T08:01:05Z|
+|telegrcn.org|2020-05-19T02:31:56Z|
 
 
-SHA256|Description
-:|:|
-1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8|telegram_setup.2.1.6.exe
-35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba|tsetup.2.1.10.exe
-f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063|AddInProcess.exe (telegram_setup.2.1.6.exe)
-379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811|AddInProcess.exe (tsetup.2.1.10.exe)
-96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22|ns.reg (2.1.6)
-d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a|ns.reg (2.1.10)
-7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a|excracted DLL from ns.reg (2.1.6)
-e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef|extracted DLL from ns.reg (2.1.10)
-e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0|embedded gh0st RAT DLL (2.1.6)
-9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db|embedded gh0st RAT DLL (2.1.10)
-19d1ff6bb589fab200f3bced0f148bb5e20fe9b37bd03de9cd425116cc0dba17|telegramCN_631.apk
+|SHA256|Description|
+|-|-|
+|1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8|telegram_setup.2.1.6.exe|
+|35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba|tsetup.2.1.10.exe|
+|f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063|AddInProcess.exe (telegram_setup.2.1.6.exe)|
+|379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811|AddInProcess.exe (tsetup.2.1.10.exe)|
+|96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22|ns.reg (2.1.6)|
+|d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a|ns.reg (2.1.10)|
+|7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a|excracted DLL from ns.reg (2.1.6)|
+|e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef|extracted DLL from ns.reg (2.1.10)|
+|e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0|embedded gh0st RAT DLL (2.1.6)|
+|9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db|embedded gh0st RAT DLL (2.1.10)|
+|19d1ff6bb589fab200f3bced0f148bb5e20fe9b37bd03de9cd425116cc0dba17|telegramCN_631.apk|
 
-PDB Path|
-:|
-D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb|
-D:\source\MyJob\企业远程控制\Release\ServerDll.pdb|
+|PDB Path|
+|-|
+|D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb|
+|D:\source\MyJob\企业远程控制\Release\ServerDll.pdb|
