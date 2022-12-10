@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"10 天的 CTF 比賽\n\n\n\nIntro[1 pts] Howdy!簽到題，不解釋。\nWeb[20 pts] Reading不太懂這題的意義，總之原始碼 Ctrl+F 搜尋 gigem&#123; 找唯一個有右大括號結尾的就是 flag。\n[40 pts] Bender很簡單，看 /robots.txt 就可以了。\n[50 pts] Bubbles簡單的 SQL Injection\n12Username: &#x27; or 1=1 --Password: &#x27; or 1=1 --\n\nMisc[20 pts] breadsticks2用 \bfile 指令發現檔案格式為：Microsoft OOXML，直接把副檔名改成 .docx 就可以打開看到 flag 了。\n[25 pts] you can run, you can hide連線進去環境以後 ls -al 看當前目錄底下看當前目錄底下的所有路徑，flag 就藏在 ~/.secret/.dont_delete_me.txt。\nCrypto[100 pts] XORbytes\n利用 $ xortool -m 100 -c 00 hexxy 找出 xor 的 key：QB1g3l4B5uzPjjD4\n把 heexy 用相同的 key 再做一次 XOR 運算還原 ELF 檔案\n執行即可拿到 flag\n\npwn[25 pts] pwn1內容待補\n12Exploit:$ python -c &quot;print &#x27;A&#x27;*(0x23-0x0C) + &#x27;\\x11\\xBA\\x07\\xF0&#x27;&quot; | nc pwn.ctf.tamu.edu 4321\n\n[50 pts] pwn2內容待補\n12Exploit:$ python -c &quot;print &#x27;A&#x27;*(0xEF+4) + &#x27;\\x4B\\x85\\x04\\x08&#x27;&quot; | nc pwn.ctf.tamu.edu 4322","dateCreated":"2018-02-27T21:38:45+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2018-02-27T21:38:45+00:00","description":"10 天的 CTF 比賽","headline":"TAMUctf 18","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/","keywords":"Writeups, TAMUctf18","thumbnailUrl":"cover.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"10 天的 CTF 比賽\n\n\n\nIntro[1 pts] Howdy!簽到題，不解釋。\nWeb[20 pts] Reading不太懂這題的意義，總之原始碼 Ctrl+F 搜尋 gigem&#123; 找唯一個有右大括號結尾的就是 flag。\n[40 pts] Bender很簡單，看 /robots.txt 就可以了。\n[50 pts] Bubbles簡單的 SQL Injection\n12Username: &#x27; or 1=1 --Password: &#x27; or 1=1 --\n\nMisc[20 pts] breadsticks2用 \bfile 指令發現檔案格式為：Microsoft OOXML，直接把副檔名改成 .docx 就可以打開看到 flag 了。\n[25 pts] you can run, you can hide連線進去環境以後 ls -al 看當前目錄底下看當前目錄底下的所有路徑，flag 就藏在 ~/.secret/.dont_delete_me.txt。\nCrypto[100 pts] XORbytes\n利用 $ xortool -m 100 -c 00 hexxy 找出 xor 的 key：QB1g3l4B5uzPjjD4\n把 heexy 用相同的 key 再做一次 XOR 運算還原 ELF 檔案\n執行即可拿到 flag\n\npwn[25 pts] pwn1內容待補\n12Exploit:$ python -c &quot;print &#x27;A&#x27;*(0x23-0x0C) + &#x27;\\x11\\xBA\\x07\\xF0&#x27;&quot; | nc pwn.ctf.tamu.edu 4321\n\n[50 pts] pwn2內容待補\n12Exploit:$ python -c &quot;print &#x27;A&#x27;*(0xEF+4) + &#x27;\\x4B\\x85\\x04\\x08&#x27;&quot; | nc pwn.ctf.tamu.edu 4322","dateCreated":"2018-02-27T21:38:45+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2018-02-27T21:38:45+00:00","description":"10 天的 CTF 比賽","headline":"TAMUctf 18","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/","keywords":"Writeups, TAMUctf18","thumbnailUrl":"cover.png"}</script>
     
     <meta name="description" content="10 天的 CTF 比賽">
 <meta property="og:type" content="blog">
@@ -123,7 +123,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -234,22 +234,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -645,7 +629,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

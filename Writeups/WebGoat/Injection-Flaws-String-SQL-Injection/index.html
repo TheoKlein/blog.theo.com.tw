@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。\n\n使用工具\n無\n\n\n\n\n\n接下來我們這題目要求輸入「Smith」來查詢Last Name，下方便列出了所以Last Name是Smith的資料。\n\n\n既然我們輸入字串後，後端會自動加入前後的單引號，那我們可以自己輸入一個單引號來結束這個字串並且在後面加入一個恆等式，最後再把後方所有的程式碼註解。\nSmith&#39; OR 1=1/*\n就可以成功列出資料表內所有的資料。\n","dateCreated":"2016-04-03T13:37:52+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-04-03T13:37:52+00:00","description":"這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。","headline":"Injection Flaws - String SQL Injection","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。\n\n使用工具\n無\n\n\n\n\n\n接下來我們這題目要求輸入「Smith」來查詢Last Name，下方便列出了所以Last Name是Smith的資料。\n\n\n既然我們輸入字串後，後端會自動加入前後的單引號，那我們可以自己輸入一個單引號來結束這個字串並且在後面加入一個恆等式，最後再把後方所有的程式碼註解。\nSmith&#39; OR 1=1/*\n就可以成功列出資料表內所有的資料。\n","dateCreated":"2016-04-03T13:37:52+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-04-03T13:37:52+00:00","description":"這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。","headline":"Injection Flaws - String SQL Injection","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
     
     <meta name="description" content="這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -638,7 +622,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

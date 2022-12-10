@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"C語言又再度讓我驚豔！\n\n題目給的提示是關於運算元的優先等級，還說這題不要太認真，不需要高深的技巧XD。\n連入解題主機後有這些檔案：\n12mistake@ubuntu:~$ lsflag  mistake  mistake.c  password\n\nmistake.c的原始碼：\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;stdio.h&gt;#include &lt;fcntl.h&gt;#define PW_LEN 10#define XORKEY 1void xor(char* s, int len)&#123;\tint i;\tfor(i=0; i&lt;len; i++)&#123;\t\ts[i] ^= XORKEY;\t&#125;&#125;int main(int argc, char* argv[])&#123;\tint fd;\tif(fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0)&#123;\t\tprintf(&quot;can&#x27;t open password %d\\n&quot;, fd);\t\treturn 0;\t&#125;\tprintf(&quot;do not bruteforce...\\n&quot;);\tsleep(time(0)%20);\tchar pw_buf[PW_LEN+1];\tint len;\tif(!(len=read(fd,pw_buf,PW_LEN) &gt; 0))&#123;\t\tprintf(&quot;read error\\n&quot;);\t\tclose(fd);\t\treturn 0;\t&#125;\tchar pw_buf2[PW_LEN+1];\tprintf(&quot;input password : &quot;);\tscanf(&quot;%10s&quot;, pw_buf2);\t// xor your input\txor(pw_buf2, 10);\tif(!strncmp(pw_buf, pw_buf2, PW_LEN))&#123;\t\tprintf(&quot;Password OK\\n&quot;);\t\tsystem(&quot;/bin/cat flag\\n&quot;);\t&#125;\telse&#123;\t\tprintf(&quot;Wrong Password\\n&quot;);\t&#125;\tclose(fd);\treturn 0;&#125;\n\n既然題目已經說跟運算元有關，馬上把焦點放在第17行fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0，這滿有趣的，仔細思考一下，先是進行了開檔的動作，若檔案存在成功開檔，會回傳1，再來因為&lt;的優先等級比=高，所以會先進行比較，最終fd會得到1 &lt; 0的比較結果是0。\n下一個焦點放在第27行，經過剛才開檔的動作以後，此時fd = 0，根據read()函式的定義，fd值為0時，會從標準輸入（stdin）讀入資料，可以讓我們輸入pw_buf的值，不過根據後面真正讀入pw_buf2密碼的第35行，密碼長度應該有10位數，而且pw_buf2會進行XOR運算，根據這些條件我們便可以輸入0000000000給pw_buf，1111111111給pw_buf2來滿足第40行的密碼判斷便可以拿到flag。\n123456mistake@ubuntu:~$ ./mistakedo not bruteforce...0000000000input password : 1111111111Password OKMommy, the operator priority always confuses me :(\n\n真的是一題有趣的題目，的確是平常在寫程式時可能會忽略的小細節，造就了不一樣的結果。\n","dateCreated":"2017-06-06T14:50:21+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-06T14:50:21+00:00","description":"C語言又再度讓我驚豔！","headline":"pwnable.kr #mistake","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"C語言又再度讓我驚豔！\n\n題目給的提示是關於運算元的優先等級，還說這題不要太認真，不需要高深的技巧XD。\n連入解題主機後有這些檔案：\n12mistake@ubuntu:~$ lsflag  mistake  mistake.c  password\n\nmistake.c的原始碼：\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;stdio.h&gt;#include &lt;fcntl.h&gt;#define PW_LEN 10#define XORKEY 1void xor(char* s, int len)&#123;\tint i;\tfor(i=0; i&lt;len; i++)&#123;\t\ts[i] ^= XORKEY;\t&#125;&#125;int main(int argc, char* argv[])&#123;\tint fd;\tif(fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0)&#123;\t\tprintf(&quot;can&#x27;t open password %d\\n&quot;, fd);\t\treturn 0;\t&#125;\tprintf(&quot;do not bruteforce...\\n&quot;);\tsleep(time(0)%20);\tchar pw_buf[PW_LEN+1];\tint len;\tif(!(len=read(fd,pw_buf,PW_LEN) &gt; 0))&#123;\t\tprintf(&quot;read error\\n&quot;);\t\tclose(fd);\t\treturn 0;\t&#125;\tchar pw_buf2[PW_LEN+1];\tprintf(&quot;input password : &quot;);\tscanf(&quot;%10s&quot;, pw_buf2);\t// xor your input\txor(pw_buf2, 10);\tif(!strncmp(pw_buf, pw_buf2, PW_LEN))&#123;\t\tprintf(&quot;Password OK\\n&quot;);\t\tsystem(&quot;/bin/cat flag\\n&quot;);\t&#125;\telse&#123;\t\tprintf(&quot;Wrong Password\\n&quot;);\t&#125;\tclose(fd);\treturn 0;&#125;\n\n既然題目已經說跟運算元有關，馬上把焦點放在第17行fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0，這滿有趣的，仔細思考一下，先是進行了開檔的動作，若檔案存在成功開檔，會回傳1，再來因為&lt;的優先等級比=高，所以會先進行比較，最終fd會得到1 &lt; 0的比較結果是0。\n下一個焦點放在第27行，經過剛才開檔的動作以後，此時fd = 0，根據read()函式的定義，fd值為0時，會從標準輸入（stdin）讀入資料，可以讓我們輸入pw_buf的值，不過根據後面真正讀入pw_buf2密碼的第35行，密碼長度應該有10位數，而且pw_buf2會進行XOR運算，根據這些條件我們便可以輸入0000000000給pw_buf，1111111111給pw_buf2來滿足第40行的密碼判斷便可以拿到flag。\n123456mistake@ubuntu:~$ ./mistakedo not bruteforce...0000000000input password : 1111111111Password OKMommy, the operator priority always confuses me :(\n\n真的是一題有趣的題目，的確是平常在寫程式時可能會忽略的小細節，造就了不一樣的結果。\n","dateCreated":"2017-06-06T14:50:21+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-06T14:50:21+00:00","description":"C語言又再度讓我驚豔！","headline":"pwnable.kr #mistake","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="C語言又再度讓我驚豔！">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -637,7 +621,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

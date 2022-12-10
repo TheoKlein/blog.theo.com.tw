@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"寫CTF的題目總是能讓我對C有更深入的了解\n\n\nSSH進入主機以後，一樣先來看看col.c的原始碼：\n12345678910111213141516171819202122232425262728293031#include &lt;stdio.h&gt;#include &lt;string.h&gt;unsigned long hashcode = 0x21DD09EC;unsigned long check_password(const char* p)&#123;\tint* ip = (int*)p;\tint i;\tint res=0;\tfor(i=0; i&lt;5; i++)&#123;\t\tres += ip[i];\t&#125;\treturn res;&#125;int main(int argc, char* argv[])&#123;\tif(argc&lt;2)&#123;\t\tprintf(&quot;usage : %s [passcode]\\n&quot;, argv[0]);\t\treturn 0;\t&#125;\tif(strlen(argv[1]) != 20)&#123;\t\tprintf(&quot;passcode length should be 20 bytes\\n&quot;);\t\treturn 0;\t&#125;\tif(hashcode == check_password( argv[1] ))&#123;\t\tsystem(&quot;/bin/cat flag&quot;);\t\treturn 0;\t&#125;\telse\t\tprintf(&quot;wrong passcode.\\n&quot;);\treturn 0;&#125;\n\n12col@ubuntu:~$ ./col testpasscode length should be 20 bytes\n\n看起來是從argv輸入長度20bytes的密碼來檢驗，把重點放到check_password(const char* p)這個函式上，把輸入的字串分成五段加起來要等於0x21DD09EC，計算一下，分成五段的話0x21DD09EC = 0x06C5CEC8 * 4 + 0x06C5CECC。\n為了滿足check_password的計算方式，我寫了一個簡單的python exploit。（&#x2F;tmp底下可以建立資料夾新增自己的檔案）\n12import structprint struct.pack(&#x27;&lt;i&#x27;, 0x06C5CEC8) * 4 + struct.pack(&#x27;&lt;i&#x27;, 0x06C5CECC)\n\n因為ubuntu是little-endian system，所以我使用了python的struct來輸出little-endian的shell code，&lt;i表示little-endian int。\n12col@ubuntu:~$ ./col $(python /tmp/theo/col.py)daddy! I just managed to create a hash collision :)","dateCreated":"2017-06-04T18:36:03+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-04T18:36:03+00:00","description":"寫CTF的題目總是能讓我對C有更深入的了解","headline":"pwnable.kr #collision","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-collision/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-collision/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"寫CTF的題目總是能讓我對C有更深入的了解\n\n\nSSH進入主機以後，一樣先來看看col.c的原始碼：\n12345678910111213141516171819202122232425262728293031#include &lt;stdio.h&gt;#include &lt;string.h&gt;unsigned long hashcode = 0x21DD09EC;unsigned long check_password(const char* p)&#123;\tint* ip = (int*)p;\tint i;\tint res=0;\tfor(i=0; i&lt;5; i++)&#123;\t\tres += ip[i];\t&#125;\treturn res;&#125;int main(int argc, char* argv[])&#123;\tif(argc&lt;2)&#123;\t\tprintf(&quot;usage : %s [passcode]\\n&quot;, argv[0]);\t\treturn 0;\t&#125;\tif(strlen(argv[1]) != 20)&#123;\t\tprintf(&quot;passcode length should be 20 bytes\\n&quot;);\t\treturn 0;\t&#125;\tif(hashcode == check_password( argv[1] ))&#123;\t\tsystem(&quot;/bin/cat flag&quot;);\t\treturn 0;\t&#125;\telse\t\tprintf(&quot;wrong passcode.\\n&quot;);\treturn 0;&#125;\n\n12col@ubuntu:~$ ./col testpasscode length should be 20 bytes\n\n看起來是從argv輸入長度20bytes的密碼來檢驗，把重點放到check_password(const char* p)這個函式上，把輸入的字串分成五段加起來要等於0x21DD09EC，計算一下，分成五段的話0x21DD09EC = 0x06C5CEC8 * 4 + 0x06C5CECC。\n為了滿足check_password的計算方式，我寫了一個簡單的python exploit。（&#x2F;tmp底下可以建立資料夾新增自己的檔案）\n12import structprint struct.pack(&#x27;&lt;i&#x27;, 0x06C5CEC8) * 4 + struct.pack(&#x27;&lt;i&#x27;, 0x06C5CECC)\n\n因為ubuntu是little-endian system，所以我使用了python的struct來輸出little-endian的shell code，&lt;i表示little-endian int。\n12col@ubuntu:~$ ./col $(python /tmp/theo/col.py)daddy! I just managed to create a hash collision :)","dateCreated":"2017-06-04T18:36:03+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-04T18:36:03+00:00","description":"寫CTF的題目總是能讓我對C有更深入的了解","headline":"pwnable.kr #collision","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-collision/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-collision/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="寫CTF的題目總是能讓我對C有更深入的了解">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -636,7 +620,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"忽然想到把久久沒玩的樹莓派拿出來重裝了最新版本的Raspbian Jessie Lite，準備拿來當作我個人家裡的迷你伺服器。\n\n\n安裝期間爬文爬到了這一篇文章，能讓樹莓派擁有AirPlay的能力，在同一個網路之下都可以串流AirPlay的音訊，當然二話不說馬上來安裝，這裡我自己也簡單記錄一下。\nGitHub - Shairport Sync\n123456789101112131415161718// clone git projectgit clone https://github.com/mikebrady/shairport-sync.git// install packagesudo apt-get -y install build-essential git autoconf automake libtool libdaemon-dev libasound2-dev libpopt-dev libconfig-dev avahi-daemon libavahi-client-dev libssl-dev libpolarssl-dev libsoxr-dev// start compliecd shairport-syncautoreconf -i -f./configure --with-alsa --with-stdout --with-pipe --with-avahi --with-ssl=openssl --with-metadata --with-systemdmake// reate user &amp; groupgetent group shairport-sync &amp;&gt; /dev/null || sudo groupadd -r shairport-sync &gt; /dev/nullgetent passwd shairport-sync &amp;&gt; /dev/null || sudo useradd -r -M -g shairport-sync -s /usr/bin/nologin -G audio shairport-sync &gt; /dev/null// install to systemsudo make install\n\n修改設定檔，我修改了name和password。\n1nano /usr/local/etc/shairport-sync.conf\n\n12345// start Shairport Syncsudo systemctl restart shairport-sync &amp;&amp; sudo systemctl status shairport-sync// set autostart after bootsudo systemctl enable shairport-sync\n\n最後就可以看看iPhone和Mac有沒有出現AirPlay的圖示可以選擇。\n","dateCreated":"2016-12-22T17:23:52+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-12-22T17:23:52+00:00","description":"忽然想到把久久沒玩的樹莓派拿出來重裝了最新版本的Raspbian Jessie Lite，準備拿來當作我個人家裡的迷你伺服器。","headline":"Raspberry Pi + AirPlay","image":["cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Blog/Raspberry-Pi-AirPlay/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Blog/Raspberry-Pi-AirPlay/","keywords":"Raspberry Pi2, Airplay","thumbnailUrl":"cover.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"忽然想到把久久沒玩的樹莓派拿出來重裝了最新版本的Raspbian Jessie Lite，準備拿來當作我個人家裡的迷你伺服器。\n\n\n安裝期間爬文爬到了這一篇文章，能讓樹莓派擁有AirPlay的能力，在同一個網路之下都可以串流AirPlay的音訊，當然二話不說馬上來安裝，這裡我自己也簡單記錄一下。\nGitHub - Shairport Sync\n123456789101112131415161718// clone git projectgit clone https://github.com/mikebrady/shairport-sync.git// install packagesudo apt-get -y install build-essential git autoconf automake libtool libdaemon-dev libasound2-dev libpopt-dev libconfig-dev avahi-daemon libavahi-client-dev libssl-dev libpolarssl-dev libsoxr-dev// start compliecd shairport-syncautoreconf -i -f./configure --with-alsa --with-stdout --with-pipe --with-avahi --with-ssl=openssl --with-metadata --with-systemdmake// reate user &amp; groupgetent group shairport-sync &amp;&gt; /dev/null || sudo groupadd -r shairport-sync &gt; /dev/nullgetent passwd shairport-sync &amp;&gt; /dev/null || sudo useradd -r -M -g shairport-sync -s /usr/bin/nologin -G audio shairport-sync &gt; /dev/null// install to systemsudo make install\n\n修改設定檔，我修改了name和password。\n1nano /usr/local/etc/shairport-sync.conf\n\n12345// start Shairport Syncsudo systemctl restart shairport-sync &amp;&amp; sudo systemctl status shairport-sync// set autostart after bootsudo systemctl enable shairport-sync\n\n最後就可以看看iPhone和Mac有沒有出現AirPlay的圖示可以選擇。\n","dateCreated":"2016-12-22T17:23:52+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-12-22T17:23:52+00:00","description":"忽然想到把久久沒玩的樹莓派拿出來重裝了最新版本的Raspbian Jessie Lite，準備拿來當作我個人家裡的迷你伺服器。","headline":"Raspberry Pi + AirPlay","image":["cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Blog/Raspberry-Pi-AirPlay/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Blog/Raspberry-Pi-AirPlay/","keywords":"Raspberry Pi2, Airplay","thumbnailUrl":"cover.jpg"}</script>
     
     <meta name="description" content="忽然想到把久久沒玩的樹莓派拿出來重裝了最新版本的Raspbian Jessie Lite，準備拿來當作我個人家裡的迷你伺服器。">
 <meta property="og:type" content="blog">
@@ -123,7 +123,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -234,22 +234,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -637,7 +621,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"直接給了一段密文\nEBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.\n\n\n\n我第一次看到這題的時候其實一直看不出什麼端倪，看到Cipher這個關鍵字我只想到了之前遇過的凱薩加密法，寫了一個小程式去試所有的位移可能也沒看到什麼結果。\n過了幾天再回來看才忽然注意到其中這一串字：\nSYNTFjmtkOWFNZdjkkNH\n\n\nksnctf flag的形式是FLAG_123456xyz，整串密文中只有這字一串的長度夠長、開頭都是大寫而且前四個字母沒有重複，用FLAG這四個字去分析了一下還真的發現有規律，查了一下資料後得知這是所謂的ROT-13，一種簡易的替換式密碼。\n知道加密方法就好辦事了，ROT-13屬於對等加密（reciprocal cipher），所以只要把密文再使用ROT-13加密一次即可回復原始文字。簡單的PHP程式就可以解密：\n12&lt;?phpecho str_rot13(&quot;EBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.&quot;);\n\nROT XIII is a simple letter substitution cipher that replaces a letter with the letter XIII letters after it in the alphabet. ROT XIII is an example of the Caesar cipher, developed in ancient Rome. Flag is FLAGSwzgxBJSAMqwxxAU. Insert an underscore immediately after FLAG.\n\n\n網路上也有現成的rot13.com可以直接ROT-13轉換。\n看到FLAG別太興奮直接複製提交，在FLAG後面還要自己再加個底線才符合FLAG_123456xyz的形式，密文的最後一句話有貼心的提醒XD。\n我絕對不是那個看到FLAG太興奮就直接複製貼上結果Wrong Flag在電腦前面煩惱的人\n","dateCreated":"2016-12-04T23:39:14+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-12-04T23:39:14+00:00","description":"直接給了一段密文\nEBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.\n","headline":"ksnctf #02 Easy Cipher","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-02-Easy-Cipher/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-02-Easy-Cipher/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"直接給了一段密文\nEBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.\n\n\n\n我第一次看到這題的時候其實一直看不出什麼端倪，看到Cipher這個關鍵字我只想到了之前遇過的凱薩加密法，寫了一個小程式去試所有的位移可能也沒看到什麼結果。\n過了幾天再回來看才忽然注意到其中這一串字：\nSYNTFjmtkOWFNZdjkkNH\n\n\nksnctf flag的形式是FLAG_123456xyz，整串密文中只有這字一串的長度夠長、開頭都是大寫而且前四個字母沒有重複，用FLAG這四個字去分析了一下還真的發現有規律，查了一下資料後得知這是所謂的ROT-13，一種簡易的替換式密碼。\n知道加密方法就好辦事了，ROT-13屬於對等加密（reciprocal cipher），所以只要把密文再使用ROT-13加密一次即可回復原始文字。簡單的PHP程式就可以解密：\n12&lt;?phpecho str_rot13(&quot;EBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.&quot;);\n\nROT XIII is a simple letter substitution cipher that replaces a letter with the letter XIII letters after it in the alphabet. ROT XIII is an example of the Caesar cipher, developed in ancient Rome. Flag is FLAGSwzgxBJSAMqwxxAU. Insert an underscore immediately after FLAG.\n\n\n網路上也有現成的rot13.com可以直接ROT-13轉換。\n看到FLAG別太興奮直接複製提交，在FLAG後面還要自己再加個底線才符合FLAG_123456xyz的形式，密文的最後一句話有貼心的提醒XD。\n我絕對不是那個看到FLAG太興奮就直接複製貼上結果Wrong Flag在電腦前面煩惱的人\n","dateCreated":"2016-12-04T23:39:14+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-12-04T23:39:14+00:00","description":"直接給了一段密文\nEBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag Ebzr. Synt vf SYNTFjmtkOWFNZdjkkNH. Vafreg na haqrefpber vzzrqvngryl nsgre SYNT.\n","headline":"ksnctf #02 Easy Cipher","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-02-Easy-Cipher/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-02-Easy-Cipher/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="直接給了一段密文 EBG KVVV vf n fvzcyr yrggre fhofgvghgvba pvcure gung ercynprf n yrggre jvgu gur yrggre KVVV yrggref nsgre vg va gur nycunorg. EBG KVVV vf na rknzcyr bs gur Pnrfne pvcure, qrirybcrq va napvrag">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -643,7 +627,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

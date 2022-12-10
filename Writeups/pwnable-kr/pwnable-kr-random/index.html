@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"電腦沒有真正的亂數\n\n很簡單的一個C亂數程式：\n123456789101112131415161718#include &lt;stdio.h&gt;int main()&#123;\tunsigned int random;\trandom = rand();\t// random value!\tunsigned int key=0;\tscanf(&quot;%d&quot;, &amp;key);\tif( (key ^ random) == 0xdeadbeef )&#123;\t\tprintf(&quot;Good!\\n&quot;);\t\tsystem(&quot;/bin/cat flag&quot;);\t\treturn 0;\t&#125;\tprintf(&quot;Wrong, maybe you should try 2^32 cases.\\n&quot;);\treturn 0;&#125;\n\n只要輸入的值和隨機數做XOR運算後等於0xdeadbeef就可以拿到flag，關鍵就在rand()產生的隨機數。電腦沒有真正的亂數，是由數學計算出來接近亂數的值，也就是說它有一連串的公式計算，平常都知道若要讓亂數能夠更亂（某意義上接近真正的亂數），C語言必須指定seed，也就是亂數種子，通常會是時間。\n很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出rand()的第一個值1804289383。接下來XOR的運算有這樣的特性：\n12A ^ B = CA = B ^ C\n\n所以只要把第一個亂數值1804289383和0xdeadbeef做XOR運算就可以得到key。我用python CLI直接算出key：\n12&gt;&gt;&gt; print 0xdeadbeef ^ 18042893833039230856\n\n1234random@ubuntu:~$ ./random3039230856Good!Mommy, I thought libc random is unpredictable...","dateCreated":"2017-06-26T20:06:42+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-26T20:06:42+00:00","description":"電腦沒有真正的亂數","headline":"pwnable.kr #random","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"電腦沒有真正的亂數\n\n很簡單的一個C亂數程式：\n123456789101112131415161718#include &lt;stdio.h&gt;int main()&#123;\tunsigned int random;\trandom = rand();\t// random value!\tunsigned int key=0;\tscanf(&quot;%d&quot;, &amp;key);\tif( (key ^ random) == 0xdeadbeef )&#123;\t\tprintf(&quot;Good!\\n&quot;);\t\tsystem(&quot;/bin/cat flag&quot;);\t\treturn 0;\t&#125;\tprintf(&quot;Wrong, maybe you should try 2^32 cases.\\n&quot;);\treturn 0;&#125;\n\n只要輸入的值和隨機數做XOR運算後等於0xdeadbeef就可以拿到flag，關鍵就在rand()產生的隨機數。電腦沒有真正的亂數，是由數學計算出來接近亂數的值，也就是說它有一連串的公式計算，平常都知道若要讓亂數能夠更亂（某意義上接近真正的亂數），C語言必須指定seed，也就是亂數種子，通常會是時間。\n很明顯這個程式並沒有設定種子，換句話說產生出來的亂數會永遠一樣，那我們就可以自己寫程式來印出rand()的第一個值1804289383。接下來XOR的運算有這樣的特性：\n12A ^ B = CA = B ^ C\n\n所以只要把第一個亂數值1804289383和0xdeadbeef做XOR運算就可以得到key。我用python CLI直接算出key：\n12&gt;&gt;&gt; print 0xdeadbeef ^ 18042893833039230856\n\n1234random@ubuntu:~$ ./random3039230856Good!Mommy, I thought libc random is unpredictable...","dateCreated":"2017-06-26T20:06:42+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-26T20:06:42+00:00","description":"電腦沒有真正的亂數","headline":"pwnable.kr #random","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-random/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="電腦沒有真正的亂數">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -635,7 +619,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

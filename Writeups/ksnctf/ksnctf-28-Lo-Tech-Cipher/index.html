@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題真的讓我大開眼界\n\n\n題目就給了一個壓縮檔，解壓縮以後有兩張圖片。\n\n我愣了滿久的，看著這兩張密密麻麻的雜訊，忽然靈光一閃把他們給疊起來看看…\nΣ(*ﾟдﾟﾉ)ﾉ 這是什麼妖術！太出乎意料了！\n不過FLAG還沒拿到，提示說最後一張圖片在ZIP裡，原來剛剛下載的ZIP是有被動過手腳的，有個好用的file指令可以檢查檔案的真實內容。\n12$ file secret.zipsecret.zip: PNG image data, 640 x 480, 8-bit/color RGBA, non-interlaced\n沒想到這個ZIP自己就是一個PNG圖片！馬上把副檔名改成.png，真的拿到了最後一張圖片，再疊上去就成功拿到FLAG了。這題真的太有趣啦～\n","dateCreated":"2017-03-28T14:52:21+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-28T14:52:21+00:00","description":"這題真的讓我大開眼界","headline":"ksnctf #28 Lo-Tech Cipher","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這題真的讓我大開眼界\n\n\n題目就給了一個壓縮檔，解壓縮以後有兩張圖片。\n\n我愣了滿久的，看著這兩張密密麻麻的雜訊，忽然靈光一閃把他們給疊起來看看…\nΣ(*ﾟдﾟﾉ)ﾉ 這是什麼妖術！太出乎意料了！\n不過FLAG還沒拿到，提示說最後一張圖片在ZIP裡，原來剛剛下載的ZIP是有被動過手腳的，有個好用的file指令可以檢查檔案的真實內容。\n12$ file secret.zipsecret.zip: PNG image data, 640 x 480, 8-bit/color RGBA, non-interlaced\n沒想到這個ZIP自己就是一個PNG圖片！馬上把副檔名改成.png，真的拿到了最後一張圖片，再疊上去就成功拿到FLAG了。這題真的太有趣啦～\n","dateCreated":"2017-03-28T14:52:21+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-28T14:52:21+00:00","description":"這題真的讓我大開眼界","headline":"ksnctf #28 Lo-Tech Cipher","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="這題真的讓我大開眼界">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -633,7 +617,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

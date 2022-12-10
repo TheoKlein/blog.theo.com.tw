@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。\n\n使用工具\nWebScarab\n\n\n\n既然這樣就先看看選項裡有什麼東西吧，滿滿.help結尾的選項，其中還有一項和題目同名的選項就選他吧！（並不是非得選CommandInjection.help，其他選項也行。）\n\n\n輸出的結果是有關選項的說明，其中注意到紅底線的部分是呼叫.html檔案的指令，就是我們要著手的部分。\n\n\n接下來我使用的是WebScarab，啟動監聽以後再回到WebGoat點選一次表單讓WebScarab攔截request。\n\n\n若成功攔截到request會跳出一個視窗\n\n\n可以點選Transform來把GET轉換成POST。\n\n\n轉成POST以後可以很清楚地看見傳送的參數，其中HelpFile的變數存了剛剛選擇的選項。\n\n\n回去比對一下剛剛呼叫.html檔案的指令，當我們選擇了AccessControlMatrix.help的選項時，整串呼叫指令是用「’」單引號包著，其中檔案路徑是用「”」雙引號，那我們就可以在WebScarab中嘗試修改HelpFile的值來進行injection:AccessControlMatrix.help&quot; &amp; ifconfig&quot;\n\n\n第一個「”」雙引號用來結束前面的檔案路徑，第二個「”」用來搭配系統預設結尾的「”」，變成「””」兩個雙引號內沒有包含任何東西，讓中間的「&amp; ifconfig」成為獨立的command。\n最後把修改過的request轉回GET以後在點選Accept changes送出這個request。\n\n\n恭喜通過了Injection Flaws的第一關！ 可以看見ExecResults的部分就是command injection的重點，ifconfig在下方的確也顯示出了伺服器的資料。\n","dateCreated":"2016-03-18T13:03:44+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-03-18T13:03:44+00:00","description":"這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。","headline":"Injection Flaws - Command Injection","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Command-Injection/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Command-Injection/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。\n\n使用工具\nWebScarab\n\n\n\n既然這樣就先看看選項裡有什麼東西吧，滿滿.help結尾的選項，其中還有一項和題目同名的選項就選他吧！（並不是非得選CommandInjection.help，其他選項也行。）\n\n\n輸出的結果是有關選項的說明，其中注意到紅底線的部分是呼叫.html檔案的指令，就是我們要著手的部分。\n\n\n接下來我使用的是WebScarab，啟動監聽以後再回到WebGoat點選一次表單讓WebScarab攔截request。\n\n\n若成功攔截到request會跳出一個視窗\n\n\n可以點選Transform來把GET轉換成POST。\n\n\n轉成POST以後可以很清楚地看見傳送的參數，其中HelpFile的變數存了剛剛選擇的選項。\n\n\n回去比對一下剛剛呼叫.html檔案的指令，當我們選擇了AccessControlMatrix.help的選項時，整串呼叫指令是用「’」單引號包著，其中檔案路徑是用「”」雙引號，那我們就可以在WebScarab中嘗試修改HelpFile的值來進行injection:AccessControlMatrix.help&quot; &amp; ifconfig&quot;\n\n\n第一個「”」雙引號用來結束前面的檔案路徑，第二個「”」用來搭配系統預設結尾的「”」，變成「””」兩個雙引號內沒有包含任何東西，讓中間的「&amp; ifconfig」成為獨立的command。\n最後把修改過的request轉回GET以後在點選Accept changes送出這個request。\n\n\n恭喜通過了Injection Flaws的第一關！ 可以看見ExecResults的部分就是command injection的重點，ifconfig在下方的確也顯示出了伺服器的資料。\n","dateCreated":"2016-03-18T13:03:44+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2016-03-18T13:03:44+00:00","description":"這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。","headline":"Injection Flaws - Command Injection","image":["logo.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Command-Injection/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Command-Injection/","keywords":"Writeups","thumbnailUrl":"logo.jpg"}</script>
     
     <meta name="description" content="這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -656,7 +640,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

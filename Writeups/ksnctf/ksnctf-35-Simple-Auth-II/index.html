@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"初學SQL必犯的安全錯誤 Σ(*ﾟдﾟﾉ)ﾉ\n\n\n看一下原始碼馬上可以看到使用SQLite來儲存資料，而且是直接放在網頁目錄下。\n1$db = new PDO(&#x27;sqlite:database.db&#x27;);\n\n所以可以直接下載database.db在本機的sqlite執行搜尋。\n12345$ wget http://ctfq.sweetduet.info:10080/~q35/database.db$ sqlite3 database.dbsqlite&gt; SELECT * FROM user;root|FLAG_iySDmApNegJvwmxN\n","dateCreated":"2017-03-23T12:53:39+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-23T12:53:39+00:00","description":"初學SQL必犯的安全錯誤 Σ(*ﾟдﾟﾉ)ﾉ","headline":"ksnctf #35 Simple Auth II","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"初學SQL必犯的安全錯誤 Σ(*ﾟдﾟﾉ)ﾉ\n\n\n看一下原始碼馬上可以看到使用SQLite來儲存資料，而且是直接放在網頁目錄下。\n1$db = new PDO(&#x27;sqlite:database.db&#x27;);\n\n所以可以直接下載database.db在本機的sqlite執行搜尋。\n12345$ wget http://ctfq.sweetduet.info:10080/~q35/database.db$ sqlite3 database.dbsqlite&gt; SELECT * FROM user;root|FLAG_iySDmApNegJvwmxN\n","dateCreated":"2017-03-23T12:53:39+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-23T12:53:39+00:00","description":"初學SQL必犯的安全錯誤 Σ(*ﾟдﾟﾉ)ﾉ","headline":"ksnctf #35 Simple Auth II","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="初學SQL必犯的安全錯誤 Σ(*ﾟдﾟﾉ)ﾉ">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -631,7 +615,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

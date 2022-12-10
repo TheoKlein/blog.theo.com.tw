@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"開始踏上pwn之路了\n\n\n依照題目給的SSH資訊進入主機以後，目錄底下有這些檔案：\n1234567891011fd@ubuntu:~$ ls -altotal 40drwxr-x---  5 root   fd   4096 Oct 26  2016 .drwxr-xr-x 80 root   root 4096 Jan 11 23:27 ..d---------  2 root   root 4096 Jun 12  2014 .bash_history-r-sr-x---  1 fd_pwn fd   7322 Jun 11  2014 fd-rw-r--r--  1 root   root  418 Jun 11  2014 fd.c-r--r-----  1 fd_pwn root   50 Jun 11  2014 flag-rw-------  1 root   root  128 Oct 26  2016 .gdb_historydr-xr-xr-x  2 root   root 4096 Dec 19 01:23 .irssidrwxr-xr-x  2 root   root 4096 Oct 23  2016 .pwntools-cache\n\n分析fd.c的原始碼：\n123456789101112131415161718192021#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;#include &lt;string.h&gt;char buf[32];int main(int argc, char* argv[], char* envp[])&#123;\tif(argc&lt;2)&#123;\t\tprintf(&quot;pass argv[1] a number\\n&quot;);\t\treturn 0;\t&#125;\tint fd = atoi( argv[1] ) - 0x1234;\tint len = 0;\tlen = read(fd, buf, 32);\tif(!strcmp(&quot;LETMEWIN\\n&quot;, buf))&#123;\t\tprintf(&quot;good job :)\\n&quot;);\t\tsystem(&quot;/bin/cat flag&quot;);\t\texit(0);\t&#125;\tprintf(&quot;learn about Linux file IO\\n&quot;);\treturn 0;&#125;\n\n很簡單的一個C程式，首先6~9行的if判斷有無輸入argv參數，將其值減去0x1234 (4660)以後存為fd的變數代入read函式，該函式的定義如下：\n123456ssize_t read(int fildes, void *buf, size_t nbytes);int fildes   * 0: standard input   * 1: standard output   * 2: standard error\n\n所以我們可以輸入4660作為argv參數讓fd = 0進而使read函式從標準輸入讀取我們輸入的LETMEWIN字串便可以拿到flag。\n1234fd@ubuntu:~$ ./fd 4660LETMEWINgood job :)mommy! I think I know what a file descriptor is!!","dateCreated":"2017-06-04T17:48:11+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-04T17:48:11+00:00","description":"開始踏上pwn之路了","headline":"pwnable.kr #fd","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-fd/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-fd/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"開始踏上pwn之路了\n\n\n依照題目給的SSH資訊進入主機以後，目錄底下有這些檔案：\n1234567891011fd@ubuntu:~$ ls -altotal 40drwxr-x---  5 root   fd   4096 Oct 26  2016 .drwxr-xr-x 80 root   root 4096 Jan 11 23:27 ..d---------  2 root   root 4096 Jun 12  2014 .bash_history-r-sr-x---  1 fd_pwn fd   7322 Jun 11  2014 fd-rw-r--r--  1 root   root  418 Jun 11  2014 fd.c-r--r-----  1 fd_pwn root   50 Jun 11  2014 flag-rw-------  1 root   root  128 Oct 26  2016 .gdb_historydr-xr-xr-x  2 root   root 4096 Dec 19 01:23 .irssidrwxr-xr-x  2 root   root 4096 Oct 23  2016 .pwntools-cache\n\n分析fd.c的原始碼：\n123456789101112131415161718192021#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;#include &lt;string.h&gt;char buf[32];int main(int argc, char* argv[], char* envp[])&#123;\tif(argc&lt;2)&#123;\t\tprintf(&quot;pass argv[1] a number\\n&quot;);\t\treturn 0;\t&#125;\tint fd = atoi( argv[1] ) - 0x1234;\tint len = 0;\tlen = read(fd, buf, 32);\tif(!strcmp(&quot;LETMEWIN\\n&quot;, buf))&#123;\t\tprintf(&quot;good job :)\\n&quot;);\t\tsystem(&quot;/bin/cat flag&quot;);\t\texit(0);\t&#125;\tprintf(&quot;learn about Linux file IO\\n&quot;);\treturn 0;&#125;\n\n很簡單的一個C程式，首先6~9行的if判斷有無輸入argv參數，將其值減去0x1234 (4660)以後存為fd的變數代入read函式，該函式的定義如下：\n123456ssize_t read(int fildes, void *buf, size_t nbytes);int fildes   * 0: standard input   * 1: standard output   * 2: standard error\n\n所以我們可以輸入4660作為argv參數讓fd = 0進而使read函式從標準輸入讀取我們輸入的LETMEWIN字串便可以拿到flag。\n1234fd@ubuntu:~$ ./fd 4660LETMEWINgood job :)mommy! I think I know what a file descriptor is!!","dateCreated":"2017-06-04T17:48:11+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-04T17:48:11+00:00","description":"開始踏上pwn之路了","headline":"pwnable.kr #fd","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-fd/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-fd/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="開始踏上pwn之路了">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -636,7 +620,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

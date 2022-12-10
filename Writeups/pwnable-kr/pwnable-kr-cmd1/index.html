@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"環境變數的基本知識\n\n題目原始碼：\n12345678910111213141516#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, &quot;flag&quot;)!=0;\tr += strstr(cmd, &quot;sh&quot;)!=0;\tr += strstr(cmd, &quot;tmp&quot;)!=0;\treturn r;&#125;int main(int argc, char* argv[], char** envp)&#123;\tputenv(&quot;PATH=/fuckyouverymuch&quot;);\tif(filter(argv[1])) return 0;\tsystem( argv[1] );\treturn 0;&#125;\n\n可以看到filter()過濾掉argv[1]裡面不能包含的flag、sh、tmp子字串，這部分用萬用字元*就可以繞過限制。\n另外在第12行把重要的環境變數PATH給覆寫掉了，這樣如果想要直接呼叫cat把flag印出來會得到以下錯誤：\n12cmd1@ubuntu:~$ ./cmd1 &quot;cat fla*&quot;sh: 1: cat: not found\n\n所以說，在呼叫cat以前我們必須先修改環境變數：\n12cmd1@ubuntu:~$ ./cmd1 &quot;export PATH=/bin; cat fla*&quot;mommy now I get what PATH environment is for :)\n\n或是更簡單的方法，先確認cat的路徑以後使用絕對路徑呼叫即可：\n1234cmd1@ubuntu:~$ which cat/bin/catcmd1@ubuntu:~$ ./cmd1 &quot;/bin/cat fla*&quot;mommy now I get what PATH environment is for :)","dateCreated":"2017-06-26T20:35:43+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-26T20:35:43+00:00","description":"環境變數的基本知識","headline":"pwnable.kr #cmd1","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"環境變數的基本知識\n\n題目原始碼：\n12345678910111213141516#include &lt;stdio.h&gt;#include &lt;string.h&gt;int filter(char* cmd)&#123;\tint r=0;\tr += strstr(cmd, &quot;flag&quot;)!=0;\tr += strstr(cmd, &quot;sh&quot;)!=0;\tr += strstr(cmd, &quot;tmp&quot;)!=0;\treturn r;&#125;int main(int argc, char* argv[], char** envp)&#123;\tputenv(&quot;PATH=/fuckyouverymuch&quot;);\tif(filter(argv[1])) return 0;\tsystem( argv[1] );\treturn 0;&#125;\n\n可以看到filter()過濾掉argv[1]裡面不能包含的flag、sh、tmp子字串，這部分用萬用字元*就可以繞過限制。\n另外在第12行把重要的環境變數PATH給覆寫掉了，這樣如果想要直接呼叫cat把flag印出來會得到以下錯誤：\n12cmd1@ubuntu:~$ ./cmd1 &quot;cat fla*&quot;sh: 1: cat: not found\n\n所以說，在呼叫cat以前我們必須先修改環境變數：\n12cmd1@ubuntu:~$ ./cmd1 &quot;export PATH=/bin; cat fla*&quot;mommy now I get what PATH environment is for :)\n\n或是更簡單的方法，先確認cat的路徑以後使用絕對路徑呼叫即可：\n1234cmd1@ubuntu:~$ which cat/bin/catcmd1@ubuntu:~$ ./cmd1 &quot;/bin/cat fla*&quot;mommy now I get what PATH environment is for :)","dateCreated":"2017-06-26T20:35:43+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-06-26T20:35:43+00:00","description":"環境變數的基本知識","headline":"pwnable.kr #cmd1","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-cmd1/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
     
     <meta name="description" content="環境變數的基本知識">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -636,7 +620,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"題目給了一段非常非常非常非常長的密文\n\n第一眼看起像是base64加密的結果，不過丟到online base64 decode解出來還是一長串的密文。其實仔細想一想，加密的內容應該就是Flag或是可能外加一兩句話，長度應該不至於base64加密完以後變得這麼長一串，所以我就寫了一個迴圈連續base64解密，還真的在第16次decode時出現了一段文字：\n123456&lt;?php$str = &quot;&lt;ENCODED_STRING&gt;&quot;;for($i = 0 ; $i &lt; 20 ; $i++)&#123;    $str = base64_decode($str);    echo $str.&quot;\\n&quot;;&#125;\n\nbegin 666 51DQ!1U]&amp;94QG4#-3:4%797I74$AU&#96;end\n\n\n看到這個嘴角忍不住上揚，這格式不就是之前寫Root Me某一題用到的uuencode嗎～  d(`･∀･)b\n二話不說直接解密啦！\n12&lt;?phpecho convert_uudecode(&quot;51DQ!1U]&amp;94QG4#-3:4%797I74\\$AU&quot;);\n\nFLAG_FeLgP3SiAWezWPHu\n\n\n70pt Gotcha!\n","dateCreated":"2017-03-22T16:03:44+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-22T16:03:44+00:00","description":"題目給了一段非常非常非常非常長的密文","headline":"ksnctf #05 Onion","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-05-Onion/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-05-Onion/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"題目給了一段非常非常非常非常長的密文\n\n第一眼看起像是base64加密的結果，不過丟到online base64 decode解出來還是一長串的密文。其實仔細想一想，加密的內容應該就是Flag或是可能外加一兩句話，長度應該不至於base64加密完以後變得這麼長一串，所以我就寫了一個迴圈連續base64解密，還真的在第16次decode時出現了一段文字：\n123456&lt;?php$str = &quot;&lt;ENCODED_STRING&gt;&quot;;for($i = 0 ; $i &lt; 20 ; $i++)&#123;    $str = base64_decode($str);    echo $str.&quot;\\n&quot;;&#125;\n\nbegin 666 51DQ!1U]&amp;94QG4#-3:4%797I74$AU&#96;end\n\n\n看到這個嘴角忍不住上揚，這格式不就是之前寫Root Me某一題用到的uuencode嗎～  d(`･∀･)b\n二話不說直接解密啦！\n12&lt;?phpecho convert_uudecode(&quot;51DQ!1U]&amp;94QG4#-3:4%797I74\\$AU&quot;);\n\nFLAG_FeLgP3SiAWezWPHu\n\n\n70pt Gotcha!\n","dateCreated":"2017-03-22T16:03:44+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2017-03-22T16:03:44+00:00","description":"題目給了一段非常非常非常非常長的密文","headline":"ksnctf #05 Onion","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-05-Onion/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-05-Onion/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="題目給了一段非常非常非常非常長的密文">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -639,7 +623,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         

