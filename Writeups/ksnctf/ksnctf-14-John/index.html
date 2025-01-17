@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>ksnctf #14 John - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="ksnctf,John">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"簡單練習John的操作\n\n標題就清楚寫明是關於John的問題，題目給了shadow的內容：\n12345678910111213141516171819202122user00:$6$Z4xEy/1KTCW.rz$Yxkc8XkscDusGWKan621H4eaPRjHc1bkXDjyFtcTtgxzlxvuPiE1rnqdQVO1lYgNOzg72FU95RQut93JF6Deo/:15491:0:99999:7:::user01:$6$ffl1bXDBqKUiD$PoXP69PaxTTX.cgzYS6Tlj7UBvstr6JruGctoObFXCr4cYXjIbxBSMiQZiVkKvUxXUC23zP8PUyXjq6qEq63u1:15491:0:99999:7:::user02:$6$ZsJXadT/rv$T/2gVzYwMBaAsZnHIjnUSmTozIF/ebMvtHIJjikFehvB8pvy28DUIQYbTJLG6QAxhzJAKOROnZq0xV4hUGefM1:15491:0:99999:7:::user03:$6$l0NHH5FF0H/U$fPv3c5Cdls/UaZmglR4Qqh8vhpIBsmY1sEjHi486ZcDQ2Vx5GY0fcQYSorWj6l42jfI47w437n.NBm8NArFyT/:15491:0:99999:7:::user04:$6$wAnAP/NMiLa/yE$.gi4r3xYuPTg5z2S59z2EzFbqpmwZYy1tBSVA9/hqTFnWY0tHqXbwL.dFQwHzKTuzXV6WMgjEZlyzUPGzVtPb0:15491:0:99999:7:::user05:$6$jTgFhKHk/$xQIdn7snYAAGvifxC02YLXcAKkiuPbJ3KBkH2Q8BZ12TL2aepaUJotgfKfNSPCXWebyCY/skOmOymok.KIm5D0:15491:0:99999:7:::user06:$6$8LXZt/zPbLtIn1o$ynsZxueG88Kz0vDr3cyK.21cv4GWw9iaW9oYZcmZ9SY5UpMQS1wl2/dbXGyR8WzVBKKP/6k8VYvWuiNQ3We52/:15491:0:99999:7:::user07:$6$jnA8m/S5aU0/$PGrG8mDy.vs3W9xhG1qd56eOEainH9xntY48.duznt989TXMn6J.scOBqp4BWg3fHWxoFgBn26LYvcnqWGcoF1:15491:0:99999:7:::user08:$6$ITB7n/qsP$fmrmItHX9B96PmhsxIX21vdYDvFHiIPnyzRFjWIbcd3y/DRHCm0lzyJEnWlQChdDAiFUFXtqwoTbEdREXQ99M.:15491:0:99999:7:::user09:$6$LpgLJrjPV$6sa0KW08Q10S.C/BSUHlHaQZT5n8uIygZSsWP5drdmuhI7c17wWCK/GEzQS7g8EL//5bqdjo1C90smTDhLEcF1:15491:0:99999:7:::user10:$6$0VSPwOzcL//6QR$RgtMpkfVPb5Cli7cjVE5jMgJlN10xY1R3jxRNrY0l/84R3.NvxP3I8XtkMkonU6DKhge0JGp54DZLQqUN9kL7/:15491:0:99999:7:::user11:$6$zryub/lvSKj7Xl$eazV2fmcJa5M3qMovQqARGK59Qxtfv2zjUJvphKNnyUMVyBn.SjEFhRT/mAjz3QFroNbwmrYLtrpyxjH.q64n/:15491:0:99999:7:::user12:$6$tAkM0dDUFe76d8K/$OnNGFEuIf1seMlLHb.8.y5/cpmBUcMbhLhOfFdd0E/DKASXPS4riB4uz2Fg3om9Atg.g7s.JFoKV0uuJ461KV/:15491:0:99999:7:::user13:$6$0cCdE5Nfqu/HFS$PwnLdS.chtm6qGwf2Uuiko7V3fMwjcQ52M8hslvoReFQ9XOBXw603Ok20VJwWAwR6RNv6adn6a6kuRm5Y3.ge1:15491:0:99999:7:::user14:$6$RgPs7j4eSa/v$71CeLB9Z1Fafi6vi2ou5LzRz5xXWTzvZeZgelnm2przx.JQYp21p8h2BCyTYFd10MKD/cquPvn42vSzlJJJ8Q1:15491:0:99999:7:::user15:$6$1uhGQ/5DwMp/$UjYTEVaChEzmUITvWpaZVvYYDLBULpI4IEyieClSsyC2NHwEnaDx6xwtUVpQPxEhi6R7OQhX68Oo5CfilYqDQ.:15491:0:99999:7:::user16:$6$V/InSacMp8U$UpDgdL/GS/kdFmn1rO97YkLAeTgofu4fDVUGoV1PWnVFxUtVyx24ix5hJp53FkBuqdzmXgwGcb6MU5AWJWjaB1:15491:0:99999:7:::user17:$6$d6mWSrE8vxDe$UqTgKPfKxm0/Aboz8DeFNNiZsFBYyE6iGpqUzSX4UpWSDfXt1DERBtI29H2Gz5q.6ls3730naAo31wAacvs/L0:15491:0:99999:7:::user18:$6$ulcKu/ddomcNGRJj$i8XB1D4YtLGbAHX0XHX88ObUWw8dQsrTqoliGAU//zGHNLmLeWd.4k5YHViNSy3rlGTQSRPtutlKnub8aRnzy0:15491:0:99999:7:::user19:$6$cVnhE9CwfSIIA$wrn6p3cgfz.JOc6KVkieNCtc.FzkjUdcDDlivn0APnYv9/z4tt7hUpPft5T8kMmnx/hiF92vjnDxcauVyQySp.:15491:0:99999:7:::user20:$6$2Pg2VxXg$K8AqsCMPAFiXSxNjETBWqEHQom9Q5dDIz9/nItxpQatrG9gvv9CRJP3kQzKLbRf13FxfOXpeEYIpOEK.2i1HP0:15491:0:99999:7:::user99:$6$SHA512IsStrong$DictionaryIsHere.http//ksnctf.sweetduet.info/q/14/dicti0nary_8Th64ikELWEsZFrf.txt:15491:0:99999:7:::\n\n仔細看了一下，唯獨user99特別不一樣，看起來給了一個字典檔網址：\n1user99:$6$SHA512IsStrong$DictionaryIsHere.http//ksnctf.sweetduet.info/q/14/dicti0nary_8Th64ikELWEsZFrf.txt:15491:0:99999:7:::\n\n既然題目有給字典檔想必有它的用處，下載下來給John來破解密碼。\n1$ john --wordlist=dictionary.txt crack.txt\n\ndictionary.txt是下載下來的字典檔、crack.txt是題目給的內容。破解完以後查看結果：\n1234567891011121314151617181920212223242526$ john --show crack.txtuser00:FREQUENT:15491:0:99999:7:::user01:LATTER:15491:0:99999:7:::user02:ADDITIONAL:15491:0:99999:7:::user03:GENDER:15491:0:99999:7:::user04:__________:15491:0:99999:7:::user05:applies:15491:0:99999:7:::user06:SPIRITS:15491:0:99999:7:::user07:independent:15491:0:99999:7:::user08:ultimate:15491:0:99999:7:::user09:JENNY:15491:0:99999:7:::user10:HELD:15491:0:99999:7:::user11:SUFFERS:15491:0:99999:7:::user12:LEAVE:15491:0:99999:7:::user13:floating:15491:0:99999:7:::user14:zecht:15491:0:99999:7:::user15:opinion:15491:0:99999:7:::user16:QUESTION:15491:0:99999:7:::user17:karaoke:15491:0:99999:7:::user18:strange:15491:0:99999:7:::user19:zero:15491:0:99999:7:::user20:DELIGHT:15491:0:99999:7:::Warning: hash encoding string length 99, type id $6appears to be unsupported on this system; will not load such hashes.21 password hashes cracked, 0 left\n\n很順利的全部解出來了，重點是要用user99給的字典檔。仔細看每個user密碼的第一個字，原來是藏頭文啊！最後在寫個簡單的程式來拼湊出flag：\n12345# flag.pyflag = &#x27;&#x27;for line in open(&#x27;rawflag.txt&#x27;, &#x27;r&#x27;):    flag = flag + line[7]print flag\n\n12$ python flag.pyFLAG_aSiuJHSLfzoQkszD\n\n一個簡單的題目來練練John的使用方法。\n","dateCreated":"2017-06-03T17:52:09+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-06-03T17:52:09+00:00","description":"簡單練習John的操作","headline":"ksnctf #14 John","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    
+    <meta name="description" content="簡單練習John的操作">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="ksnctf #14 John">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="簡單練習John的操作">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/ksnctf.png">
+<meta property="article:published_time" content="2017-06-03T17:52:09.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.262Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/ksnctf.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/ksnctf.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/ksnctf.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            ksnctf #14 John
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-06-03T17:52:09+00:00">
+	
+		    Jun 03, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/ksnctf/">ksnctf</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>簡單練習John的操作</p>
+<span id="more"></span>
+<p>標題就清楚寫明是關於<a target="_blank" rel="noopener" href="http://www.openwall.com/john/">John</a>的問題，題目給了shadow的內容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">user00:$6$Z4xEy/1KTCW.rz$Yxkc8XkscDusGWKan621H4eaPRjHc1bkXDjyFtcTtgxzlxvuPiE1rnqdQVO1lYgNOzg72FU95RQut93JF6Deo/:15491:0:99999:7:::</span><br><span class="line">user01:$6$ffl1bXDBqKUiD$PoXP69PaxTTX.cgzYS6Tlj7UBvstr6JruGctoObFXCr4cYXjIbxBSMiQZiVkKvUxXUC23zP8PUyXjq6qEq63u1:15491:0:99999:7:::</span><br><span class="line">user02:$6$ZsJXadT/rv$T/2gVzYwMBaAsZnHIjnUSmTozIF/ebMvtHIJjikFehvB8pvy28DUIQYbTJLG6QAxhzJAKOROnZq0xV4hUGefM1:15491:0:99999:7:::</span><br><span class="line">user03:$6$l0NHH5FF0H/U$fPv3c5Cdls/UaZmglR4Qqh8vhpIBsmY1sEjHi486ZcDQ2Vx5GY0fcQYSorWj6l42jfI47w437n.NBm8NArFyT/:15491:0:99999:7:::</span><br><span class="line">user04:$6$wAnAP/NMiLa/yE$.gi4r3xYuPTg5z2S59z2EzFbqpmwZYy1tBSVA9/hqTFnWY0tHqXbwL.dFQwHzKTuzXV6WMgjEZlyzUPGzVtPb0:15491:0:99999:7:::</span><br><span class="line">user05:$6$jTgFhKHk/$xQIdn7snYAAGvifxC02YLXcAKkiuPbJ3KBkH2Q8BZ12TL2aepaUJotgfKfNSPCXWebyCY/skOmOymok.KIm5D0:15491:0:99999:7:::</span><br><span class="line">user06:$6$8LXZt/zPbLtIn1o$ynsZxueG88Kz0vDr3cyK.21cv4GWw9iaW9oYZcmZ9SY5UpMQS1wl2/dbXGyR8WzVBKKP/6k8VYvWuiNQ3We52/:15491:0:99999:7:::</span><br><span class="line">user07:$6$jnA8m/S5aU0/$PGrG8mDy.vs3W9xhG1qd56eOEainH9xntY48.duznt989TXMn6J.scOBqp4BWg3fHWxoFgBn26LYvcnqWGcoF1:15491:0:99999:7:::</span><br><span class="line">user08:$6$ITB7n/qsP$fmrmItHX9B96PmhsxIX21vdYDvFHiIPnyzRFjWIbcd3y/DRHCm0lzyJEnWlQChdDAiFUFXtqwoTbEdREXQ99M.:15491:0:99999:7:::</span><br><span class="line">user09:$6$LpgLJrjPV$6sa0KW08Q10S.C/BSUHlHaQZT5n8uIygZSsWP5drdmuhI7c17wWCK/GEzQS7g8EL//5bqdjo1C90smTDhLEcF1:15491:0:99999:7:::</span><br><span class="line">user10:$6$0VSPwOzcL//6QR$RgtMpkfVPb5Cli7cjVE5jMgJlN10xY1R3jxRNrY0l/84R3.NvxP3I8XtkMkonU6DKhge0JGp54DZLQqUN9kL7/:15491:0:99999:7:::</span><br><span class="line">user11:$6$zryub/lvSKj7Xl$eazV2fmcJa5M3qMovQqARGK59Qxtfv2zjUJvphKNnyUMVyBn.SjEFhRT/mAjz3QFroNbwmrYLtrpyxjH.q64n/:15491:0:99999:7:::</span><br><span class="line">user12:$6$tAkM0dDUFe76d8K/$OnNGFEuIf1seMlLHb.8.y5/cpmBUcMbhLhOfFdd0E/DKASXPS4riB4uz2Fg3om9Atg.g7s.JFoKV0uuJ461KV/:15491:0:99999:7:::</span><br><span class="line">user13:$6$0cCdE5Nfqu/HFS$PwnLdS.chtm6qGwf2Uuiko7V3fMwjcQ52M8hslvoReFQ9XOBXw603Ok20VJwWAwR6RNv6adn6a6kuRm5Y3.ge1:15491:0:99999:7:::</span><br><span class="line">user14:$6$RgPs7j4eSa/v$71CeLB9Z1Fafi6vi2ou5LzRz5xXWTzvZeZgelnm2przx.JQYp21p8h2BCyTYFd10MKD/cquPvn42vSzlJJJ8Q1:15491:0:99999:7:::</span><br><span class="line">user15:$6$1uhGQ/5DwMp/$UjYTEVaChEzmUITvWpaZVvYYDLBULpI4IEyieClSsyC2NHwEnaDx6xwtUVpQPxEhi6R7OQhX68Oo5CfilYqDQ.:15491:0:99999:7:::</span><br><span class="line">user16:$6$V/InSacMp8U$UpDgdL/GS/kdFmn1rO97YkLAeTgofu4fDVUGoV1PWnVFxUtVyx24ix5hJp53FkBuqdzmXgwGcb6MU5AWJWjaB1:15491:0:99999:7:::</span><br><span class="line">user17:$6$d6mWSrE8vxDe$UqTgKPfKxm0/Aboz8DeFNNiZsFBYyE6iGpqUzSX4UpWSDfXt1DERBtI29H2Gz5q.6ls3730naAo31wAacvs/L0:15491:0:99999:7:::</span><br><span class="line">user18:$6$ulcKu/ddomcNGRJj$i8XB1D4YtLGbAHX0XHX88ObUWw8dQsrTqoliGAU//zGHNLmLeWd.4k5YHViNSy3rlGTQSRPtutlKnub8aRnzy0:15491:0:99999:7:::</span><br><span class="line">user19:$6$cVnhE9CwfSIIA$wrn6p3cgfz.JOc6KVkieNCtc.FzkjUdcDDlivn0APnYv9/z4tt7hUpPft5T8kMmnx/hiF92vjnDxcauVyQySp.:15491:0:99999:7:::</span><br><span class="line">user20:$6$2Pg2VxXg$K8AqsCMPAFiXSxNjETBWqEHQom9Q5dDIz9/nItxpQatrG9gvv9CRJP3kQzKLbRf13FxfOXpeEYIpOEK.2i1HP0:15491:0:99999:7:::</span><br><span class="line">user99:$6$SHA512IsStrong$DictionaryIsHere.http//ksnctf.sweetduet.info/q/14/dicti0nary_8Th64ikELWEsZFrf.txt:15491:0:99999:7:::</span><br></pre></td></tr></table></figure>
+
+<p>仔細看了一下，唯獨user99特別不一樣，看起來給了一個字典檔網址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">user99:$6$SHA512IsStrong$DictionaryIsHere.http//ksnctf.sweetduet.info/q/14/dicti0nary_8Th64ikELWEsZFrf.txt:15491:0:99999:7:::</span><br></pre></td></tr></table></figure>
+<p><img src="/dictionary.png" alt="Dictionary"></p>
+<p>既然題目有給字典檔想必有它的用處，下載下來給John來破解密碼。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ john --wordlist=dictionary.txt crack.txt</span><br></pre></td></tr></table></figure>
+
+<p><code>dictionary.txt</code>是下載下來的字典檔、<code>crack.txt</code>是題目給的內容。破解完以後查看結果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$ john --show crack.txt</span><br><span class="line">user00:FREQUENT:15491:0:99999:7:::</span><br><span class="line">user01:LATTER:15491:0:99999:7:::</span><br><span class="line">user02:ADDITIONAL:15491:0:99999:7:::</span><br><span class="line">user03:GENDER:15491:0:99999:7:::</span><br><span class="line">user04:__________:15491:0:99999:7:::</span><br><span class="line">user05:applies:15491:0:99999:7:::</span><br><span class="line">user06:SPIRITS:15491:0:99999:7:::</span><br><span class="line">user07:independent:15491:0:99999:7:::</span><br><span class="line">user08:ultimate:15491:0:99999:7:::</span><br><span class="line">user09:JENNY:15491:0:99999:7:::</span><br><span class="line">user10:HELD:15491:0:99999:7:::</span><br><span class="line">user11:SUFFERS:15491:0:99999:7:::</span><br><span class="line">user12:LEAVE:15491:0:99999:7:::</span><br><span class="line">user13:floating:15491:0:99999:7:::</span><br><span class="line">user14:zecht:15491:0:99999:7:::</span><br><span class="line">user15:opinion:15491:0:99999:7:::</span><br><span class="line">user16:QUESTION:15491:0:99999:7:::</span><br><span class="line">user17:karaoke:15491:0:99999:7:::</span><br><span class="line">user18:strange:15491:0:99999:7:::</span><br><span class="line">user19:zero:15491:0:99999:7:::</span><br><span class="line">user20:DELIGHT:15491:0:99999:7:::</span><br><span class="line">Warning: hash encoding string length 99, type id $6</span><br><span class="line">appears to be unsupported on this system; will not load such hashes.</span><br><span class="line"></span><br><span class="line">21 password hashes cracked, 0 left</span><br></pre></td></tr></table></figure>
+
+<p>很順利的全部解出來了，重點是要用user99給的字典檔。仔細看每個user密碼的第一個字，原來是藏頭文啊！最後在寫個簡單的程式來拼湊出flag：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># flag.py</span></span><br><span class="line">flag = <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> <span class="built_in">open</span>(<span class="string">&#x27;rawflag.txt&#x27;</span>, <span class="string">&#x27;r&#x27;</span>):</span><br><span class="line">    flag = flag + line[<span class="number">7</span>]</span><br><span class="line"><span class="built_in">print</span> flag</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ python flag.py</span><br><span class="line">FLAG_aSiuJHSLfzoQkszD</span><br></pre></td></tr></table></figure>
+
+<p>一個簡單的題目來練練John的使用方法。</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-fd/"
+                    data-tooltip="pwnable.kr #fd"
+                    aria-label="PREVIOUS: pwnable.kr #fd"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"
+                    data-tooltip="ksnctf #28 Lo-Tech Cipher"
+                    aria-label="NEXT: ksnctf #28 Lo-Tech Cipher"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-fd/"
+                    data-tooltip="pwnable.kr #fd"
+                    aria-label="PREVIOUS: pwnable.kr #fd"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"
+                    data-tooltip="ksnctf #28 Lo-Tech Cipher"
+                    aria-label="NEXT: ksnctf #28 Lo-Tech Cipher"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-14-John/';
+              
+            this.page.identifier = 'Writeups/ksnctf/ksnctf-14-John/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

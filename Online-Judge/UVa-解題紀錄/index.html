@@ -1,0 +1,776 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>UVa 解題紀錄 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="Online Judge,UVa">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"新增：10107\n\n\n\nProblem Set VolumesVolume 1\n00100 - The 3n + 1 Problem\n00167 - The Sultan’s Successors\n\nVolume 2\n00263 - Number Chains\n00272 - TEX Quotes\n\nVolume 4\n00439 - Knight Moves\n00446 - Kibbles “n” Bits “n” Bits “n” Bits\n00458 - The Decoder\n00488 - Triangle Wave\n00490 - Rotating Sentences\n00494 - Kindergarten Counting Game\n\nVolume 5\n00514 - Rails\n00551 - Nesting a Bunch of Brackets\n\nVolume 6\n00686 - Goldbach’s Conjecture (II)\n00699 - The Falling Leaves\n\nVolume 9\n00948 - Fibonaccimal Base\n\nVolume 12\n01210 - Sum of Consecutive Prime Numbers\n\nContest VolumesVolume 100\n10008 - What’s Cryptanalysis?\n10018 - Reverse and Add\n10035 - Primary Arithmetic\n10055 - Hashmat the Brave Warrior\n10062 - Tell me the frequencies!\n10071 - Back to High School Physics\n10082 - WERTYU\n\nVolume 101\n10106 - Product\n10107 - What is the Median?\n\nVolume 102\n10222 - Decode the Mad man\n10276 - Hanoi Tower Troubles Again!\n\nVolume 103\n10300 - Ecological Premium\n10346 - Peter’s Smokes\n\nVolume 104\n10473 - Simple Base Conversion\n\nVolume 105\n10550 - Combination Lock\n\nVolume 106\n10696 - f91\n\nVolume 107\n10721 - Bar Codes\n10783 - Odd Sum\n\nVolume 108\n10812 - Beat the Spread!\n\nVolume 109\n10921 - Find the Telephone\n10924 - Prime Words\n10929 - You can say 11\n10931 - Parity\n10943 - How do you add?\n10970 - Big Chocolate\n\nVolume 111\n11172 - Relational Operator\n11185 - Ternary\n\nVolume 113\n11384 - Help is needed for Dexter\n11389 - The Bus Driver Problem\n\nVolume 114\n11417 - GCD\n11448 - Who said crisis?\n\nVolume 115\n11577 - Letter Frequency\n\nVolume 116\n11624 - Fire!\n11689 - Soda Surpler\n\nVolume 117\n11727 - Cost Cutting\n11764 - Jumping Mario\n\nVolume 118\n11806 - Cheerleaders\n\nVolume 120\n12015 - Google is Feeling Lucky\n12086 - Potentiometers\n\nVolume 121\n12149 - Feynman\n\n","dateCreated":"2017-03-26T19:04:20+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-03-26T19:04:20+00:00","description":"新增：10107","headline":"UVa 解題紀錄","image":["uva.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/","keywords":"UVa","thumbnailUrl":"uva.jpg"}</script>
+    
+    <meta name="description" content="新增：10107">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="UVa 解題紀錄">
+<meta property="og:url" content="https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="新增：10107">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/uva.jpg">
+<meta property="article:published_time" content="2017-03-26T19:04:20.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.172Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="UVa">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/uva.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/uva.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/uva.jpg"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            UVa 解題紀錄
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-03-26T19:04:20+00:00">
+	
+		    Mar 26, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Online-Judge/">Online Judge</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>新增：10107</p>
+<span id="more"></span><h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Problem-Set-Volumes"><span class="toc-text">Problem Set Volumes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-1"><span class="toc-text">Volume 1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-2"><span class="toc-text">Volume 2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-4"><span class="toc-text">Volume 4</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-5"><span class="toc-text">Volume 5</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-6"><span class="toc-text">Volume 6</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-9"><span class="toc-text">Volume 9</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-12"><span class="toc-text">Volume 12</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Contest-Volumes"><span class="toc-text">Contest Volumes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-100"><span class="toc-text">Volume 100</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-101"><span class="toc-text">Volume 101</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-102"><span class="toc-text">Volume 102</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-103"><span class="toc-text">Volume 103</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-104"><span class="toc-text">Volume 104</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-105"><span class="toc-text">Volume 105</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-106"><span class="toc-text">Volume 106</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-107"><span class="toc-text">Volume 107</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-108"><span class="toc-text">Volume 108</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-109"><span class="toc-text">Volume 109</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-111"><span class="toc-text">Volume 111</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-113"><span class="toc-text">Volume 113</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-114"><span class="toc-text">Volume 114</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-115"><span class="toc-text">Volume 115</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-116"><span class="toc-text">Volume 116</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-117"><span class="toc-text">Volume 117</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-118"><span class="toc-text">Volume 118</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-120"><span class="toc-text">Volume 120</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Volume-121"><span class="toc-text">Volume 121</span></a></li></ol></li></ol>
+
+<hr>
+<h2 id="Problem-Set-Volumes"><a href="#Problem-Set-Volumes" class="headerlink" title="Problem Set Volumes"></a>Problem Set Volumes</h2><h3 id="Volume-1"><a href="#Volume-1" class="headerlink" title="Volume 1"></a>Volume 1</h3><ul>
+<li>00100 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume1/00100.cpp">The 3n + 1 Problem</a></li>
+<li>00167 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume1/00167.cpp">The Sultan’s Successors</a></li>
+</ul>
+<h3 id="Volume-2"><a href="#Volume-2" class="headerlink" title="Volume 2"></a>Volume 2</h3><ul>
+<li>00263 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume2/00263.cpp">Number Chains</a></li>
+<li>00272 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume2/00272.cpp">TEX Quotes</a></li>
+</ul>
+<h3 id="Volume-4"><a href="#Volume-4" class="headerlink" title="Volume 4"></a>Volume 4</h3><ul>
+<li>00439 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00439.cpp">Knight Moves</a></li>
+<li>00446 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00446.cpp">Kibbles “n” Bits “n” Bits “n” Bits</a></li>
+<li>00458 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00458.cpp">The Decoder</a></li>
+<li>00488 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00488.cpp">Triangle Wave</a></li>
+<li>00490 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00490.cpp">Rotating Sentences</a></li>
+<li>00494 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume4/00494.c">Kindergarten Counting Game</a></li>
+</ul>
+<h3 id="Volume-5"><a href="#Volume-5" class="headerlink" title="Volume 5"></a>Volume 5</h3><ul>
+<li>00514 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume5/00514.cpp">Rails</a></li>
+<li>00551 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume5/00551.cpp">Nesting a Bunch of Brackets</a></li>
+</ul>
+<h3 id="Volume-6"><a href="#Volume-6" class="headerlink" title="Volume 6"></a>Volume 6</h3><ul>
+<li>00686 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume6/00686.cpp">Goldbach’s Conjecture (II)</a></li>
+<li>00699 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume6/00699.cpp">The Falling Leaves</a></li>
+</ul>
+<h3 id="Volume-9"><a href="#Volume-9" class="headerlink" title="Volume 9"></a>Volume 9</h3><ul>
+<li>00948 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume9/00948.cpp">Fibonaccimal Base</a></li>
+</ul>
+<h3 id="Volume-12"><a href="#Volume-12" class="headerlink" title="Volume 12"></a>Volume 12</h3><ul>
+<li>01210 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ProblemSetVolumes/Volume12/01210.cpp">Sum of Consecutive Prime Numbers</a></li>
+</ul>
+<h2 id="Contest-Volumes"><a href="#Contest-Volumes" class="headerlink" title="Contest Volumes"></a>Contest Volumes</h2><h3 id="Volume-100"><a href="#Volume-100" class="headerlink" title="Volume 100"></a>Volume 100</h3><ul>
+<li>10008 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10008.cpp">What’s Cryptanalysis?</a></li>
+<li>10018 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10018.cpp">Reverse and Add</a></li>
+<li>10035 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10035.cpp">Primary Arithmetic</a></li>
+<li>10055 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10055.cpp">Hashmat the Brave Warrior</a></li>
+<li>10062 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10062.cpp">Tell me the frequencies!</a></li>
+<li>10071 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10071.cpp">Back to High School Physics</a></li>
+<li>10082 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume100/10082.cpp">WERTYU</a></li>
+</ul>
+<h3 id="Volume-101"><a href="#Volume-101" class="headerlink" title="Volume 101"></a>Volume 101</h3><ul>
+<li>10106 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume101/10106.cpp">Product</a></li>
+<li>10107 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume101/10107.cpp">What is the Median?</a></li>
+</ul>
+<h3 id="Volume-102"><a href="#Volume-102" class="headerlink" title="Volume 102"></a>Volume 102</h3><ul>
+<li>10222 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume102/10222.cpp">Decode the Mad man</a></li>
+<li>10276 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume102/10276.cpp">Hanoi Tower Troubles Again!</a></li>
+</ul>
+<h3 id="Volume-103"><a href="#Volume-103" class="headerlink" title="Volume 103"></a>Volume 103</h3><ul>
+<li>10300 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume103/10300.cpp">Ecological Premium</a></li>
+<li>10346 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume103/10346.cpp">Peter’s Smokes</a></li>
+</ul>
+<h3 id="Volume-104"><a href="#Volume-104" class="headerlink" title="Volume 104"></a>Volume 104</h3><ul>
+<li>10473 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume104/10473.cpp">Simple Base Conversion</a></li>
+</ul>
+<h3 id="Volume-105"><a href="#Volume-105" class="headerlink" title="Volume 105"></a>Volume 105</h3><ul>
+<li>10550 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume105/10550.cpp">Combination Lock</a></li>
+</ul>
+<h3 id="Volume-106"><a href="#Volume-106" class="headerlink" title="Volume 106"></a>Volume 106</h3><ul>
+<li>10696 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume106/10696.cpp">f91</a></li>
+</ul>
+<h3 id="Volume-107"><a href="#Volume-107" class="headerlink" title="Volume 107"></a>Volume 107</h3><ul>
+<li>10721 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume107/10721.cpp">Bar Codes</a></li>
+<li>10783 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume107/10783.cpp">Odd Sum</a></li>
+</ul>
+<h3 id="Volume-108"><a href="#Volume-108" class="headerlink" title="Volume 108"></a>Volume 108</h3><ul>
+<li>10812 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume108/10812.cpp">Beat the Spread!</a></li>
+</ul>
+<h3 id="Volume-109"><a href="#Volume-109" class="headerlink" title="Volume 109"></a>Volume 109</h3><ul>
+<li>10921 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10921.cpp">Find the Telephone</a></li>
+<li>10924 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10924.cpp">Prime Words</a></li>
+<li>10929 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10929.cpp">You can say 11</a></li>
+<li>10931 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10931.cpp">Parity</a></li>
+<li>10943 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10943.cpp">How do you add?</a></li>
+<li>10970 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume109/10970.cpp">Big Chocolate</a></li>
+</ul>
+<h3 id="Volume-111"><a href="#Volume-111" class="headerlink" title="Volume 111"></a>Volume 111</h3><ul>
+<li>11172 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume111/11172.cpp">Relational Operator</a></li>
+<li>11185 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume111/11185.cpp">Ternary</a></li>
+</ul>
+<h3 id="Volume-113"><a href="#Volume-113" class="headerlink" title="Volume 113"></a>Volume 113</h3><ul>
+<li>11384 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume113/11384.cpp">Help is needed for Dexter</a></li>
+<li>11389 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume113/11389.cpp">The Bus Driver Problem</a></li>
+</ul>
+<h3 id="Volume-114"><a href="#Volume-114" class="headerlink" title="Volume 114"></a>Volume 114</h3><ul>
+<li>11417 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume114/11417.cpp">GCD</a></li>
+<li>11448 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume114/11448.cpp">Who said crisis?</a></li>
+</ul>
+<h3 id="Volume-115"><a href="#Volume-115" class="headerlink" title="Volume 115"></a>Volume 115</h3><ul>
+<li>11577 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume115/11577.cpp">Letter Frequency</a></li>
+</ul>
+<h3 id="Volume-116"><a href="#Volume-116" class="headerlink" title="Volume 116"></a>Volume 116</h3><ul>
+<li>11624 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume116/11624.cpp">Fire!</a></li>
+<li>11689 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume116/11689.cpp">Soda Surpler</a></li>
+</ul>
+<h3 id="Volume-117"><a href="#Volume-117" class="headerlink" title="Volume 117"></a>Volume 117</h3><ul>
+<li>11727 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume117/11727.cpp">Cost Cutting</a></li>
+<li>11764 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume117/11764.cpp">Jumping Mario</a></li>
+</ul>
+<h3 id="Volume-118"><a href="#Volume-118" class="headerlink" title="Volume 118"></a>Volume 118</h3><ul>
+<li>11806 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume118/11806.cpp">Cheerleaders</a></li>
+</ul>
+<h3 id="Volume-120"><a href="#Volume-120" class="headerlink" title="Volume 120"></a>Volume 120</h3><ul>
+<li>12015 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume120/12015.cpp">Google is Feeling Lucky</a></li>
+<li>12086 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume120/12086.cpp">Potentiometers</a></li>
+</ul>
+<h3 id="Volume-121"><a href="#Volume-121" class="headerlink" title="Volume 121"></a>Volume 121</h3><ul>
+<li>12149 - <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/UVa/blob/master/ContestVolumes/Volume121/12149.cpp">Feynman</a></li>
+</ul>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/UVa/" rel="tag">UVa</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    data-tooltip="ksnctf #26 Sherlock Holmes"
+                    aria-label="PREVIOUS: ksnctf #26 Sherlock Holmes"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-25-Reserved/"
+                    data-tooltip="ksnctf #25 Reserved"
+                    aria-label="NEXT: ksnctf #25 Reserved"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    data-tooltip="ksnctf #26 Sherlock Holmes"
+                    aria-label="PREVIOUS: ksnctf #26 Sherlock Holmes"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-25-Reserved/"
+                    data-tooltip="ksnctf #25 Reserved"
+                    aria-label="NEXT: ksnctf #25 Reserved"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/';
+              
+            this.page.identifier = 'Online-Judge/UVa-解題紀錄/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

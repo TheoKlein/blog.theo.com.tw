@@ -1,0 +1,689 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>VulnHub #Node:1 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="vulnhub,writeup,node">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Official website: Node: 1 ~ VulnHub\n\n\ninfo1234567Nmap scan report for 192.168.56.101Host is up (0.00031s latency).Not shown: 998 filtered portsPORT     STATE SERVICE22/tcp   open  ssh3000/tcp open  pppMAC Address: 08:00:27:A2:8A:95 (Oracle VirtualBox virtual NIC)\n\n22/tcp SSH 服務目前沒有登錄資訊暫且擱置，3000/tcp 是一個網站，得從這裡著手。\nLogin把 Bur Suite 接起來以後觀察網站的封包，發現一些有意思的 API，且此網站為 Node.js express 框架，基本上只有一個登入的功能，推測應該要以管理員身份登入才能得到進一步的資訊。/assets/js/app/ 裡有不少 JavaScript 的 code 也可以幫助你找到這些 API 路徑。\n/api/users/latest 會回傳三個使用者的帳號及 SHA256 的密碼，Google 就可以找到 decrypt 的明文，不過一般使用者帳號並沒有用處，目標是取得 admin 的帳號並登入後台。\n嘗試不同的 API 時發現/api/users會回傳所有的使用者資訊，於是得到具有管理權限的帳號 myP14ceAdm1nAcc0uNT 及 SHA256 的密碼 dffc504aa55359b9265cbebe1e4032fe600b64475ae3fd29c07d23223334d0af，一樣直接 Google 明文後即可成功登入。\n\n後台介面唯一的功能便是下載網站的備份檔，下載下來是個純文字檔，觀察一下即可發現是 base64 編碼，decode 以後再次確認檔案類型發現是個有密碼的 ZIP 壓縮檔。\n1234567$ file myplace.backupmyplace.backup: ASCII text, with very long lines, with no line terminators$ echo myplace.backup | base64 --decode &gt; decode$ file decodedecode: Zip archive data, at least v1.0 to extract\n\nDecrypt Zip File如果能夠解開這個壓縮檔，便可以進行 code review 去尋找其他潛在的漏洞。我使用 pkcrack 來還原加密的壓縮檔，只要我們能有一個同樣的檔案存在在壓縮檔內，便可以透過 pkcrack 去解密，於是我下載了 home.html 這個模板並壓縮成 key.zip，使用 binwalk 來確認 home.html 的路徑，便成功的還原出 result.zip，可以解壓縮進行更多的檢視了。\n1234$ binwalk decode.zip | grep home.html$ wget http://192.168.56.101:3000/partials/home.html$ zip key.zip home.html$ pkcrack -d result.zip -P key.zip -c  &quot;var/www/myplace/static/partials/home.html&quot; -C decode.zip -p home.html\n\nCode ReviewCode review 會發現 mongoDB 的登錄資訊為 mark:5AYRft73VtFpc84k，嘗試登陸 SSH 成功，可是並未具有 root 權限，並發現第一個 flag 為 /home/tom/user.txt，必須設法提升權限。\nLocal Privilege Escalation看了一下目錄底下沒有其他檔案以後，決定將目標轉移到本地提權上。首先檢查 kernel 相關資訊並使用 searchsploit 來尋找相關的 payload。\n\n12345$ uname -aLinux node 4.4.0-93-generic #116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux$ searchsploit linux 4.4.0// 發現 exploits/linux/local/44298.c 符合條件，可以試試\n\n找到了可能可行的 payload 以後，我們已經有 SSH 的登錄資訊，可以使用 scp 來把檔案上傳至靶機內並編譯執行，即可成功取得 root 權限並且拿到兩把 flag。\n1$ scp /usr/share/exploitdb/exploits/linux/local/44298.c mark@192.168.56.101:/tmp/exploit.c\n\n\n","dateCreated":"2018-10-31T16:38:17+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2018-10-31T16:38:17+00:00","description":"Official website: Node: 1 ~ VulnHub","headline":"VulnHub #Node:1","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/","keywords":"Writeups","thumbnailUrl":"cover.png"}</script>
+    
+    <meta name="description" content="Official website: Node: 1 ~ VulnHub">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="VulnHub #Node:1">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="Official website: Node: 1 ~ VulnHub">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/cover.png">
+<meta property="article:published_time" content="2018-10-31T16:38:17.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.238Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/cover.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/cover.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/cover.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            VulnHub #Node:1
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2018-10-31T16:38:17+00:00">
+	
+		    Oct 31, 2018
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/VulnHub/">VulnHub</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>Official website: <a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/node-1,252/">Node: 1 ~ VulnHub</a></p>
+<span id="more"></span>
+
+<h2 id="info"><a href="#info" class="headerlink" title="info"></a>info</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Nmap scan report for 192.168.56.101</span><br><span class="line">Host is up (0.00031s latency).</span><br><span class="line">Not shown: 998 filtered ports</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">3000/tcp open  ppp</span><br><span class="line">MAC Address: 08:00:27:A2:8A:95 (Oracle VirtualBox virtual NIC)</span><br></pre></td></tr></table></figure>
+
+<p><code>22/tcp</code> SSH 服務目前沒有登錄資訊暫且擱置，<code>3000/tcp</code> 是一個網站，得從這裡著手。</p>
+<h2 id="Login"><a href="#Login" class="headerlink" title="Login"></a>Login</h2><p>把 Bur Suite 接起來以後觀察網站的封包，發現一些有意思的 API，且此網站為 <code>Node.js express</code> 框架，基本上只有一個登入的功能，推測應該要以管理員身份登入才能得到進一步的資訊。<code>/assets/js/app/</code> 裡有不少 JavaScript 的 code 也可以幫助你找到這些 API 路徑。</p>
+<p><code>/api/users/latest</code> 會回傳三個使用者的帳號及 SHA256 的密碼，Google 就可以找到 decrypt 的明文，不過一般使用者帳號並沒有用處，目標是取得 admin 的帳號並登入後台。</p>
+<p>嘗試不同的 API 時發現<code>/api/users</code>會回傳所有的使用者資訊，於是得到具有管理權限的帳號 <code>myP14ceAdm1nAcc0uNT</code> 及 SHA256 的密碼 <code>dffc504aa55359b9265cbebe1e4032fe600b64475ae3fd29c07d23223334d0af</code>，一樣直接 Google 明文後即可成功登入。</p>
+<p><img src="/panel.png" alt="panel"></p>
+<p>後台介面唯一的功能便是下載網站的備份檔，下載下來是個純文字檔，觀察一下即可發現是 base64 編碼，decode 以後再次確認檔案類型發現是個有密碼的 ZIP 壓縮檔。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ file myplace.backup</span><br><span class="line">myplace.backup: ASCII text, with very long lines, with no line terminators</span><br><span class="line"></span><br><span class="line">$ echo myplace.backup | base64 --decode &gt; decode</span><br><span class="line"></span><br><span class="line">$ file decode</span><br><span class="line">decode: Zip archive data, at least v1.0 to extract</span><br></pre></td></tr></table></figure>
+
+<h2 id="Decrypt-Zip-File"><a href="#Decrypt-Zip-File" class="headerlink" title="Decrypt Zip File"></a>Decrypt Zip File</h2><p>如果能夠解開這個壓縮檔，便可以進行 code review 去尋找其他潛在的漏洞。我使用 <code>pkcrack</code> 來還原加密的壓縮檔，只要我們能有一個同樣的檔案存在在壓縮檔內，便可以透過 <code>pkcrack</code> 去解密，於是我下載了 <code>home.html</code> 這個模板並壓縮成 <code>key.zip</code>，使用 <code>binwalk</code> 來確認 <code>home.html</code> 的路徑，便成功的還原出 <code>result.zip</code>，可以解壓縮進行更多的檢視了。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ binwalk decode.zip | grep home.html</span><br><span class="line">$ wget http://192.168.56.101:3000/partials/home.html</span><br><span class="line">$ zip key.zip home.html</span><br><span class="line">$ pkcrack -d result.zip -P key.zip -c  &quot;var/www/myplace/static/partials/home.html&quot; -C decode.zip -p home.html</span><br></pre></td></tr></table></figure>
+
+<h2 id="Code-Review"><a href="#Code-Review" class="headerlink" title="Code Review"></a>Code Review</h2><p>Code review 會發現 mongoDB 的登錄資訊為 <code>mark:5AYRft73VtFpc84k</code>，嘗試登陸 SSH 成功，可是並未具有 root 權限，並發現第一個 flag 為 <code>/home/tom/user.txt</code>，必須設法提升權限。</p>
+<h2 id="Local-Privilege-Escalation"><a href="#Local-Privilege-Escalation" class="headerlink" title="Local Privilege Escalation"></a>Local Privilege Escalation</h2><p>看了一下目錄底下沒有其他檔案以後，決定將目標轉移到本地提權上。首先檢查 kernel 相關資訊並使用 <code>searchsploit</code> 來尋找相關的 payload。</p>
+<p><img src="/searchsploit.png" alt="searchsploit"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ uname -a</span><br><span class="line">Linux node 4.4.0-93-generic #116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux</span><br><span class="line"></span><br><span class="line">$ searchsploit linux 4.4.0</span><br><span class="line">// 發現 exploits/linux/local/44298.c 符合條件，可以試試</span><br></pre></td></tr></table></figure>
+
+<p>找到了可能可行的 payload 以後，我們已經有 SSH 的登錄資訊，可以使用 <code>scp</code> 來把檔案上傳至靶機內並編譯執行，即可成功取得 root 權限並且拿到兩把 flag。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ scp /usr/share/exploitdb/exploits/linux/local/44298.c mark@192.168.56.101:/tmp/exploit.c</span><br></pre></td></tr></table></figure>
+
+<p><img src="/exploit.png" alt="exploit"></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/"
+                    data-tooltip="VulnHub #Basic Pentesting: 1"
+                    aria-label="PREVIOUS: VulnHub #Basic Pentesting: 1"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-13-Proverb/"
+                    data-tooltip="ksnctf #13 Proverb"
+                    aria-label="NEXT: ksnctf #13 Proverb"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/"
+                    data-tooltip="VulnHub #Basic Pentesting: 1"
+                    aria-label="PREVIOUS: VulnHub #Basic Pentesting: 1"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-13-Proverb/"
+                    data-tooltip="ksnctf #13 Proverb"
+                    aria-label="NEXT: ksnctf #13 Proverb"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/';
+              
+            this.page.identifier = 'Writeups/VulnHub/VulnHub-Node-1/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

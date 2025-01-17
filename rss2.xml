@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>&lt;Theo/&gt;</title>
+    <link>https://blog.theo.com.tw/</link>
+    
+    <atom:link href="https://blog.theo.com.tw/rss2.xml" rel="self" type="application/rss+xml"/>
+    
+    <description>Keep hacking.</description>
+    <pubDate>Fri, 17 Jan 2025 13:11:17 GMT</pubDate>
+    <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析</title>
+      <link>https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/</link>
+      <guid>https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/</guid>
+      <pubDate>Wed, 20 Jan 2021 23:46:39 GMT</pubDate>
+      
+      <description>&lt;p&gt;繼前一篇 &lt;a href=&quot;https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/&quot;&gt;分析一個加料的 Telegram for Windows 中文版安裝程式&lt;/a&gt; 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Malware/">Malware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Telegram/">Telegram</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Trojan/">Trojan</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>分析一個加料的 Telegram for Windows 中文版安裝程式</title>
+      <link>https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/</link>
+      <guid>https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/</guid>
+      <pubDate>Sun, 25 Oct 2020 17:01:39 GMT</pubDate>
+      
+      <description>&lt;p&gt;紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Malware/">Malware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Telegram/">Telegram</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Trojan/">Trojan</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/gh0st-RAT/">gh0st RAT</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2</title>
+      <link>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/</link>
+      <guid>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/</guid>
+      <pubDate>Tue, 13 Oct 2020 23:52:13 GMT</pubDate>
+      
+      <description>&lt;p&gt;A distributed honeypot system based on &lt;a href=&quot;https://github.com/telekom-security/tpotce/releases/tag/20.06.1&quot;&gt;T-Pot 20.06.1&lt;/a&gt;, hello &lt;a href=&quot;https://www.elastic.co/beats/filebeat&quot;&gt;Filebeat&lt;/a&gt;!&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/honeypot/">honeypot</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>New Variant of XLoader Targets Japanese Telcos And Banks For Phishing</title>
+      <link>https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/</link>
+      <guid>https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/</guid>
+      <pubDate>Tue, 31 Mar 2020 15:16:02 GMT</pubDate>
+      
+      <description>&lt;p&gt;We got a new variant of &lt;code&gt;XLoader&lt;/code&gt; via a link &lt;code&gt;http://wrssa[.]xyz&lt;/code&gt; from scam SMS message in mid-March 2020. It is a new version of &lt;code&gt;XLoader&lt;/code&gt; using Blogspot and Pinterest to deliver C&amp;amp;C address and phishing sites.&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/XLoader/">XLoader</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Android/">Android</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Spyware/">Spyware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Phishing/">Phishing</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>新 XLoader 變種瞄準日本電信商及銀行進行網路釣魚</title>
+      <link>https://blog.theo.com.tw/Research/%E6%96%B0-XLoader-%E8%AE%8A%E7%A8%AE%E7%9E%84%E6%BA%96%E6%97%A5%E6%9C%AC%E9%9B%BB%E4%BF%A1%E5%95%86%E5%8F%8A%E9%8A%80%E8%A1%8C%E9%80%B2%E8%A1%8C%E7%B6%B2%E8%B7%AF%E9%87%A3%E9%AD%9A/</link>
+      <guid>https://blog.theo.com.tw/Research/%E6%96%B0-XLoader-%E8%AE%8A%E7%A8%AE%E7%9E%84%E6%BA%96%E6%97%A5%E6%9C%AC%E9%9B%BB%E4%BF%A1%E5%95%86%E5%8F%8A%E9%8A%80%E8%A1%8C%E9%80%B2%E8%A1%8C%E7%B6%B2%E8%B7%AF%E9%87%A3%E9%AD%9A/</guid>
+      <pubDate>Tue, 31 Mar 2020 15:15:58 GMT</pubDate>
+      
+      <description>&lt;p&gt;我們在三月中旬經由詐騙簡訊的連結 &lt;code&gt;http://wrssa[.]xyz&lt;/code&gt; 獲得了一個 XLoader 的新變種樣本，這個新變種利用 Blogspot 和 Pinterest 來隱藏 C&amp;amp;C 位址以及釣魚網站。&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/XLoader/">XLoader</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Android/">Android</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Spyware/">Spyware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Phishing/">Phishing</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/%E6%96%B0-XLoader-%E8%AE%8A%E7%A8%AE%E7%9E%84%E6%BA%96%E6%97%A5%E6%9C%AC%E9%9B%BB%E4%BF%A1%E5%95%86%E5%8F%8A%E9%8A%80%E8%A1%8C%E9%80%B2%E8%A1%8C%E7%B6%B2%E8%B7%AF%E9%87%A3%E9%AD%9A/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CLAMBLING - A New Backdoor Base On Dropbox (EN)</title>
+      <link>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/</link>
+      <guid>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/</guid>
+      <pubDate>Mon, 17 Feb 2020 14:11:13 GMT</pubDate>
+      
+      <description>&lt;p&gt;In July 2019, one of our customer’s company suffering the APT attack and we start the investigation immediately. During the investigation we found a brand new backdoor sample, which implements lots of features by using Dropbox API, using Dropbox like a C&amp;amp;C server. After the reverse engineering, we extract the Dropbox token used by the sample, dig into Dropbox folder, and reveal the whole functional structure.</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Malware/">Malware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/APT/">APT</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/IncidentResponse/">IncidentResponse</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CLAMBLING - A New Backdoor Base On Dropbox</title>
+      <link>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/</link>
+      <guid>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/</guid>
+      <pubDate>Mon, 17 Feb 2020 13:22:21 GMT</pubDate>
+      
+      <description>&lt;p&gt;2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Malware/">Malware</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/APT/">APT</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/IncidentResponse/">IncidentResponse</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>Deploy A Distributed T-Pot System For Personal Research In Budget</title>
+      <link>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/</link>
+      <guid>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/</guid>
+      <pubDate>Tue, 26 Nov 2019 10:47:22 GMT</pubDate>
+      
+      <description>&lt;p&gt;A distributed honeypot system based on &lt;a href=&quot;https://github.com/telekom-security/tpotce/releases/tag/19.03.1&quot;&gt;T-Pot 19.03.1&lt;/a&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/honeypot/">honeypot</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>Analyze A Fake OpenSSH 5.3 0day Exploit</title>
+      <link>https://blog.theo.com.tw/Research/Analyze-A-Fake-OpenSSH-5-3-0day-Exploit/</link>
+      <guid>https://blog.theo.com.tw/Research/Analyze-A-Fake-OpenSSH-5-3-0day-Exploit/</guid>
+      <pubDate>Mon, 14 Oct 2019 18:46:03 GMT</pubDate>
+      
+      <description>&lt;p&gt;A quick look of a fake 0day exploit :)&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Shellcode/">Shellcode</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/Analyze-A-Fake-OpenSSH-5-3-0day-Exploit/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>PHP: The issue between parse_url and real file path</title>
+      <link>https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/</link>
+      <guid>https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/</guid>
+      <pubDate>Wed, 28 Aug 2019 13:58:58 GMT</pubDate>
+      
+      <description>&lt;p&gt;Use &lt;code&gt;parse_url($url)&lt;/code&gt; to check &lt;code&gt;$url&lt;/code&gt;‘s scheme and pass &lt;code&gt;$url&lt;/code&gt; to &lt;code&gt;file_get_contents()&lt;/code&gt; will lead to LFR issue.&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Research/">Research</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/PHP/">PHP</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/LFI/">LFI</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>VulnHub #Basic Pentesting: 1</title>
+      <link>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/</link>
+      <guid>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/</guid>
+      <pubDate>Sun, 24 Feb 2019 13:08:44 GMT</pubDate>
+      
+      <description>&lt;p&gt;Official website: &lt;a href=&quot;https://www.vulnhub.com/entry/basic-pentesting-1,216&quot;&gt;Basic Pentesting: 1&lt;/a&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/VulnHub/">VulnHub</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>VulnHub #Node:1</title>
+      <link>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/</link>
+      <guid>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/</guid>
+      <pubDate>Wed, 31 Oct 2018 16:38:17 GMT</pubDate>
+      
+      <description>&lt;p&gt;Official website: &lt;a href=&quot;https://www.vulnhub.com/entry/node-1,252/&quot;&gt;Node: 1 ~ VulnHub&lt;/a&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/VulnHub/">VulnHub</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Node-1/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>ksnctf #13 Proverb</title>
+      <link>https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/</link>
+      <guid>https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/</guid>
+      <pubDate>Mon, 06 Aug 2018 15:45:18 GMT</pubDate>
+      
+      <description>&lt;p&gt;&lt;code&gt;ln -s&lt;/code&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/ksnctf/">ksnctf</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-13-Proverb/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>VulnHub #JIS-CTF:VulnUpload</title>
+      <link>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-JIS-CTF-VulnUpload/</link>
+      <guid>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-JIS-CTF-VulnUpload/</guid>
+      <pubDate>Sun, 13 May 2018 14:30:39 GMT</pubDate>
+      
+      <description>&lt;p&gt;Official website: &lt;a href=&quot;https://www.vulnhub.com/entry/jis-ctf-vulnupload,228/&quot;&gt;JIS-CTF: VulnUpload ~ VulnHub&lt;/a&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/VulnHub/">VulnHub</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-JIS-CTF-VulnUpload/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>VulnHub #64base</title>
+      <link>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/</link>
+      <guid>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/</guid>
+      <pubDate>Sat, 12 May 2018 22:56:13 GMT</pubDate>
+      
+      <description>&lt;p&gt;Official website: &lt;a href=&quot;https://www.vulnhub.com/entry/64base-101,173/&quot;&gt;64Base: 1.0.1 ~ VulnHub&lt;/a&gt;&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/VulnHub/">VulnHub</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>TAMUctf 18</title>
+      <link>https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/</link>
+      <guid>https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/</guid>
+      <pubDate>Tue, 27 Feb 2018 21:38:45 GMT</pubDate>
+      
+      <description>&lt;p&gt;10 天的 CTF 比賽&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/TAMUctf/">TAMUctf</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/TAMUctf18/">TAMUctf18</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/TAMUctf/TAMUctf-18/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>VulnHub #Quaoar</title>
+      <link>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/</link>
+      <guid>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/</guid>
+      <pubDate>Wed, 13 Sep 2017 14:09:46 GMT</pubDate>
+      
+      <description>&lt;p&gt;hackfest2016: Quaoar&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/VulnHub/">VulnHub</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>NISRA Enlightened 2017</title>
+      <link>https://blog.theo.com.tw/Blog/NISRA-Enlightened-2017/</link>
+      <guid>https://blog.theo.com.tw/Blog/NISRA-Enlightened-2017/</guid>
+      <pubDate>Thu, 07 Sep 2017 21:24:33 GMT</pubDate>
+      
+      <description>&lt;p&gt;「沒有人一開始就是強者，但你必須先開始才能變強。」&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Blog/">Blog</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/NISRA/">NISRA</category>
+      
+      <category domain="https://blog.theo.com.tw/tags/Wargame/">Wargame</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Blog/NISRA-Enlightened-2017/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>AIS3 2017</title>
+      <link>https://blog.theo.com.tw/Blog/AIS3-2017/</link>
+      <guid>https://blog.theo.com.tw/Blog/AIS3-2017/</guid>
+      <pubDate>Mon, 04 Sep 2017 21:11:57 GMT</pubDate>
+      
+      <description>&lt;p&gt;為期七天的密集課程，不敢說技能大幅提升，但是確實吸收了不少經驗值。&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Blog/">Blog</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/AIS3/">AIS3</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Blog/AIS3-2017/#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>pwnable.kr #shellshock</title>
+      <link>https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/</link>
+      <guid>https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/</guid>
+      <pubDate>Thu, 27 Jul 2017 20:50:01 GMT</pubDate>
+      
+      <description>&lt;p&gt;Mommy, there was a shocking news about bash.&lt;br&gt;I bet you already know, but lets just make it sure :)&lt;/p&gt;</description>
+      
+      
+      
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/">Writeups</category>
+      
+      <category domain="https://blog.theo.com.tw/categories/Writeups/pwnable-kr/">pwnable.kr</category>
+      
+      
+      <category domain="https://blog.theo.com.tw/tags/Writeups/">Writeups</category>
+      
+      
+      <comments>https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-shellshock/#disqus_thread</comments>
+      
+    </item>
+    
+  </channel>
+</rss>

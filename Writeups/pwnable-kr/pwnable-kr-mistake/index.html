@@ -1,0 +1,678 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>pwnable.kr #mistake - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="pwnable.kr,Toddler&#39;s Bottle,mistake">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"C語言又再度讓我驚豔！\n\n題目給的提示是關於運算元的優先等級，還說這題不要太認真，不需要高深的技巧XD。\n連入解題主機後有這些檔案：\n12mistake@ubuntu:~$ lsflag  mistake  mistake.c  password\n\nmistake.c的原始碼：\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;stdio.h&gt;#include &lt;fcntl.h&gt;#define PW_LEN 10#define XORKEY 1void xor(char* s, int len)&#123;\tint i;\tfor(i=0; i&lt;len; i++)&#123;\t\ts[i] ^= XORKEY;\t&#125;&#125;int main(int argc, char* argv[])&#123;\tint fd;\tif(fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0)&#123;\t\tprintf(&quot;can&#x27;t open password %d\\n&quot;, fd);\t\treturn 0;\t&#125;\tprintf(&quot;do not bruteforce...\\n&quot;);\tsleep(time(0)%20);\tchar pw_buf[PW_LEN+1];\tint len;\tif(!(len=read(fd,pw_buf,PW_LEN) &gt; 0))&#123;\t\tprintf(&quot;read error\\n&quot;);\t\tclose(fd);\t\treturn 0;\t&#125;\tchar pw_buf2[PW_LEN+1];\tprintf(&quot;input password : &quot;);\tscanf(&quot;%10s&quot;, pw_buf2);\t// xor your input\txor(pw_buf2, 10);\tif(!strncmp(pw_buf, pw_buf2, PW_LEN))&#123;\t\tprintf(&quot;Password OK\\n&quot;);\t\tsystem(&quot;/bin/cat flag\\n&quot;);\t&#125;\telse&#123;\t\tprintf(&quot;Wrong Password\\n&quot;);\t&#125;\tclose(fd);\treturn 0;&#125;\n\n既然題目已經說跟運算元有關，馬上把焦點放在第17行fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0，這滿有趣的，仔細思考一下，先是進行了開檔的動作，若檔案存在成功開檔，會回傳1，再來因為&lt;的優先等級比=高，所以會先進行比較，最終fd會得到1 &lt; 0的比較結果是0。\n下一個焦點放在第27行，經過剛才開檔的動作以後，此時fd = 0，根據read()函式的定義，fd值為0時，會從標準輸入（stdin）讀入資料，可以讓我們輸入pw_buf的值，不過根據後面真正讀入pw_buf2密碼的第35行，密碼長度應該有10位數，而且pw_buf2會進行XOR運算，根據這些條件我們便可以輸入0000000000給pw_buf，1111111111給pw_buf2來滿足第40行的密碼判斷便可以拿到flag。\n123456mistake@ubuntu:~$ ./mistakedo not bruteforce...0000000000input password : 1111111111Password OKMommy, the operator priority always confuses me :(\n\n真的是一題有趣的題目，的確是平常在寫程式時可能會忽略的小細節，造就了不一樣的結果。\n","dateCreated":"2017-06-06T14:50:21+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-06-06T14:50:21+00:00","description":"C語言又再度讓我驚豔！","headline":"pwnable.kr #mistake","image":["pwnablekr.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/","keywords":"Writeups","thumbnailUrl":"pwnablekr.jpg"}</script>
+    
+    <meta name="description" content="C語言又再度讓我驚豔！">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="pwnable.kr #mistake">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="C語言又再度讓我驚豔！">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/pwnablekr.jpg">
+<meta property="article:published_time" content="2017-06-06T14:50:21.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.278Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/pwnablekr.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/pwnablekr.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/pwnablekr.jpg"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            pwnable.kr #mistake
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-06-06T14:50:21+00:00">
+	
+		    Jun 06, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/pwnable-kr/">pwnable.kr</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>C語言又再度讓我驚豔！</p>
+<span id="more"></span>
+<p>題目給的提示是關於運算元的優先等級，還說這題不要太認真，不需要高深的技巧XD。</p>
+<p>連入解題主機後有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mistake@ubuntu:~$ ls</span><br><span class="line">flag  mistake  mistake.c  password</span><br></pre></td></tr></table></figure>
+
+<p><code>mistake.c</code>的原始碼：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PW_LEN 10</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> XORKEY 1</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">xor</span><span class="params">(<span class="type">char</span>* s, <span class="type">int</span> len)</span>&#123;</span><br><span class="line">	<span class="type">int</span> i;</span><br><span class="line">	<span class="keyword">for</span>(i=<span class="number">0</span>; i&lt;len; i++)&#123;</span><br><span class="line">		s[i] ^= XORKEY;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> fd;</span><br><span class="line">	<span class="keyword">if</span>(fd=open(<span class="string">&quot;/home/mistake/password&quot;</span>,O_RDONLY,<span class="number">0400</span>) &lt; <span class="number">0</span>)&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;can&#x27;t open password %d\n&quot;</span>, fd);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;do not bruteforce...\n&quot;</span>);</span><br><span class="line">	sleep(time(<span class="number">0</span>)%<span class="number">20</span>);</span><br><span class="line"></span><br><span class="line">	<span class="type">char</span> pw_buf[PW_LEN+<span class="number">1</span>];</span><br><span class="line">	<span class="type">int</span> len;</span><br><span class="line">	<span class="keyword">if</span>(!(len=read(fd,pw_buf,PW_LEN) &gt; <span class="number">0</span>))&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;read error\n&quot;</span>);</span><br><span class="line">		close(fd);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="type">char</span> pw_buf2[PW_LEN+<span class="number">1</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;input password : &quot;</span>);</span><br><span class="line">	<span class="built_in">scanf</span>(<span class="string">&quot;%10s&quot;</span>, pw_buf2);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// xor your input</span></span><br><span class="line">	xor(pw_buf2, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>(!<span class="built_in">strncmp</span>(pw_buf, pw_buf2, PW_LEN))&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;Password OK\n&quot;</span>);</span><br><span class="line">		system(<span class="string">&quot;/bin/cat flag\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;Wrong Password\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	close(fd);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>既然題目已經說跟運算元有關，馬上把焦點放在第17行<code>fd=open(&quot;/home/mistake/password&quot;,O_RDONLY,0400) &lt; 0</code>，這滿有趣的，仔細思考一下，先是進行了開檔的動作，若檔案存在成功開檔，會回傳<code>1</code>，再來因為<code>&lt;</code>的優先等級比<code>=</code>高，所以會先進行比較，最終<code>fd</code>會得到<code>1 &lt; 0</code>的比較結果是<code>0</code>。</p>
+<p>下一個焦點放在第27行，經過剛才開檔的動作以後，此時<code>fd = 0</code>，根據<code>read()</code>函式的定義，<code>fd</code>值為<code>0</code>時，會從標準輸入（stdin）讀入資料，可以讓我們輸入<code>pw_buf</code>的值，不過根據後面真正讀入<code>pw_buf2</code>密碼的第35行，密碼長度應該有10位數，而且<code>pw_buf2</code>會進行<code>XOR</code>運算，根據這些條件我們便可以輸入<code>0000000000</code>給<code>pw_buf</code>，<code>1111111111</code>給<code>pw_buf2</code>來滿足第40行的密碼判斷便可以拿到flag。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mistake@ubuntu:~$ ./mistake</span><br><span class="line">do not bruteforce...</span><br><span class="line">0000000000</span><br><span class="line">input password : 1111111111</span><br><span class="line">Password OK</span><br><span class="line">Mommy, the operator priority always confuses me :(</span><br></pre></td></tr></table></figure>
+
+<p>真的是一題有趣的題目，的確是平常在寫程式時可能會忽略的小細節，造就了不一樣的結果。</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    data-tooltip="TMCTF 2017 #Reverse 100"
+                    aria-label="PREVIOUS: TMCTF 2017 #Reverse 100"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    data-tooltip="picoCTF2017 #LEVEL1"
+                    aria-label="NEXT: picoCTF2017 #LEVEL1"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    data-tooltip="TMCTF 2017 #Reverse 100"
+                    aria-label="PREVIOUS: TMCTF 2017 #Reverse 100"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    data-tooltip="picoCTF2017 #LEVEL1"
+                    aria-label="NEXT: picoCTF2017 #LEVEL1"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/pwnable-kr/pwnable-kr-mistake/';
+              
+            this.page.identifier = 'Writeups/pwnable-kr/pwnable-kr-mistake/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

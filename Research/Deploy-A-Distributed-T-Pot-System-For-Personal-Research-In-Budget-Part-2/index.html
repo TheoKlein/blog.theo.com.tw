@@ -1,0 +1,705 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="T-Pot,honeypot,distributed,wireguard">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"A distributed honeypot system based on T-Pot 20.06.1, hello Filebeat!\n\n\nAfter I successfully deployed my distributed honeypot and published the article “Deploy A Distributed T-Pot System For Personal Research In Budget“ a year ago, it works without any critical problems.\nOn June 30, 2020, T-Pot 20.06.0 was released and I want to take this opportunity to rebuild my distributed honeypot system. After some experiments I noticed that in the new version, Logstash could not startup when the memory limit is set to a maximum of 512MB or even 1GB on the VPS (1 CPU &#x2F; 1GB RAM with 3GB swap). My goal is not changed and I don’t want to upgrade the VPS just for more RAM. So, here comes the new data flow with Filebeat and this blog.\nNew Data FlowUnlike the original data flow which has Logstash installed on every sensor node to process and send log back to the central collector server. Filebeat takes the role to do only one job: send raw data back to the Logstash on the central collector server. That means, I need to write a filebeat.yml config for T-Pot, you can refer to my forked T-Pot repository at here.\nI choose 64299/tcp for Logstash to listen to the request from Filebeat, please check your firewall policy. Also, like my previous version, all my servers are connected by WireGuard VPN and transform data through the VPN tunnel.\nNew IssueFilebeat “input” Field Name ConflictBeats fields conform to the Elastic Common Schema (ECS), which has a field name called “input” as an object. Since “input” is an important field for many honeypots as string type, I modify the default fields.yml file to overwrite the “input” field schema. Details can be check at this commit: https://github.com/TheoKlein/tpotce/commit/162c1aac65be154d9dcad93da6fb73f5d1863e6c\nI think this is not a great solution but it works. If anyone has a better way to solve this problem, please let me know.\nLogstash 7.0 Strict Field ReferenceStart from Logstash 7.0, field reference parser is more strict.\nLogstash will crash when your honeypot get the request like this:\n1curl -X POST http://&lt;HONEYPOT_IP&gt; -d &quot;0x[]=test&quot;\n\nIt will be logged by Tanner and dump the post data like this snippet:\n12345...&quot;post_data&quot;: &#123;    &quot;0x[]&quot;: &quot;test&quot;&#125;...\n\nThere is an open issue on GitHub to discuss this problem. I have no choice but to modify the log format from Tanner, convert the dictionary post data to URL encoded string.\n123...&quot;post_data&quot;: &quot;0x%5B%5D%3Dtest&quot;...\nYou can take a look at here https://github.com/TheoKlein/tanner/blob/master/tanner/reporting/log_local.py#L12\nThese two issues are the major problem I meet. For all modifications, you can check at here: https://github.com/telekom-security/tpotce/compare/1afbb8...TheoKlein:fe7b540\nDeploy Your Distributed Honeypot System\nAttention: My forked repository also modifies some other settings, please check the comparison before you install from my repository.\n\nOn each sensor server:\n1234567$ git clone https://github.com/TheoKlein/tpotce$ cp tpotce/docker/elk/filebeat/fi* /opt/# Modify your central collector server&#x27;s IP$ vim /opt/filebeat.yml# Follow the official instruction to install as &quot;NEXTGEN&quot; type\n\nOn central collector server:\n1234$ git clone https://github.com/TheoKlein/tpotce$ cp tpotce/docker/elk/logstash/dist/logstash_with_filebeat.conf /opt/logstash.conf# Follow the official instruction to install as &quot;COLLECTOR&quot; type\n\nConclusionRight now my distributed honeypot system has 5 sensor servers, 1 VPN gateway server, and 1 central collector server. Except for the central collector server, everything else is a rented VPS, which costs me $30 a month in total. It’s a perfectly acceptable price for me :)\n","dateCreated":"2020-10-13T23:52:13+00:00","dateModified":"2025-01-17T13:11:16+00:00","datePublished":"2020-10-13T23:52:13+00:00","description":"A distributed honeypot system based on T-Pot 20.06.1, hello Filebeat!","headline":"Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2","image":["cover.jpg","banner.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/","keywords":"honeypot","thumbnailUrl":"cover.jpg"}</script>
+    
+    <meta name="description" content="A distributed honeypot system based on T-Pot 20.06.1, hello Filebeat!">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2">
+<meta property="og:url" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="A distributed honeypot system based on T-Pot 20.06.1, hello Filebeat!">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/banner.png">
+<meta property="article:published_time" content="2020-10-13T23:52:13.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:16.695Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="honeypot">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/banner.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/cover.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/cover.jpg"/>
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/banner.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/banner.png"/>
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+        <div class="post-header-cover
+                    text-center
+                    "
+             style="background-image:url('/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/banner.png');"
+             data-behavior="2">
+            
+        </div>
+
+            <div id="main" data-behavior="2"
+                 class="hasCover
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2020-10-13T23:52:13+00:00">
+	
+		    Oct 13, 2020
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Research/">Research</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>A distributed honeypot system based on <a target="_blank" rel="noopener" href="https://github.com/telekom-security/tpotce/releases/tag/20.06.1">T-Pot 20.06.1</a>, hello <a target="_blank" rel="noopener" href="https://www.elastic.co/beats/filebeat">Filebeat</a>!</p>
+<span id="more"></span>
+
+<p>After I successfully deployed my distributed honeypot and published the article “<a href="/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/">Deploy A Distributed T-Pot System For Personal Research In Budget</a>“ a year ago, it works without any critical problems.</p>
+<p>On June 30, 2020, <a target="_blank" rel="noopener" href="https://github.com/telekom-security/tpotce/releases/tag/20.06.0">T-Pot 20.06.0</a> was released and I want to take this opportunity to rebuild my distributed honeypot system. After some experiments I noticed that in the new version, Logstash could not startup when the memory limit is set to a maximum of 512MB or even 1GB on the VPS (1 CPU &#x2F; 1GB RAM with 3GB swap). My goal is not changed and I don’t want to upgrade the VPS just for more RAM. So, here comes the new data flow with <a target="_blank" rel="noopener" href="https://www.elastic.co/beats/filebeat">Filebeat</a> and this blog.</p>
+<h2 id="New-Data-Flow"><a href="#New-Data-Flow" class="headerlink" title="New Data Flow"></a>New Data Flow</h2><p><img src="/dataflow.png" alt="dataflow"><br>Unlike the original data flow which has Logstash installed on every sensor node to process and send log back to the central collector server. Filebeat takes the role to do only one job: send raw data back to the Logstash on the central collector server. That means, I need to write a <code>filebeat.yml</code> config for T-Pot, you can refer to my forked T-Pot repository at <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/tpotce/blob/master/docker/elk/filebeat/filebeat.yml">here</a>.</p>
+<p>I choose <code>64299/tcp</code> for Logstash to listen to the request from Filebeat, please check your firewall policy. Also, like my previous version, all my servers are connected by WireGuard VPN and transform data through the VPN tunnel.</p>
+<h2 id="New-Issue"><a href="#New-Issue" class="headerlink" title="New Issue"></a>New Issue</h2><h3 id="Filebeat-“input”-Field-Name-Conflict"><a href="#Filebeat-“input”-Field-Name-Conflict" class="headerlink" title="Filebeat “input” Field Name Conflict"></a>Filebeat “input” Field Name Conflict</h3><p>Beats fields conform to the <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/ecs/current/index.html">Elastic Common Schema (ECS)</a>, which has a field name called “input” as an object. Since “input” is an important field for many honeypots as string type, I modify the default <code>fields.yml</code> file to overwrite the “input” field schema. Details can be check at this commit: <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/tpotce/commit/162c1aac65be154d9dcad93da6fb73f5d1863e6c">https://github.com/TheoKlein/tpotce/commit/162c1aac65be154d9dcad93da6fb73f5d1863e6c</a></p>
+<p>I think this is not a great solution but it works. If anyone has a better way to solve this problem, please let me know.</p>
+<h3 id="Logstash-7-0-Strict-Field-Reference"><a href="#Logstash-7-0-Strict-Field-Reference" class="headerlink" title="Logstash 7.0 Strict Field Reference"></a>Logstash 7.0 Strict Field Reference</h3><p>Start from Logstash 7.0, <a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/logstash/current/breaking-7.0.html#field-ref-strict">field reference parser is more strict</a>.</p>
+<p>Logstash will crash when your honeypot get the request like this:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X POST http://&lt;HONEYPOT_IP&gt; -d &quot;0x[]=test&quot;</span><br></pre></td></tr></table></figure>
+
+<p>It will be logged by Tanner and dump the post data like this snippet:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">&quot;post_data&quot;: &#123;</span><br><span class="line">    &quot;0x[]&quot;: &quot;test&quot;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>There is an open issue on <a target="_blank" rel="noopener" href="https://github.com/elastic/logstash/issues/11608">GitHub</a> to discuss this problem. I have no choice but to modify the log format from Tanner, convert the dictionary post data to URL encoded string.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">&quot;post_data&quot;: &quot;0x%5B%5D%3Dtest&quot;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>You can take a look at here <a target="_blank" rel="noopener" href="https://github.com/TheoKlein/tanner/blob/master/tanner/reporting/log_local.py#L12">https://github.com/TheoKlein/tanner/blob/master/tanner/reporting/log_local.py#L12</a></p>
+<p>These two issues are the major problem I meet. For all modifications, you can check at here: <a target="_blank" rel="noopener" href="https://github.com/telekom-security/tpotce/compare/1afbb8...TheoKlein:fe7b540">https://github.com/telekom-security/tpotce/compare/1afbb8...TheoKlein:fe7b540</a></p>
+<h2 id="Deploy-Your-Distributed-Honeypot-System"><a href="#Deploy-Your-Distributed-Honeypot-System" class="headerlink" title="Deploy Your Distributed Honeypot System"></a>Deploy Your Distributed Honeypot System</h2><blockquote>
+<p>Attention: My forked repository also modifies some other settings, please check the comparison before you install from my repository.</p>
+</blockquote>
+<p>On each sensor server:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/TheoKlein/tpotce</span><br><span class="line">$ <span class="built_in">cp</span> tpotce/docker/elk/filebeat/fi* /opt/</span><br><span class="line"></span><br><span class="line"><span class="comment"># Modify your central collector server&#x27;s IP</span></span><br><span class="line">$ vim /opt/filebeat.yml</span><br><span class="line"></span><br><span class="line"><span class="comment"># Follow the official instruction to install as &quot;NEXTGEN&quot; type</span></span><br></pre></td></tr></table></figure>
+
+<p>On central collector server:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/TheoKlein/tpotce</span><br><span class="line">$ <span class="built_in">cp</span> tpotce/docker/elk/logstash/dist/logstash_with_filebeat.conf /opt/logstash.conf</span><br><span class="line"></span><br><span class="line"><span class="comment"># Follow the official instruction to install as &quot;COLLECTOR&quot; type</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>Right now my distributed honeypot system has 5 sensor servers, 1 VPN gateway server, and 1 central collector server. Except for the central collector server, everything else is a rented VPS, which costs me $30 a month in total. It’s a perfectly acceptable price for me :)</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/honeypot/" rel="tag">honeypot</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    data-tooltip="分析一個加料的 Telegram for Windows 中文版安裝程式"
+                    aria-label="PREVIOUS: 分析一個加料的 Telegram for Windows 中文版安裝程式"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/"
+                    data-tooltip="New Variant of XLoader Targets Japanese Telcos And Banks For Phishing"
+                    aria-label="NEXT: New Variant of XLoader Targets Japanese Telcos And Banks For Phishing"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    data-tooltip="分析一個加料的 Telegram for Windows 中文版安裝程式"
+                    aria-label="PREVIOUS: 分析一個加料的 Telegram for Windows 中文版安裝程式"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/New-Variant-of-XLoader-Targets-Japanese-Telcos-And-Banks-For-Phishing/"
+                    data-tooltip="New Variant of XLoader Targets Japanese Telcos And Banks For Phishing"
+                    aria-label="NEXT: New Variant of XLoader Targets Japanese Telcos And Banks For Phishing"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/';
+              
+            this.page.identifier = 'Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

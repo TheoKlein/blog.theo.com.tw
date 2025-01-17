@@ -1,0 +1,733 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>picoCTF2017 #LEVEL1 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="picoCTF,picoCTF 2017">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"比賽結束這麼久才有空整理出這篇文章（其實只是自己太弱到現在才LEVEL 1全解）\n\n前面Level1基礎的題目的確都還不錯，適合新手來學習（像我），後面的題目慢慢變難有挑戰性…\n\nForensics[50PTS] Digital Camouflage題目給了一個data.pcap要我們找出密碼，直接查看其檔案內容，其中有一行的內容如下：\n\nuserid&#x3D;stevensj&amp;pswrd&#x3D;UjZBS05oV3dvNw%3D%3D\n\n提示裡有說，如果你覺得你找到了密碼可是提交失敗，或許是有加密過的關係。看了一下pswrd，後面有熟悉的%3D，這是URL Encoding，%3D -&gt; =，所以密碼應該是UjZBS05oV3dvNw==，但是這樣提交還是會失敗。\n再想想其他加密法，長度看起來不像MD5，另一個常用的base64或許可以試試，直接丟到線上Decoder轉換，得到R6AKNhWwo7，就是此題的flag。\n[50PTS] Special Agent User同樣給了一個data.pcap要我們看看user-agent，我用wireshark打開以後只過濾http.user_agent，總共看到9個http request，其中有8個的user-agent是wget，只有一個是我們要找的，根據題目的說明，flag的格式是BrowserName BrowserVersion，而且BrowserVersion的條件是最多要取到3個子版本號，另外如果最後一個子版本號是0的話就忽略。符合條件的只有Chrome/40.0.2214.93，根據格式修改後即可得到flag。\n\nChrome 40.0.2214\n\n\nCryptography[20PTS] keyz這題僅是基礎知識，要求參賽者將自己電腦的public key藉由web terminal加入到~/.ssh/authorized_keys中，即可使用自己的電腦進行SSH登入，登入後就會看到flag。\n\nCongratulations on setting up SSH key authentication!Here is your flag: who_needs_pwords_anyways\n\n[40PTS] Substitute基本上題目已經道盡一切了，這題就是一個字母位移加密法的題目，比較常聽到的像是凱薩加密法。不過這題沒有這麼簡單，它並不是有順序的位移，我使用這個網站來解出密文，language選擇English，它會偵測解密後的文字是否有意義，如果有意義，那麼很可能就是正確的結果。解出來的結果第一句話就看到flag了：\n\nTHE FLAG IS IFONLYMODERNCRYPTOWASLIKETHIS.\n\n[50PTS] computeAES認識AES加密演算法，題目只給了以下資訊：\n\nEncrypted with AES in ECB mode. All values base64 encodedciphertext &#x3D; I300ryGVTXJVT803Sdt&#x2F;KcOGlyPStZkeIHKapRjzwWf9+p7fIWkBnCWu&#x2F;IWls+5Skey &#x3D; iyq1bFDkirtGqiFz7OVi4A&#x3D;&#x3D;\n\n提示說可以是線上工具或是使用Python，當然是要用Python來自幹才好玩。爬了文以後我寫了這個decoder（要先pip install pycrypto）：\n123456from Crypto.Cipher import AESkey = &#x27;iyq1bFDkirtGqiFz7OVi4A==&#x27;text = &#x27;I300ryGVTXJVT803Sdt/KcOGlyPStZkeIHKapRjzwWf9+p7fIWkBnCWu/IWls+5S&#x27;aes = AES.new(key.decode(&#x27;base64&#x27;), AES.MODE_ECB)print aes.decrypt(text.decode(&#x27;base64&#x27;))\n\nflag{do_not_let_machines_win_2d4975bc}__________\n\n[50PTS] computeRSA根據提示的公式使用Python shell直接計算（補上RSA加密演算法的介紹）\n12&gt;&gt;&gt; pow(150815, 1941, 435979)133337\n\nReverse Engineering[20PTS] Hex2Raw此題需要SSH進入解題環境，目錄下有hex2raw的執行檔和flag，執行以後出現題目要求：\n12345Give me this in raw form (0x41 -&gt; &#x27;A&#x27;):7ca67167db329a5d1508cc4ad5380678You gave me:\n之前解別的CTF題目學到的xxd指令終於要派上用場了！詳細的xxd用法就請自行查看該網頁。\n直接使用xxd指令就可以把hex轉換成binary：\n1$ echo 7ca67167db329a5d1508cc4ad5380678 | xxd -r -p | ./hex2raw\n\n12Yay! That&#x27;s what I wanted! Here be the flag:75d3080d00407fa709c18a6cc69d1edc\n\n[20PTS] Raw2Hex跟上一題非常類似，不過這次要轉回hex。同樣可以利用xxd指令來解這題。\n12$ ./raw2hex | xxd -p54686520666c61672069733ae519e7aa7e593fde891bd24aaa423ea4\n\nWeb Exploitation[20PTS] What Is Web就題意看來，似乎希望我們暸解一個網頁的組成，給了這個網址。既然要暸解網頁，第一步當然就先看看原始碼。\n在首頁的原始碼最後馬上就發現了線索：\n123&lt;!-- Cool! Look at me! This is an HTML file. It describes what each page contains in a format your browser can understand. --&gt;&lt;!-- The first part of the flag (there are 3 parts) is 9daca0510ff --&gt;&lt;!-- What other types of files are there in a webpage? --&gt;\n\n把flag拆成三段放在不同地方讓我們繼續去找，原始碼裡還可以看到使用了hacker.css和script.js兩個檔案，分別開啟便可以在最上方的註解找到第二、第三段flag。\n123456/*This is the css file. It contains information on how to graphically displaythe page. It is in a seperate file so that multiple pages can all use the same one. This allows them all to be updated by changing just this one.The second part of the flag is eb6c5680635 */\n\n12345/* This is a javascript file. It contains code that runs locally in your * browser, although it has spread to a large number of other uses. * * The final part of the flag is f1ef52d049f */\n\nflag:9daca0510ffeb6c5680635f1ef52d049f\n\nBinary ExploitationMiscMaster Challenge[50PTS] Lazy Dev題目要求我們登入這個網站，看了一下原始碼：\n1234567891011&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;body&gt;    &lt;h1&gt;Enter the password&lt;/h1&gt;    &lt;input id=&quot;password&quot;&gt;    &lt;button type=&quot;button&quot; onclick=&quot;process_password()&quot;&gt;Submit&lt;/button&gt;    &lt;p id=&quot;res&quot;&gt;&lt;/p&gt;&lt;/body&gt;&lt;script type=&quot;text/javascript&quot; src=&quot;/static/client.js&quot;&gt;&lt;/script&gt;&lt;/html&gt;\n\n檢查密碼的函式寫在/static/client.js裡：\n123456789101112131415161718192021222324252627//Validate the password. TBD!function validate(pword)&#123;  //TODO: Implement me  return false;&#125;//Make an ajax request to the serverfunction make_ajax_req(input)&#123;  var text_response;  var http_req = new XMLHttpRequest();  var params = &quot;pword_valid=&quot; + input.toString();  http_req.open(&quot;POST&quot;, &quot;login&quot;, true);  http_req.setRequestHeader(&quot;Content-type&quot;, &quot;application/x-www-form-urlencoded&quot;);  http_req.onreadystatechange = function() &#123;//Call a function when the state changes.  \tif(http_req.readyState == 4 &amp;&amp; http_req.status == 200) &#123;      document.getElementById(&quot;res&quot;).innerHTML = http_req.responseText;    &#125;  &#125;  http_req.send(params);&#125;//Called when the user submits the passwordfunction process_password()&#123;  var pword = document.getElementById(&quot;password&quot;).value;  var res = validate(pword);  var server_res = make_ajax_req(res);&#125;\n結果檢查密碼的validate()根本還沒實作，只會回傳false，不過有意思的是，檢查完密碼後，會在利用make_ajax_req()發出一次HTTP request，這時就可以用BurpSuit來修改HTTP request。\n成功修改HTTP request並得到flag。\n\nclient_side_is_the_dark_sidebde1f567656f8c9b654a1ec24e1ff889\n\n文章未完待續\n","dateCreated":"2017-06-05T14:21:37+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-06-05T14:21:37+00:00","description":"比賽結束這麼久才有空整理出這篇文章（其實只是自己太弱到現在才LEVEL 1全解）","headline":"picoCTF2017 #LEVEL1","image":["picoctf.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/","keywords":"Writeups, picoCTF","thumbnailUrl":"picoctf.jpg"}</script>
+    
+    <meta name="description" content="比賽結束這麼久才有空整理出這篇文章（其實只是自己太弱到現在才LEVEL 1全解）">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="picoCTF2017 #LEVEL1">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="比賽結束這麼久才有空整理出這篇文章（其實只是自己太弱到現在才LEVEL 1全解）">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/picoctf.jpg">
+<meta property="article:published_time" content="2017-06-05T14:21:37.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.268Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta property="article:tag" content="picoCTF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/picoctf.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/picoctf.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/picoctf.jpg"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            picoCTF2017 #LEVEL1
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-06-05T14:21:37+00:00">
+	
+		    Jun 05, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/picoCTF/">picoCTF</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>比賽結束這麼久才有空整理出這篇文章<del>（其實只是自己太弱到現在才LEVEL 1全解）</del></p>
+<span id="more"></span>
+<p>前面Level1基礎的題目的確都還不錯，適合新手來學習（像我），後面的題目慢慢變難有挑戰性…</p>
+<h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Forensics"><span class="toc-text">Forensics</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#50PTS-Digital-Camouflage"><span class="toc-text">[50PTS] Digital Camouflage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#50PTS-Special-Agent-User"><span class="toc-text">[50PTS] Special Agent User</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cryptography"><span class="toc-text">Cryptography</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#20PTS-keyz"><span class="toc-text">[20PTS] keyz</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#40PTS-Substitute"><span class="toc-text">[40PTS] Substitute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#50PTS-computeAES"><span class="toc-text">[50PTS] computeAES</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#50PTS-computeRSA"><span class="toc-text">[50PTS] computeRSA</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reverse-Engineering"><span class="toc-text">Reverse Engineering</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#20PTS-Hex2Raw"><span class="toc-text">[20PTS] Hex2Raw</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#20PTS-Raw2Hex"><span class="toc-text">[20PTS] Raw2Hex</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Web-Exploitation"><span class="toc-text">Web Exploitation</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#20PTS-What-Is-Web"><span class="toc-text">[20PTS] What Is Web</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Binary-Exploitation"><span class="toc-text">Binary Exploitation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Misc"><span class="toc-text">Misc</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Master-Challenge"><span class="toc-text">Master Challenge</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#50PTS-Lazy-Dev"><span class="toc-text">[50PTS] Lazy Dev</span></a></li></ol></li></ol>
+<h2 id="Forensics"><a href="#Forensics" class="headerlink" title="Forensics"></a>Forensics</h2><h3 id="50PTS-Digital-Camouflage"><a href="#50PTS-Digital-Camouflage" class="headerlink" title="[50PTS] Digital Camouflage"></a>[50PTS] Digital Camouflage</h3><p>題目給了一個<code>data.pcap</code>要我們找出密碼，直接查看其檔案內容，其中有一行的內容如下：</p>
+<blockquote>
+<p>userid&#x3D;stevensj&amp;pswrd&#x3D;UjZBS05oV3dvNw%3D%3D</p>
+</blockquote>
+<p>提示裡有說，如果你覺得你找到了密碼可是提交失敗，或許是有加密過的關係。<br>看了一下<code>pswrd</code>，後面有熟悉的<code>%3D</code>，這是<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Percent-encoding">URL Encoding</a>，<code>%3D -&gt; =</code>，所以密碼應該是<code>UjZBS05oV3dvNw==</code>，但是這樣提交還是會失敗。</p>
+<p>再想想其他加密法，長度看起來不像MD5，另一個常用的base64或許可以試試，直接丟到線上<a target="_blank" rel="noopener" href="https://www.base64decode.org/">Decoder</a>轉換，得到<code>R6AKNhWwo7</code>，就是此題的flag。</p>
+<h3 id="50PTS-Special-Agent-User"><a href="#50PTS-Special-Agent-User" class="headerlink" title="[50PTS] Special Agent User"></a>[50PTS] Special Agent User</h3><p>同樣給了一個<code>data.pcap</code>要我們看看user-agent，我用wireshark打開以後只過濾<code>http.user_agent</code>，總共看到9個http request，其中有8個的user-agent是<code>wget</code>，只有一個是我們要找的，根據題目的說明，flag的格式是<code>BrowserName BrowserVersion</code>，而且<code>BrowserVersion</code>的條件是最多要取到3個子版本號，另外如果最後一個子版本號是0的話就忽略。符合條件的只有<code>Chrome/40.0.2214.93</code>，根據格式修改後即可得到flag。</p>
+<blockquote>
+<p>Chrome 40.0.2214</p>
+</blockquote>
+<p><img src="/SpecialAgentUser-01.png" alt="wireshark"></p>
+<h2 id="Cryptography"><a href="#Cryptography" class="headerlink" title="Cryptography"></a>Cryptography</h2><h3 id="20PTS-keyz"><a href="#20PTS-keyz" class="headerlink" title="[20PTS] keyz"></a>[20PTS] keyz</h3><p>這題僅是基礎知識，要求參賽者將自己電腦的public key藉由web terminal加入到<code>~/.ssh/authorized_keys</code>中，即可使用自己的電腦進行SSH登入，登入後就會看到flag。</p>
+<blockquote>
+<p>Congratulations on setting up SSH key authentication!<br>Here is your flag: who_needs_pwords_anyways</p>
+</blockquote>
+<h3 id="40PTS-Substitute"><a href="#40PTS-Substitute" class="headerlink" title="[40PTS] Substitute"></a>[40PTS] Substitute</h3><p>基本上題目已經道盡一切了，這題就是一個字母位移加密法的題目，比較常聽到的像是<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Caesar_cipher">凱薩加密法</a>。不過這題沒有這麼簡單，它並不是有順序的位移，我使用這個<a target="_blank" rel="noopener" href="https://www.guballa.de/substitution-solver">網站</a>來解出密文，language選擇English，它會偵測解密後的文字是否有意義，如果有意義，那麼很可能就是正確的結果。解出來的結果第一句話就看到flag了：</p>
+<blockquote>
+<p>THE FLAG IS IFONLYMODERNCRYPTOWASLIKETHIS.</p>
+</blockquote>
+<h3 id="50PTS-computeAES"><a href="#50PTS-computeAES" class="headerlink" title="[50PTS] computeAES"></a>[50PTS] computeAES</h3><p>認識AES加密演算法，題目只給了以下資訊：</p>
+<blockquote>
+<p>Encrypted with AES in ECB mode. All values base64 encoded<br>ciphertext &#x3D; I300ryGVTXJVT803Sdt&#x2F;KcOGlyPStZkeIHKapRjzwWf9+p7fIWkBnCWu&#x2F;IWls+5S<br>key &#x3D; iyq1bFDkirtGqiFz7OVi4A&#x3D;&#x3D;</p>
+</blockquote>
+<p>提示說可以是線上工具或是使用Python，當然是要用Python來自幹才好玩。爬了文以後我寫了這個decoder（要先<code>pip install pycrypto</code>）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line">key = <span class="string">&#x27;iyq1bFDkirtGqiFz7OVi4A==&#x27;</span></span><br><span class="line">text = <span class="string">&#x27;I300ryGVTXJVT803Sdt/KcOGlyPStZkeIHKapRjzwWf9+p7fIWkBnCWu/IWls+5S&#x27;</span></span><br><span class="line"></span><br><span class="line">aes = AES.new(key.decode(<span class="string">&#x27;base64&#x27;</span>), AES.MODE_ECB)</span><br><span class="line"><span class="built_in">print</span> aes.decrypt(text.decode(<span class="string">&#x27;base64&#x27;</span>))</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>flag{do_not_let_machines_win_2d4975bc}__________</p>
+</blockquote>
+<h3 id="50PTS-computeRSA"><a href="#50PTS-computeRSA" class="headerlink" title="[50PTS] computeRSA"></a>[50PTS] computeRSA</h3><p>根據提示的公式使用Python shell直接計算（補上<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/RSA%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95">RSA加密演算法</a>的介紹）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">pow</span>(<span class="number">150815</span>, <span class="number">1941</span>, <span class="number">435979</span>)</span><br><span class="line"><span class="number">133337</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Reverse-Engineering"><a href="#Reverse-Engineering" class="headerlink" title="Reverse Engineering"></a>Reverse Engineering</h2><h3 id="20PTS-Hex2Raw"><a href="#20PTS-Hex2Raw" class="headerlink" title="[20PTS] Hex2Raw"></a>[20PTS] Hex2Raw</h3><p>此題需要SSH進入解題環境，目錄下有<code>hex2raw</code>的執行檔和<code>flag</code>，執行以後出現題目要求：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Give me this in raw form (0x41 -&gt; &#x27;A&#x27;):</span><br><span class="line">7ca67167db329a5d1508cc4ad5380678</span><br><span class="line"></span><br><span class="line">You gave me:</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>之前解別的CTF題目學到的<a target="_blank" rel="noopener" href="http://linuxcommand.org/man_pages/xxd1.html">xxd</a>指令終於要派上用場了！詳細的xxd用法就請自行查看該網頁。</p>
+<p>直接使用xxd指令就可以把<code>hex</code>轉換成<code>binary</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ echo 7ca67167db329a5d1508cc4ad5380678 | xxd -r -p | ./hex2raw</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Yay! That&#x27;s what I wanted! Here be the flag:</span><br><span class="line">75d3080d00407fa709c18a6cc69d1edc</span><br></pre></td></tr></table></figure>
+
+<h3 id="20PTS-Raw2Hex"><a href="#20PTS-Raw2Hex" class="headerlink" title="[20PTS] Raw2Hex"></a>[20PTS] Raw2Hex</h3><p>跟上一題非常類似，不過這次要轉回<code>hex</code>。同樣可以利用xxd指令來解這題。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ./raw2hex | xxd -p</span><br><span class="line">54686520666c61672069733ae519e7aa7e593fde891bd24aaa423ea4</span><br></pre></td></tr></table></figure>
+
+<h2 id="Web-Exploitation"><a href="#Web-Exploitation" class="headerlink" title="Web Exploitation"></a>Web Exploitation</h2><h3 id="20PTS-What-Is-Web"><a href="#20PTS-What-Is-Web" class="headerlink" title="[20PTS] What Is Web"></a>[20PTS] What Is Web</h3><p>就題意看來，似乎希望我們暸解一個網頁的組成，給了這個<a target="_blank" rel="noopener" href="http://shell2017.picoctf.com:4079/">網址</a>。既然要暸解網頁，第一步當然就先看看原始碼。</p>
+<p>在首頁的原始碼最後馬上就發現了線索：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- Cool! Look at me! This is an HTML file. It describes what each page contains in a format your browser can understand. --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- The first part of the flag (there are 3 parts) is 9daca0510ff --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- What other types of files are there in a webpage? --&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>把flag拆成三段放在不同地方讓我們繼續去找，原始碼裡還可以看到使用了<code>hacker.css</code>和<code>script.js</code>兩個檔案，分別開啟便可以在最上方的註解找到第二、第三段flag。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">This is the css file. It contains information on how to graphically display</span><br><span class="line">the page. It is in a seperate file so that multiple pages can all use the same </span><br><span class="line">one. This allows them all to be updated by changing just this one.</span><br><span class="line">The second part of the flag is eb6c5680635 </span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* This is a javascript file. It contains code that runs locally in your</span><br><span class="line"> * browser, although it has spread to a large number of other uses.</span><br><span class="line"> *</span><br><span class="line"> * The final part of the flag is f1ef52d049f</span><br><span class="line"> */</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>flag:<br>9daca0510ffeb6c5680635f1ef52d049f</p>
+</blockquote>
+<h2 id="Binary-Exploitation"><a href="#Binary-Exploitation" class="headerlink" title="Binary Exploitation"></a>Binary Exploitation</h2><h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><h2 id="Master-Challenge"><a href="#Master-Challenge" class="headerlink" title="Master Challenge"></a>Master Challenge</h2><h3 id="50PTS-Lazy-Dev"><a href="#50PTS-Lazy-Dev" class="headerlink" title="[50PTS] Lazy Dev"></a>[50PTS] Lazy Dev</h3><p>題目要求我們登入這個<a target="_blank" rel="noopener" href="http://shell2017.picoctf.com:35895/">網站</a>，看了一下原始碼：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h1</span>&gt;</span>Enter the password<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">&quot;button&quot;</span> <span class="attr">onclick</span>=<span class="string">&quot;process_password()&quot;</span>&gt;</span>Submit<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">&quot;res&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;/static/client.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>檢查密碼的函式寫在<code>/static/client.js</code>裡：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Validate the password. TBD!</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">validate</span>(<span class="params">pword</span>)&#123;</span><br><span class="line">  <span class="comment">//<span class="doctag">TODO:</span> Implement me</span></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Make an ajax request to the server</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">make_ajax_req</span>(<span class="params">input</span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> text_response;</span><br><span class="line">  <span class="keyword">var</span> http_req = <span class="keyword">new</span> <span class="title class_">XMLHttpRequest</span>();</span><br><span class="line">  <span class="keyword">var</span> params = <span class="string">&quot;pword_valid=&quot;</span> + input.<span class="title function_">toString</span>();</span><br><span class="line">  http_req.<span class="title function_">open</span>(<span class="string">&quot;POST&quot;</span>, <span class="string">&quot;login&quot;</span>, <span class="literal">true</span>);</span><br><span class="line">  http_req.<span class="title function_">setRequestHeader</span>(<span class="string">&quot;Content-type&quot;</span>, <span class="string">&quot;application/x-www-form-urlencoded&quot;</span>);</span><br><span class="line">  http_req.<span class="property">onreadystatechange</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;<span class="comment">//Call a function when the state changes.</span></span><br><span class="line">  	<span class="keyword">if</span>(http_req.<span class="property">readyState</span> == <span class="number">4</span> &amp;&amp; http_req.<span class="property">status</span> == <span class="number">200</span>) &#123;</span><br><span class="line">      <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;res&quot;</span>).<span class="property">innerHTML</span> = http_req.<span class="property">responseText</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  http_req.<span class="title function_">send</span>(params);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Called when the user submits the password</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">process_password</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="keyword">var</span> pword = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;password&quot;</span>).<span class="property">value</span>;</span><br><span class="line">  <span class="keyword">var</span> res = <span class="title function_">validate</span>(pword);</span><br><span class="line">  <span class="keyword">var</span> server_res = <span class="title function_">make_ajax_req</span>(res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>結果檢查密碼的<code>validate()</code>根本還沒實作，只會回傳<code>false</code>，不過有意思的是，檢查完密碼後，會在利用<code>make_ajax_req()</code>發出一次HTTP request，這時就可以用<a target="_blank" rel="noopener" href="https://portswigger.net/burp/">BurpSuit</a>來修改HTTP request。<br><img src="/LazyDev-01.png" alt="false"><br><img src="/LazyDev-02.png" alt="true"></p>
+<p>成功修改HTTP request並得到flag。<br><img src="/LazyDev-03.png" alt="flag"></p>
+<blockquote>
+<p>client_side_is_the_dark_sidebde1f567656f8c9b654a1ec24e1ff889</p>
+</blockquote>
+<p>文章未完待續</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/picoCTF/" rel="tag">picoCTF</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    data-tooltip="pwnable.kr #mistake"
+                    aria-label="PREVIOUS: pwnable.kr #mistake"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-collision/"
+                    data-tooltip="pwnable.kr #collision"
+                    aria-label="NEXT: pwnable.kr #collision"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    data-tooltip="pwnable.kr #mistake"
+                    aria-label="PREVIOUS: pwnable.kr #mistake"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-collision/"
+                    data-tooltip="pwnable.kr #collision"
+                    aria-label="NEXT: pwnable.kr #collision"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/picoCTF/picoCTF2017-LEVEL1/';
+              
+            this.page.identifier = 'Writeups/picoCTF/picoCTF2017-LEVEL1/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

@@ -1,0 +1,697 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>VulnHub #Quaoar - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="vulnhub,writeup,quaoar">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"hackfest2016: Quaoar\n\n目標VulnHub：QuaoarLocal Victim Quaoar IP: 192.168.31.54\n\nGet a shell\nGet root access\nThere is a post exploitation flag on the box\n\n偵查VM 開起來以後唯一的資訊就是一個 IP，第一件事就先拿去 Nmap 看一看開啟了哪些對外的服務。\n123456789101112131415161718root@kali:~# nmap -sS 192.168.31.54Starting Nmap 7.60 ( https://nmap.org ) at 2017-09-13 06:37 UTCNmap scan report for 192.168.31.54Host is up (0.011s latency).Not shown: 991 closed portsPORT    STATE SERVICE22/tcp  open  ssh53/tcp  open  domain80/tcp  open  http110/tcp open  pop3139/tcp open  netbios-ssn143/tcp open  imap445/tcp open  microsoft-ds993/tcp open  imaps995/tcp open  pop3sNmap done: 1 IP address (1 host up) scanned in 2.18 seconds\n\n太棒了，80 port 有開一個 http 的服務，web 可能會是很好的一個攻擊入口。不過用瀏覽器一看只有兩張圖片而已。只好進入例行步驟看看有哪些路徑，我自己習慣先看看有沒有robots.txt，在這裡還真的藏了 Wordpress 在裡面。\n順帶一提，也可以利用Burp Suite或是OWASP ZAP的Spider功能來爬整個網站的連結，就可以很清楚看到大部分的東西。\n知道有一個 Wordpress 網站後，我再使用WPScan來檢查這個 Wordpress 站點有沒有什麼弱點。（因為檢查結果滿多的就不整個複製貼上了。）\n12345678910111213141516171819202122232425262728root@kali:~# wpscan -u 192.168.31.54/wordpress_______________________________________________________________        __          _______   _____        \\ \\        / /  __ \\ / ____|         \\ \\  /\\  / /| |__) | (___   ___  __ _ _ __ ®          \\ \\/  \\/ / |  ___/ \\___ \\ / __|/ _` | &#x27;_ \\           \\  /\\  /  | |     ____) | (__| (_| | | | |            \\/  \\/   |_|    |_____/ \\___|\\__,_|_| |_|        WordPress Security Scanner by the WPScan Team                       Version 2.9.3          Sponsored by Sucuri - https://sucuri.net   @_WPScan_, @ethicalhack3r, @erwan_lr, pvdl, @_FireFart________________________________________________________________[+] URL: http://192.168.31.54/wordpress/[+] Started: Wed Sep 13 06:57:36 2017[!] The WordPress &#x27;http://192.168.31.54/wordpress/readme.html&#x27; file exists exposing a version number[+] Interesting header: SERVER: Apache/2.2.22 (Ubuntu)[+] Interesting header: X-POWERED-BY: PHP/5.3.10-1ubuntu3[+] XML-RPC Interface available under: http://192.168.31.54/wordpress/xmlrpc.php[!] Upload directory has directory listing enabled: http://192.168.31.54/wordpress/wp-content/uploads/[!] Includes directory has directory listing enabled: http://192.168.31.54/wordpress/wp-includes/[+] WordPress version 3.9.14 (Released on 2016-09-07) identified from advanced fingerprinting, meta generator, readme, links opml, stylesheets numbers[!] 15 vulnerabilities identified from the version number...\n\n總體而言有不少 CVE 弱點被檢查出來，不過我比較在意的是 Wordpress 的登入功能，舊的版本說不定會有預設密碼這種弱點，再用 WPScan 加上猜測常見使用者的參數：\n123456789101112root@kali:~# wpscan -u 192.168.31.54/wordpress --enumerat user...[+] Enumerating usernames ...[+] Identified the following 2 user/s:    +----+--------+--------+    | Id | Login  | Name   |    +----+--------+--------+    | 1  | admin  | admin  |    | 2  | wpuser | wpuser |    +----+--------+--------+[!] Default first WordPress username &#x27;admin&#x27; is still used...\n結果竟然有預設的admin帳號仍然還在使用中，當然第一個就先猜密碼也是admin，一試就成功。\n滲透有了 Wordpress 的管理權限後，再來得思考如何取得這台伺服器的控制權。Wordpress 有擴充 Plugin 的功能，而且可以上傳自製的 Plugin，或許可以利用安裝自訂 Plugin 的功能來上傳一個 webshell。寫一個 Wordpress Plugin 不難，可以參考官方這篇文章，只要有一些基本的描述就可以改造成最基本的 Plugin。\n這裡我用有名的b374k來修改成符合 Wordpress Plugin 的格式，基本上只要在開頭加些 Plugin 描述後再包成ZIP就可以上傳。\n1234567891011121314&lt;?php/*Plugin Name: b374kDescription: a simple webshellVersion: 1.0*//*\tb374k shell 3.2.3\tJayalah Indonesiaku\t(c)2014\thttps://github.com/b374k/b374k*/.....\n\n上傳成功以後，Plugin的路徑位在/wp-content/plugins/PLUGIN_NAME/xxx.php，例如這次的路徑/wp-content/plugins/b374k/b374k.php，輸入預設密碼b374k後就可以成功進入 webshell。\n基本上到這邊已經成功上傳了一個 webshell 而且找到了位在/home/wpadmin/flag.txt的第一個 flag。\nroot雖然有了 webshell 就可以辦到很多事，但能拿下伺服器的 root 才算是掌握了伺服器的操作權。\n有裝過 Wordpress 的就會知道有個wp-config.php的檔案會儲存一些重要設定，例如帳號密碼。的確找到了 MySQL 的 root 密碼，抱著姑且一試的心態打這個密碼去做 SSH 登入，沒想到竟然成功了，system root 的密碼竟然跟 MySQL root 一樣，不愧是難度 Vary Easy 的 vm，沒有特別刁難… 同時也找到了第二個 flag 在 /root/flag.txt。\n123456789101112131415161718192021root@kali:~# ssh root@192.168.31.54root@192.168.31.54&#x27;s password:Welcome to Ubuntu 12.04 LTS (GNU/Linux 3.2.0-23-generic-pae i686) * Documentation:  https://help.ubuntu.com/  System information as of Wed Sep 13 04:10:59 EDT 2017  System load:  0.16              Processes:             97  Usage of /:   29.9% of 7.21GB   Users logged in:       0  Memory usage: 39%               IP address for eth0:   192.168.31.54  Swap usage:   10%               IP address for virbr0: 192.168.122.1  Graph this data and manage this system at https://landscape.canonical.com/New release &#x27;14.04.5 LTS&#x27; available.Run &#x27;do-release-upgrade&#x27; to upgrade to it.Last login: Wed Sep 13 04:09:53 2017 from 192.168.31.193root@Quaoar:~# cat flag.txt8e3f9ec016e3598c5eec11fd3d73f6fb\n\nFinal flag最後一個 flag 我一直沒有頭緒藏在哪裡，看來官方給的一些 Walkthrough 才知道，原來這要考的是進入伺服器之後要檢查 crontab 的習慣，很多時候滲透進伺服器後會利用 crontab 來反彈 shell。而檢查也不單純只是下個$ crontab -l的方法，這個會有瑕疵，只會列出目前使用者 (root) 的 crontab，最保險的做法還是得自己到/etc/cron.d底下看看全部的 crontab。的確有一個/etc/cron.d/php5的檔案，最後一個 flag 就在這裡面。\n12345678root@Quaoar:/etc/cron.d# cat php5# /etc/cron.d/php5: crontab fragment for php5#  This purges session files older than X, where X is defined in seconds#  as the largest value of session.gc_maxlifetime from all your php.ini#  files, or 24 minutes if not defined.  See /usr/lib/php5/maxlifetime# Its always a good idea to check for crontab to learn more about the operating system good job you get 50! - d46795f84148fd338603d0d6a9dbf8de# Look for and purge old sessions every 30 minutes09,39 *     * * *     root   [ -x /usr/lib/php5/maxlifetime ] &amp;&amp; [ -d /var/lib/php5 ] &amp;&amp; find /var/lib/php5/ -depth -mindepth 1 -maxdepth 1 -type f -cmin +$(/usr/lib/php5/maxlifetime) ! -execdir fuser -s &#123;&#125; 2&gt;/dev/null \\; -delete\n\n結語第一次玩這種 vulnerable vm 的 CTF，有別於單純的線上 CTF 解題，更需要全面的思考和執行，我覺得更能夠練習到完整地滲透測試，從偵查、滲透到提權，一步一步的掌握整個伺服器。以後該多多練習這方面的挑戰。\n","dateCreated":"2017-09-13T14:09:46+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-09-13T14:09:46+00:00","description":"hackfest2016: Quaoar","headline":"VulnHub #Quaoar","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/","keywords":"Writeups","thumbnailUrl":"cover.png"}</script>
+    
+    <meta name="description" content="hackfest2016: Quaoar">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="VulnHub #Quaoar">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="hackfest2016: Quaoar">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/cover.png">
+<meta property="article:published_time" content="2017-09-13T14:09:46.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.245Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/cover.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/cover.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/cover.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            VulnHub #Quaoar
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-09-13T14:09:46+00:00">
+	
+		    Sep 13, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/VulnHub/">VulnHub</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>hackfest2016: Quaoar</p>
+<span id="more"></span>
+<h2 id="目標"><a href="#目標" class="headerlink" title="目標"></a>目標</h2><p>VulnHub：<a target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/hackfest2016-quaoar,180/">Quaoar</a><br>Local Victim Quaoar IP: 192.168.31.54</p>
+<ol>
+<li>Get a shell</li>
+<li>Get root access</li>
+<li>There is a post exploitation flag on the box</li>
+</ol>
+<h2 id="偵查"><a href="#偵查" class="headerlink" title="偵查"></a>偵查</h2><p>VM 開起來以後唯一的資訊就是一個 IP，第一件事就先拿去 Nmap 看一看開啟了哪些對外的服務。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~# nmap -sS 192.168.31.54</span><br><span class="line"></span><br><span class="line">Starting Nmap 7.60 ( https://nmap.org ) at 2017-09-13 06:37 UTC</span><br><span class="line">Nmap scan report for 192.168.31.54</span><br><span class="line">Host is up (0.011s latency).</span><br><span class="line">Not shown: 991 closed ports</span><br><span class="line">PORT    STATE SERVICE</span><br><span class="line">22/tcp  open  ssh</span><br><span class="line">53/tcp  open  domain</span><br><span class="line">80/tcp  open  http</span><br><span class="line">110/tcp open  pop3</span><br><span class="line">139/tcp open  netbios-ssn</span><br><span class="line">143/tcp open  imap</span><br><span class="line">445/tcp open  microsoft-ds</span><br><span class="line">993/tcp open  imaps</span><br><span class="line">995/tcp open  pop3s</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 2.18 seconds</span><br></pre></td></tr></table></figure>
+
+<p>太棒了，80 port 有開一個 http 的服務，web 可能會是很好的一個攻擊入口。不過用瀏覽器一看只有兩張圖片而已。只好進入例行步驟看看有哪些路徑，我自己習慣先看看有沒有<code>robots.txt</code>，在這裡還真的藏了 Wordpress 在裡面。<br><img src="/robots.png" alt="robots.txt"></p>
+<p>順帶一提，也可以利用<code>Burp Suite</code>或是<code>OWASP ZAP</code>的<code>Spider</code>功能來爬整個網站的連結，就可以很清楚看到大部分的東西。<br><img src="/burp.png" alt="burp"></p>
+<p>知道有一個 Wordpress 網站後，我再使用<code>WPScan</code>來檢查這個 Wordpress 站點有沒有什麼弱點。（因為檢查結果滿多的就不整個複製貼上了。）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~# wpscan -u 192.168.31.54/wordpress</span><br><span class="line">_______________________________________________________________</span><br><span class="line">        __          _______   _____</span><br><span class="line">        \ \        / /  __ \ / ____|</span><br><span class="line">         \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®</span><br><span class="line">          \ \/  \/ / |  ___/ \___ \ / __|/ _` | &#x27;_ \</span><br><span class="line">           \  /\  /  | |     ____) | (__| (_| | | | |</span><br><span class="line">            \/  \/   |_|    |_____/ \___|\__,_|_| |_|</span><br><span class="line"></span><br><span class="line">        WordPress Security Scanner by the WPScan Team</span><br><span class="line">                       Version 2.9.3</span><br><span class="line">          Sponsored by Sucuri - https://sucuri.net</span><br><span class="line">   @_WPScan_, @ethicalhack3r, @erwan_lr, pvdl, @_FireFart_</span><br><span class="line">_______________________________________________________________</span><br><span class="line"></span><br><span class="line">[+] URL: http://192.168.31.54/wordpress/</span><br><span class="line">[+] Started: Wed Sep 13 06:57:36 2017</span><br><span class="line"></span><br><span class="line">[!] The WordPress &#x27;http://192.168.31.54/wordpress/readme.html&#x27; file exists exposing a version number</span><br><span class="line">[+] Interesting header: SERVER: Apache/2.2.22 (Ubuntu)</span><br><span class="line">[+] Interesting header: X-POWERED-BY: PHP/5.3.10-1ubuntu3</span><br><span class="line">[+] XML-RPC Interface available under: http://192.168.31.54/wordpress/xmlrpc.php</span><br><span class="line">[!] Upload directory has directory listing enabled: http://192.168.31.54/wordpress/wp-content/uploads/</span><br><span class="line">[!] Includes directory has directory listing enabled: http://192.168.31.54/wordpress/wp-includes/</span><br><span class="line"></span><br><span class="line">[+] WordPress version 3.9.14 (Released on 2016-09-07) identified from advanced fingerprinting, meta generator, readme, links opml, stylesheets numbers</span><br><span class="line">[!] 15 vulnerabilities identified from the version number</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>總體而言有不少 CVE 弱點被檢查出來，不過我比較在意的是 Wordpress 的登入功能，舊的版本說不定會有預設密碼這種弱點，再用 WPScan 加上猜測常見使用者的參數：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~# wpscan -u 192.168.31.54/wordpress --enumerat user</span><br><span class="line">...</span><br><span class="line">[+] Enumerating usernames ...</span><br><span class="line">[+] Identified the following 2 user/s:</span><br><span class="line">    +----+--------+--------+</span><br><span class="line">    | Id | Login  | Name   |</span><br><span class="line">    +----+--------+--------+</span><br><span class="line">    | 1  | admin  | admin  |</span><br><span class="line">    | 2  | wpuser | wpuser |</span><br><span class="line">    +----+--------+--------+</span><br><span class="line">[!] Default first WordPress username &#x27;admin&#x27; is still used</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>結果竟然有預設的<code>admin</code>帳號仍然還在使用中，當然第一個就先猜密碼也是<code>admin</code>，一試就成功。<br><img src="/dashboard.png" alt="dashboard"></p>
+<h2 id="滲透"><a href="#滲透" class="headerlink" title="滲透"></a>滲透</h2><p>有了 Wordpress 的管理權限後，再來得思考如何取得這台伺服器的控制權。Wordpress 有擴充 Plugin 的功能，而且可以上傳自製的 Plugin，或許可以利用安裝自訂 Plugin 的功能來上傳一個 webshell。寫一個 Wordpress Plugin 不難，可以參考官方這篇<a target="_blank" rel="noopener" href="https://codex.wordpress.org/Writing_a_Plugin">文章</a>，只要有一些基本的描述就可以改造成最基本的 Plugin。</p>
+<p>這裡我用有名的<a target="_blank" rel="noopener" href="https://github.com/b374k/b374k">b374k</a>來修改成符合 Wordpress Plugin 的格式，基本上只要在開頭加些 Plugin 描述後再包成<code>ZIP</code>就可以上傳。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Plugin Name: b374k</span></span><br><span class="line"><span class="comment">Description: a simple webshell</span></span><br><span class="line"><span class="comment">Version: 1.0</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	b374k shell 3.2.3</span></span><br><span class="line"><span class="comment">	Jayalah Indonesiaku</span></span><br><span class="line"><span class="comment">	(c)2014</span></span><br><span class="line"><span class="comment">	https://github.com/b374k/b374k</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
+<p><img src="/upload.png" alt="upload"></p>
+<p>上傳成功以後，Plugin的路徑位在<code>/wp-content/plugins/PLUGIN_NAME/xxx.php</code>，例如這次的路徑<code>/wp-content/plugins/b374k/b374k.php</code>，輸入預設密碼<code>b374k</code>後就可以成功進入 webshell。<br><img src="/webshell.png" alt="webshell"></p>
+<p>基本上到這邊已經成功上傳了一個 webshell 而且找到了位在<code>/home/wpadmin/flag.txt</code>的第一個 flag。<br><img src="/flag.png" alt="flag"></p>
+<h2 id="root"><a href="#root" class="headerlink" title="root"></a>root</h2><p>雖然有了 webshell 就可以辦到很多事，但能拿下伺服器的 root 才算是掌握了伺服器的操作權。</p>
+<p>有裝過 Wordpress 的就會知道有個<code>wp-config.php</code>的檔案會儲存一些重要設定，例如帳號密碼。的確找到了 MySQL 的 root 密碼，抱著姑且一試的心態打這個密碼去做 SSH 登入，沒想到竟然成功了，system root 的密碼竟然跟 MySQL root 一樣，不愧是難度 Vary Easy 的 vm，沒有特別刁難… 同時也找到了第二個 flag 在 <code>/root/flag.txt</code>。<br><img src="/root.png" alt="root"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~# ssh root@192.168.31.54</span><br><span class="line">root@192.168.31.54&#x27;s password:</span><br><span class="line">Welcome to Ubuntu 12.04 LTS (GNU/Linux 3.2.0-23-generic-pae i686)</span><br><span class="line"></span><br><span class="line"> * Documentation:  https://help.ubuntu.com/</span><br><span class="line"></span><br><span class="line">  System information as of Wed Sep 13 04:10:59 EDT 2017</span><br><span class="line"></span><br><span class="line">  System load:  0.16              Processes:             97</span><br><span class="line">  Usage of /:   29.9% of 7.21GB   Users logged in:       0</span><br><span class="line">  Memory usage: 39%               IP address for eth0:   192.168.31.54</span><br><span class="line">  Swap usage:   10%               IP address for virbr0: 192.168.122.1</span><br><span class="line"></span><br><span class="line">  Graph this data and manage this system at https://landscape.canonical.com/</span><br><span class="line"></span><br><span class="line">New release &#x27;14.04.5 LTS&#x27; available.</span><br><span class="line">Run &#x27;do-release-upgrade&#x27; to upgrade to it.</span><br><span class="line"></span><br><span class="line">Last login: Wed Sep 13 04:09:53 2017 from 192.168.31.193</span><br><span class="line">root@Quaoar:~# cat flag.txt</span><br><span class="line">8e3f9ec016e3598c5eec11fd3d73f6fb</span><br></pre></td></tr></table></figure>
+
+<h2 id="Final-flag"><a href="#Final-flag" class="headerlink" title="Final flag"></a>Final flag</h2><p>最後一個 flag 我一直沒有頭緒藏在哪裡，看來官方給的一些 Walkthrough 才知道，原來這要考的是進入伺服器之後要檢查 crontab 的習慣，很多時候滲透進伺服器後會利用 crontab 來反彈 shell。而檢查也不單純只是下個<code>$ crontab -l</code>的方法，這個會有瑕疵，只會列出目前使用者 (root) 的 crontab，最保險的做法還是得自己到<code>/etc/cron.d</code>底下看看全部的 crontab。的確有一個<code>/etc/cron.d/php5</code>的檔案，最後一個 flag 就在這裡面。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">root@Quaoar:/etc/cron.d# cat php5</span><br><span class="line"># /etc/cron.d/php5: crontab fragment for php5</span><br><span class="line">#  This purges session files older than X, where X is defined in seconds</span><br><span class="line">#  as the largest value of session.gc_maxlifetime from all your php.ini</span><br><span class="line">#  files, or 24 minutes if not defined.  See /usr/lib/php5/maxlifetime</span><br><span class="line"># Its always a good idea to check for crontab to learn more about the operating system good job you get 50! - d46795f84148fd338603d0d6a9dbf8de</span><br><span class="line"># Look for and purge old sessions every 30 minutes</span><br><span class="line">09,39 *     * * *     root   [ -x /usr/lib/php5/maxlifetime ] &amp;&amp; [ -d /var/lib/php5 ] &amp;&amp; find /var/lib/php5/ -depth -mindepth 1 -maxdepth 1 -type f -cmin +$(/usr/lib/php5/maxlifetime) ! -execdir fuser -s &#123;&#125; 2&gt;/dev/null \; -delete</span><br></pre></td></tr></table></figure>
+
+<h2 id="結語"><a href="#結語" class="headerlink" title="結語"></a>結語</h2><p>第一次玩這種 vulnerable vm 的 CTF，有別於單純的線上 CTF 解題，更需要全面的思考和執行，我覺得更能夠練習到完整地滲透測試，從偵查、滲透到提權，一步一步的掌握整個伺服器。以後該多多練習這方面的挑戰。</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TAMUctf/TAMUctf-18/"
+                    data-tooltip="TAMUctf 18"
+                    aria-label="PREVIOUS: TAMUctf 18"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Blog/NISRA-Enlightened-2017/"
+                    data-tooltip="NISRA Enlightened 2017"
+                    aria-label="NEXT: NISRA Enlightened 2017"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/TAMUctf/TAMUctf-18/"
+                    data-tooltip="TAMUctf 18"
+                    aria-label="PREVIOUS: TAMUctf 18"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Blog/NISRA-Enlightened-2017/"
+                    data-tooltip="NISRA Enlightened 2017"
+                    aria-label="NEXT: NISRA Enlightened 2017"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/VulnHub/VulnHub-Quaoar/';
+              
+            this.page.identifier = 'Writeups/VulnHub/VulnHub-Quaoar/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

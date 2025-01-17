@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>Category: WebGoat - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{}</script>
+    
+    <meta name="description" content="Keep hacking.">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:url" content="https://blog.theo.com.tw/categories/Writeups/WebGoat/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="Keep hacking.">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="Theo Chen">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+    <section class="postShorten-group main-content-wrap">
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-left">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
+                            href="/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/"
+                            aria-label=": Injection Flaws - String SQL Injection"
+                        >
+                            Injection Flaws - String SQL Injection
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2016-04-03T13:37:52+00:00">
+	
+		    Apr 03, 2016
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/WebGoat/">WebGoat</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-excerpt">
+                    <p>這題是一個很基本的SQL字串查詢語句的練習。 首先我試著輸入自己的名字，可以看見下方的SQL語句最後單引號內會變成我們輸入的字串。</p>
+                    
+                        <a
+                            href="/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": Injection Flaws - String SQL Injection"
+                        >
+                            Continue reading
+                        </a>
+                        
+                    
+                </div>
+            
+        </div>
+        
+            <a
+                href="/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/"
+                aria-label=": Injection Flaws - String SQL Injection"
+            >
+                <div class="postShorten-thumbnailimg">
+                    <img alt="" src="https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-String-SQL-Injection/logo.jpg"/>
+                </div>
+            </a>
+            
+        
+    </article>
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-left">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
+                            href="/Writeups/WebGoat/Injection-Flaws-Log-Spoofing/"
+                            aria-label=": Injection Flaws - Log Spoofing"
+                        >
+                            Injection Flaws - Log Spoofing
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2016-03-25T13:33:15+00:00">
+	
+		    Mar 25, 2016
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/WebGoat/">WebGoat</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-excerpt">
+                    <p>這題要我們嘗試「看起來」用admin的身份成功登入，下方灰色的區塊就是伺服器記錄檔的內容。 廢話不多說，先嘗試登入看看。</p>
+                    
+                        <a
+                            href="/Writeups/WebGoat/Injection-Flaws-Log-Spoofing/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": Injection Flaws - Log Spoofing"
+                        >
+                            Continue reading
+                        </a>
+                        
+                    
+                </div>
+            
+        </div>
+        
+            <a
+                href="/Writeups/WebGoat/Injection-Flaws-Log-Spoofing/"
+                aria-label=": Injection Flaws - Log Spoofing"
+            >
+                <div class="postShorten-thumbnailimg">
+                    <img alt="" src="https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Log-Spoofing/logo.jpg"/>
+                </div>
+            </a>
+            
+        
+    </article>
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-left">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
+                            href="/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/"
+                            aria-label=": Session Management Flaws - Hijack a Session"
+                        >
+                            Session Management Flaws - Hijack a Session
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2016-03-22T13:28:36+00:00">
+	
+		    Mar 22, 2016
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/WebGoat/">WebGoat</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-excerpt">
+                    <p>這題題目擺明就是要我們攔截Session加以分析，若Session長度或複雜度不夠，可以藉由分析伺服器回傳的Session來找出Session的規律，進而找到伺服器發給其他人使用的Session並偽裝成其他人登入。</p>
+                    
+                        <a
+                            href="/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": Session Management Flaws - Hijack a Session"
+                        >
+                            Continue reading
+                        </a>
+                        
+                    
+                </div>
+            
+        </div>
+        
+            <a
+                href="/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/"
+                aria-label=": Session Management Flaws - Hijack a Session"
+            >
+                <div class="postShorten-thumbnailimg">
+                    <img alt="" src="https://blog.theo.com.tw/Writeups/WebGoat/Session-Management-Flaws-Hijack-a-Session/logo.jpg"/>
+                </div>
+            </a>
+            
+        
+    </article>
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-left">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
+                            href="/Writeups/WebGoat/Injection-Flaws-Numeric-SQL-Injection/"
+                            aria-label=": Injection Flaws - Numeric SQL Injection"
+                        >
+                            Injection Flaws - Numeric SQL Injection
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2016-03-19T13:23:21+00:00">
+	
+		    Mar 19, 2016
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/WebGoat/">WebGoat</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-excerpt">
+                    <p>這題也是HTML網頁中常見的select表單，但下方特別寫出了後端呼叫資料庫的SQL語句。</p>
+                    
+                        <a
+                            href="/Writeups/WebGoat/Injection-Flaws-Numeric-SQL-Injection/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": Injection Flaws - Numeric SQL Injection"
+                        >
+                            Continue reading
+                        </a>
+                        
+                    
+                </div>
+            
+        </div>
+        
+            <a
+                href="/Writeups/WebGoat/Injection-Flaws-Numeric-SQL-Injection/"
+                aria-label=": Injection Flaws - Numeric SQL Injection"
+            >
+                <div class="postShorten-thumbnailimg">
+                    <img alt="" src="https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Numeric-SQL-Injection/logo.jpg"/>
+                </div>
+            </a>
+            
+        
+    </article>
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-left">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
+                            href="/Writeups/WebGoat/Injection-Flaws-Command-Injection/"
+                            aria-label=": Injection Flaws - Command Injection"
+                        >
+                            Injection Flaws - Command Injection
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2016-03-18T13:03:44+00:00">
+	
+		    Mar 18, 2016
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/WebGoat/">WebGoat</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-excerpt">
+                    <p>這是有關Injection部分的第一關，題目的要求很簡單，提供一個HTML select的form，要我們想辦法把command注入伺服器的系統。</p>
+                    
+                        <a
+                            href="/Writeups/WebGoat/Injection-Flaws-Command-Injection/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": Injection Flaws - Command Injection"
+                        >
+                            Continue reading
+                        </a>
+                        
+                    
+                </div>
+            
+        </div>
+        
+            <a
+                href="/Writeups/WebGoat/Injection-Flaws-Command-Injection/"
+                aria-label=": Injection Flaws - Command Injection"
+            >
+                <div class="postShorten-thumbnailimg">
+                    <img alt="" src="https://blog.theo.com.tw/Writeups/WebGoat/Injection-Flaws-Command-Injection/logo.jpg"/>
+                </div>
+            </a>
+            
+        
+    </article>
+    
+    <div class="pagination-bar">
+    <ul class="pagination">
+        
+        
+        <li class="pagination-number">page 1 of 1</li>
+    </ul>
+</div>
+
+</section>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+
+
+
+    </body>
+</html>

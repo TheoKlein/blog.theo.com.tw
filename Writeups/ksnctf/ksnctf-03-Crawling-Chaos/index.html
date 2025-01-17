@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>ksnctf #03 Crawling Chaos - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="ksnctf,Crawling Chaos">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"原來顏文字可以這麼強大 (´⊙ω⊙`)\n\n\n題目的原始碼script裡面充滿著大量的顏文字，以下節錄一小部份：\n(ᒧᆞωᆞ)&#x3D;(&#x2F;ᆞωᆞ&#x2F;),(ᒧᆞωᆞ).ᒧうー&#x3D;-!!(&#x2F;ᆞωᆞ&#x2F;).にゃー,(〳ᆞωᆞ)&#x3D;(ᒧᆞωᆞ),(〳ᆞωᆞ).〳にゃー&#x3D;- -!(ᒧᆞωᆞ).ᒧうー,(ᒧᆞωᆞ).ᒧうーｰ&#x3D;(〳ᆞωᆞ).〳にゃー- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーｰ- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーー&#x3D;(〳ᆞωᆞ).〳にゃーｰ- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーー&#x3D;(ᒧᆞωᆞ).ᒧうーー- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーー- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーｰｰ- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーｰー&#x3D;(〳ᆞωᆞ).〳にゃーｰｰ- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰー&#x3D;(ᒧᆞωᆞ).ᒧうーｰー- -(〳ᆞωᆞ).〳にゃー,ｰ&#x3D;’’,(ᒧᆞωᆞ).ᒧうーーｰ&#x3D;!(ᒧᆞωᆞ).ᒧうー+ｰ,(〳ᆞωᆞ).〳にゃーーｰ&#x3D;!(〳ᆞωᆞ).〳にゃー+ｰ,(ᒧᆞωᆞ).ᒧうーーー&#x3D;{這いよれ:!(〳ᆞωᆞ).〳にゃー}+ｰ,(〳ᆞωᆞ).〳にゃーーー&#x3D;(ᒧᆞωᆞ).ᒧニャル子さん+ｰ,(ᆞωᆞᒪ)&#x3D;(ｺᆞωᆞ)&#x3D;(ᒧᆞωᆞ).ᒧうー,(ᒧᆞωᆞ).ᒧうーｰｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(ᒧᆞωᆞ).ᒧうーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰｰー&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰｰー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)- -(ᒧᆞωᆞ).ᒧうーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰ-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰーｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰーー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰーー&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーｰー&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーｰー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーーｰ&#x3D;&#x2F;“”ω””&#x2F;+&#x2F;\\ω\\&#x2F;,(〳ᆞωᆞ).〳にゃーーーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーーー&#x3D;(ᒧᆞωᆞ).ᒧうーーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーーー&#x3D;(ᒧᆞωᆞ).ᒧうーーーー+(〳ᆞωᆞ).〳にゃーーｰー,(ᒧᆞωᆞ).ᒧうーｰｰｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーーー+(ᒧᆞωᆞ).ᒧうー+(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰｰｰｰ\n\n\n雖然馬上可以知道肯定是某種JS混淆，但這樣子的混淆方式還真的是第一次看到。是有搜尋到一位日本人發明的aaencode，但找到的online decoder沒辦法解密出來，思考了一段時間意識到最近都在寫Node.js，既然這是個script那為何不丟給Node.js執行看看呢？不丟還好，一丟不得了，還真的把東西全噴出來了！\n12345undefined:2$(function()&#123;$(&quot;form&quot;).submit(function()&#123;var t=$(&#x27;input[type=&quot;text&quot;]&#x27;).val();var p=Array(70,152,195,284,475,612,791,896,810,850,737,1332,1469,1120,1470,832,1785,2196,1520,1480,1449);var f=false;if(p.length==t.length)&#123;f=true;for(var i=0;i&lt;p.length;i++)if(t.charCodeAt(i)*(i+1)!=p[i])f=false;if(f)alert(&quot;(」・ω・)」うー!(/・ω・)/にゃー!&quot;);&#125;if(!f)alert(&quot;No&quot;);return false;&#125;);&#125;);^ReferenceError: $ is not defined\n\n總而言之呢，souce code到手了，整理一下分析程式碼就可以發現其實只是簡易的數學運算而已。\n123456789101112131415$(function () &#123;    $(&quot;form&quot;).submit(function () &#123;        var t = $(&#x27;input[type=&quot;text&quot;]&#x27;).val();        var p = Array(70, 152, 195, 284, 475, 612, 791, 896, 810, 850, 737, 1332, 1469, 1120, 1470, 832, 1785, 2196, 1520, 1480, 1449);        var f = false;        if (p.length == t.length) &#123;            f = true;            for (var i = 0; i &lt; p.length; i++)                if (t.charCodeAt(i) * (i + 1) != p[i]) f = false;            if (f) alert(&quot;(」・ω・)」うー!(/・ω・)/にゃー!&quot;);        &#125;        if (!f) alert(&quot;No&quot;);        return false;    &#125;);&#125;);\n\n寫個簡易的C程式就可以順利拿到flag。\n12345678#include &lt;stdio.h&gt;int main()&#123;    int i, arrar[30] = &#123;70, 152, 195, 284, 475, 612, 791, 896, 810, 850, 737, 1332, 1469, 1120, 1470, 832, 1785, 2196, 1520, 1480, 1449&#125;;    for(i = 0 ; i &lt; 21; i++)        printf(&quot;%c&quot;, array[i] / (i + 1));    return 0;&#125;\n\nFLAG_fqpZUCoqPb4izPJE\n","dateCreated":"2017-03-23T00:05:36+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-03-23T00:05:36+00:00","description":"原來顏文字可以這麼強大 (´⊙ω⊙`)","headline":"ksnctf #03 Crawling Chaos","image":["ksnctf.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/","keywords":"Writeups","thumbnailUrl":"ksnctf.png"}</script>
+    
+    <meta name="description" content="原來顏文字可以這麼強大 (´⊙ω⊙&#96;)">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="ksnctf #03 Crawling Chaos">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="原來顏文字可以這麼強大 (´⊙ω⊙&#96;)">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/ksnctf.png">
+<meta property="article:published_time" content="2017-03-23T00:05:36.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.262Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/ksnctf.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/ksnctf.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/ksnctf.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            ksnctf #03 Crawling Chaos
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-03-23T00:05:36+00:00">
+	
+		    Mar 23, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/ksnctf/">ksnctf</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>原來顏文字可以這麼強大 (´⊙ω⊙`)</p>
+<span id="more"></span>
+
+<p>題目的原始碼script裡面充滿著大量的顏文字，以下節錄一小部份：</p>
+<blockquote><p>(ᒧᆞωᆞ)&#x3D;(&#x2F;ᆞωᆞ&#x2F;),(ᒧᆞωᆞ).ᒧうー&#x3D;-!!(&#x2F;ᆞωᆞ&#x2F;).にゃー,(〳ᆞωᆞ)&#x3D;(ᒧᆞωᆞ),(〳ᆞωᆞ).〳にゃー&#x3D;- -!(ᒧᆞωᆞ).ᒧうー,(ᒧᆞωᆞ).ᒧうーｰ&#x3D;(〳ᆞωᆞ).〳にゃー- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーｰ- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーー&#x3D;(〳ᆞωᆞ).〳にゃーｰ- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーー&#x3D;(ᒧᆞωᆞ).ᒧうーー- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーー- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーｰｰ- -(〳ᆞωᆞ).〳にゃー,(ᒧᆞωᆞ).ᒧうーｰー&#x3D;(〳ᆞωᆞ).〳にゃーｰｰ- -!(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰー&#x3D;(ᒧᆞωᆞ).ᒧうーｰー- -(〳ᆞωᆞ).〳にゃー,ｰ&#x3D;’’,(ᒧᆞωᆞ).ᒧうーーｰ&#x3D;!(ᒧᆞωᆞ).ᒧうー+ｰ,(〳ᆞωᆞ).〳にゃーーｰ&#x3D;!(〳ᆞωᆞ).〳にゃー+ｰ,(ᒧᆞωᆞ).ᒧうーーー&#x3D;{這いよれ:!(〳ᆞωᆞ).〳にゃー}+ｰ,(〳ᆞωᆞ).〳にゃーーー&#x3D;(ᒧᆞωᆞ).ᒧニャル子さん+ｰ,(ᆞωᆞᒪ)&#x3D;(ｺᆞωᆞ)&#x3D;(ᒧᆞωᆞ).ᒧうー,(ᒧᆞωᆞ).ᒧうーｰｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(ᒧᆞωᆞ).ᒧうーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰｰー&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰｰー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)- -(ᒧᆞωᆞ).ᒧうーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰ-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰーｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーｰーー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーｰーー&#x3D;(ᒧᆞωᆞ).ᒧうーーー[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーｰｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰ-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーｰー&#x3D;(ᒧᆞωᆞ).ᒧうーーｰ[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーｰー&#x3D;(〳ᆞωᆞ).〳にゃーーー[(ᆞωᆞᒪ)-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーーｰ&#x3D;&#x2F;“”ω””&#x2F;+&#x2F;\ω\&#x2F;,(〳ᆞωᆞ).〳にゃーーーｰ&#x3D;(ᒧᆞωᆞ).ᒧうーーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃー-(ｺᆞωᆞ)],(ᒧᆞωᆞ).ᒧうーーーー&#x3D;(ᒧᆞωᆞ).ᒧうーーーｰ[(ᆞωᆞᒪ)- -(〳ᆞωᆞ).〳にゃーｰー-(ｺᆞωᆞ)],(〳ᆞωᆞ).〳にゃーーーー&#x3D;(ᒧᆞωᆞ).ᒧうーーーー+(〳ᆞωᆞ).〳にゃーーｰー,(ᒧᆞωᆞ).ᒧうーｰｰｰｰ&#x3D;(〳ᆞωᆞ).〳にゃーーーー+(ᒧᆞωᆞ).ᒧうー+(ᒧᆞωᆞ).ᒧうー,(〳ᆞωᆞ).〳にゃーｰｰｰｰ</p>
+</blockquote>
+
+<p>雖然馬上可以知道肯定是某種JS混淆，但這樣子的混淆方式還真的是第一次看到。是有搜尋到一位日本人發明的<a target="_blank" rel="noopener" href="http://utf-8.jp/public/aaencode.html">aaencode</a>，但找到的online decoder沒辦法解密出來，思考了一段時間意識到最近都在寫Node.js，既然這是個script那為何不丟給Node.js執行看看呢？不丟還好，一丟不得了，還真的把東西全噴出來了！</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">undefined</span>:<span class="number">2</span></span><br><span class="line">$(<span class="keyword">function</span>(<span class="params"></span>)&#123;$(<span class="string">&quot;form&quot;</span>).<span class="title function_">submit</span>(<span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="keyword">var</span> t=$(<span class="string">&#x27;input[type=&quot;text&quot;]&#x27;</span>).<span class="title function_">val</span>();<span class="keyword">var</span> p=<span class="title class_">Array</span>(<span class="number">70</span>,<span class="number">152</span>,<span class="number">195</span>,<span class="number">284</span>,<span class="number">475</span>,<span class="number">612</span>,<span class="number">791</span>,<span class="number">896</span>,<span class="number">810</span>,<span class="number">850</span>,<span class="number">737</span>,<span class="number">1332</span>,<span class="number">1469</span>,<span class="number">1120</span>,<span class="number">1470</span>,<span class="number">832</span>,<span class="number">1785</span>,<span class="number">2196</span>,<span class="number">1520</span>,<span class="number">1480</span>,<span class="number">1449</span>);<span class="keyword">var</span> f=<span class="literal">false</span>;<span class="keyword">if</span>(p.<span class="property">length</span>==t.<span class="property">length</span>)&#123;f=<span class="literal">true</span>;<span class="keyword">for</span>(<span class="keyword">var</span> i=<span class="number">0</span>;i&lt;p.<span class="property">length</span>;i++)<span class="keyword">if</span>(t.<span class="title function_">charCodeAt</span>(i)*(i+<span class="number">1</span>)!=p[i])f=<span class="literal">false</span>;<span class="keyword">if</span>(f)<span class="title function_">alert</span>(<span class="string">&quot;(」・ω・)」うー!(/・ω・)/にゃー!&quot;</span>);&#125;<span class="keyword">if</span>(!f)<span class="title function_">alert</span>(<span class="string">&quot;No&quot;</span>);<span class="keyword">return</span> <span class="literal">false</span>;&#125;);&#125;);</span><br><span class="line">^</span><br><span class="line"></span><br><span class="line"><span class="title class_">ReferenceError</span>: $ is not defined</span><br></pre></td></tr></table></figure>
+
+<p>總而言之呢，souce code到手了，整理一下分析程式碼就可以發現其實只是簡易的數學運算而已。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    $(<span class="string">&quot;form&quot;</span>).<span class="title function_">submit</span>(<span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> t = $(<span class="string">&#x27;input[type=&quot;text&quot;]&#x27;</span>).<span class="title function_">val</span>();</span><br><span class="line">        <span class="keyword">var</span> p = <span class="title class_">Array</span>(<span class="number">70</span>, <span class="number">152</span>, <span class="number">195</span>, <span class="number">284</span>, <span class="number">475</span>, <span class="number">612</span>, <span class="number">791</span>, <span class="number">896</span>, <span class="number">810</span>, <span class="number">850</span>, <span class="number">737</span>, <span class="number">1332</span>, <span class="number">1469</span>, <span class="number">1120</span>, <span class="number">1470</span>, <span class="number">832</span>, <span class="number">1785</span>, <span class="number">2196</span>, <span class="number">1520</span>, <span class="number">1480</span>, <span class="number">1449</span>);</span><br><span class="line">        <span class="keyword">var</span> f = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">if</span> (p.<span class="property">length</span> == t.<span class="property">length</span>) &#123;</span><br><span class="line">            f = <span class="literal">true</span>;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; p.<span class="property">length</span>; i++)</span><br><span class="line">                <span class="keyword">if</span> (t.<span class="title function_">charCodeAt</span>(i) * (i + <span class="number">1</span>) != p[i]) f = <span class="literal">false</span>;</span><br><span class="line">            <span class="keyword">if</span> (f) <span class="title function_">alert</span>(<span class="string">&quot;(」・ω・)」うー!(/・ω・)/にゃー!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!f) <span class="title function_">alert</span>(<span class="string">&quot;No&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>寫個簡易的C程式就可以順利拿到flag。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> i, arrar[<span class="number">30</span>] = &#123;<span class="number">70</span>, <span class="number">152</span>, <span class="number">195</span>, <span class="number">284</span>, <span class="number">475</span>, <span class="number">612</span>, <span class="number">791</span>, <span class="number">896</span>, <span class="number">810</span>, <span class="number">850</span>, <span class="number">737</span>, <span class="number">1332</span>, <span class="number">1469</span>, <span class="number">1120</span>, <span class="number">1470</span>, <span class="number">832</span>, <span class="number">1785</span>, <span class="number">2196</span>, <span class="number">1520</span>, <span class="number">1480</span>, <span class="number">1449</span>&#125;;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span> ; i &lt; <span class="number">21</span>; i++)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%c&quot;</span>, <span class="built_in">array</span>[i] / (i + <span class="number">1</span>));</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote><p>FLAG_fqpZUCoqPb4izPJE</p>
+</blockquote>
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/"
+                    data-tooltip="ksnctf #35 Simple Auth II"
+                    aria-label="PREVIOUS: ksnctf #35 Simple Auth II"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-32-Simple-Auth/"
+                    data-tooltip="ksnctf #32 Simple Auth"
+                    aria-label="NEXT: ksnctf #32 Simple Auth"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-35-Simple-Auth-II/"
+                    data-tooltip="ksnctf #35 Simple Auth II"
+                    aria-label="PREVIOUS: ksnctf #35 Simple Auth II"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/ksnctf/ksnctf-32-Simple-Auth/"
+                    data-tooltip="ksnctf #32 Simple Auth"
+                    aria-label="NEXT: ksnctf #32 Simple Auth"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/ksnctf/ksnctf-03-Crawling-Chaos/';
+              
+            this.page.identifier = 'Writeups/ksnctf/ksnctf-03-Crawling-Chaos/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

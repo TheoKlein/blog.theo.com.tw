@@ -1,0 +1,702 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>TMCTF 2017 #Reverse 100 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="TMCTF2017,Reverse 100">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"總算開始有解題的感覺了 OAO\n\n\n前情提要雖然這次TMCTF最後還是0題收場，Reverse 100這題就卡在最後一個檔案反組譯還不熟悉找不到flag片段，雖然差一點點就破蛋了感覺頗漚，但這次關於Reverse 100還是學習了一些經驗。\n正文題目非常簡潔扼要：\n\nYou get one unknown file. Please find flag in this file with your knowledge.\n\n給了pocket這個檔案，既然unknown，那就來看看它的檔案型態。\n12$ file pocketpocket: Zip archive data, at least v2.0 to extract\n\n既然是壓縮檔，加上副檔名後解壓縮拿到biscuit這個同樣也是未知的檔案，相同方式再看一次：\n12$ file biscuitbiscuit: RAR archive data, v1d, os: Win32\n\n又是壓縮檔（這時候心裡開始OS該不會是多層壓縮檔吧），在解壓縮一次，這次開始有所不同了，得到了biscuit1和biscuit2兩個檔案。\n123$ file biscuit1 biscuit2biscuit1: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windowsbiscuit2: Zip archive data, at least v2.0 to extract\n\nbiscuit1是 Windows 的執行檔，biscuit2又是個壓縮檔，不過這個解壓縮需要密碼，所以只好再把焦點放回biscuit1上。\n\n執行以後看來要我們找m開頭的單字來解壓縮biscuit2，看來得反組譯看看了，問題我自己也還是反組譯的超級新手，抱著沒什麼太大的期望打開了Immunity Debugger開始到處看看，想說已知要找m開頭的單字的話或許可以看到什麼蛛絲馬跡，花點時間找了找還真的在stack裡面看到了macaron，真是幸運，詳細的組合語言反組譯之後在花點時間去仔細研究看看。（本來就該trace組語才對啊啊啊）\n\n這邊拿到密碼就先解壓縮再說，再拿到biscuit3、biscuit4、biscuit5三個檔案\n1234$ file biscuit3 biscuit4 biscuit5biscuit3: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, comment: &quot;Optimized by JPEGmini 3.13.3.15 0x411b5876&quot;, baseline, precision 8, 150x150, frames 3biscuit4: ASCII text, with CRLF line terminatorsbiscuit5: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows\n\nbiscuit4是個文字檔，提示說Flag = TMCTF&#123;biscuit3_ biscuit5&#125;。\n接著看biscuit3 ：\n\n恩…一盤餅乾…當然不能只單純看圖片是什麼，要檢查檔案本身有沒有被塞其他東西。我用binwalk來檢查：\n12345678$ binwalk biscuit3.jpgDECIMAL       HEXADECIMAL     DESCRIPTION--------------------------------------------------------------------------------0             0x0             JPEG image data, JFIF standard 1.01382           0x17E           Copyright string: &quot;Copyright (c) 1998 Hewlett-Packard Company&quot;14253         0x37AD          Zip archive data, at least v1.0 to extract, compressed size: 5, uncompressed size: 5, name: biscuit.txt14356         0x3814          End of Zip archive\n\n果然在最後14253開始的地方又藏了一個壓縮檔在裡面，利用dd指令把這個壓縮檔分離出來：\n1$ dd if=biscuit3.jpg bs=1 skip=14253 of=biscuit3.zip\n\n解壓縮後是一個純文字檔，終於拿到biscuit3的flag片段：cream。\n最後一個拼圖biscuit5又是個 Windows 執行檔，這次執行後沒有輸出任何提示，只好再次丟到Immunity Debugger想辦法找找線索。剛剛用偷吃步的報應現在馬上就踢到鐵板了，還不太會trace組語的我看了老半天實在是找不到什麼特別的字串。最後就卡在這裡解不出來…\n比賽結束後看了其他人的writeup才注意到trace組語的一些技巧，原來程式大概的實作內容是原先有biscu5個字的字串，會進入迴圈開始做替換的動作，仔細一步一步觀察迴圈做的動作，最後就會得知替換完的字串是choux，相見恨晚啊！這題到這邊就可以把flag湊齊了。\n結論反組譯還是要好好練，該看的組語還是要看（切身之痛 QQ找時間再研究IDA的用法，常看到大家搭配IDA來檢視程式運作的流程，比起直接看全部的組語更可以快速掌握一些程式的關鍵點。\n","dateCreated":"2017-06-25T00:21:19+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2017-06-25T00:21:19+00:00","description":"總算開始有解題的感覺了 OAO","headline":"TMCTF 2017 #Reverse 100","image":["cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/","keywords":"Writeups, TMCTF","thumbnailUrl":"cover.jpg"}</script>
+    
+    <meta name="description" content="總算開始有解題的感覺了 OAO">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="TMCTF 2017 #Reverse 100">
+<meta property="og:url" content="https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="總算開始有解題的感覺了 OAO">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/cover.jpg">
+<meta property="article:published_time" content="2017-06-25T00:21:19.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.168Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Writeups">
+<meta property="article:tag" content="TMCTF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/cover.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/cover.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/cover.jpg"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            TMCTF 2017 #Reverse 100
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2017-06-25T00:21:19+00:00">
+	
+		    Jun 25, 2017
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Writeups/">Writeups</a>, <a class="category-link" href="/categories/Writeups/TMCTF/">TMCTF</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>總算開始有解題的感覺了 OAO</p>
+<span id="more"></span>
+
+<h2 id="前情提要"><a href="#前情提要" class="headerlink" title="前情提要"></a>前情提要</h2><p>雖然這次TMCTF最後還是0題收場，Reverse 100這題就卡在最後一個檔案反組譯還不熟悉找不到flag片段，雖然差一點點就破蛋了感覺頗漚，但這次關於Reverse 100還是學習了一些經驗。</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>題目非常簡潔扼要：</p>
+<blockquote>
+<p>You get one unknown file. Please find flag in this file with your knowledge.</p>
+</blockquote>
+<p>給了<code>pocket</code>這個檔案，既然unknown，那就來看看它的檔案型態。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ file pocket</span><br><span class="line">pocket: Zip archive data, at least v2.0 to extract</span><br></pre></td></tr></table></figure>
+
+<p>既然是壓縮檔，加上副檔名後解壓縮拿到<code>biscuit</code>這個同樣也是未知的檔案，相同方式再看一次：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ file biscuit</span><br><span class="line">biscuit: RAR archive data, v1d, os: Win32</span><br></pre></td></tr></table></figure>
+
+<p>又是壓縮檔（這時候心裡開始OS該不會是多層壓縮檔吧），在解壓縮一次，這次開始有所不同了，得到了<code>biscuit1</code>和<code>biscuit2</code>兩個檔案。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ file biscuit1 biscuit2</span><br><span class="line">biscuit1: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows</span><br><span class="line">biscuit2: Zip archive data, at least v2.0 to extract</span><br></pre></td></tr></table></figure>
+
+<p><code>biscuit1</code>是 Windows 的執行檔，<code>biscuit2</code>又是個壓縮檔，不過這個解壓縮需要密碼，所以只好再把焦點放回<code>biscuit1</code>上。</p>
+<p><img src="/biscuit1.png"></p>
+<p>執行以後看來要我們找<code>m</code>開頭的單字來解壓縮<code>biscuit2</code>，看來得反組譯看看了，問題我自己也還是反組譯的超級新手，抱著沒什麼太大的期望打開了<a target="_blank" rel="noopener" href="https://www.immunityinc.com/products/debugger/">Immunity Debugger</a>開始到處看看，想說已知要找<code>m</code>開頭的單字的話或許可以看到什麼蛛絲馬跡，花點時間找了找還真的在stack裡面看到了<code>macaron</code>，真是幸運，詳細的組合語言反組譯之後在花點時間去仔細研究看看。（本來就該trace組語才對啊啊啊）</p>
+<p><img src="/stack.png"></p>
+<p>這邊拿到密碼就先解壓縮再說，再拿到<code>biscuit3</code>、<code>biscuit4</code>、<code>biscuit5</code>三個檔案</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ file biscuit3 biscuit4 biscuit5</span><br><span class="line">biscuit3: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, comment: &quot;Optimized by JPEGmini 3.13.3.15 0x411b5876&quot;, baseline, precision 8, 150x150, frames 3</span><br><span class="line">biscuit4: ASCII text, with CRLF line terminators</span><br><span class="line">biscuit5: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows</span><br></pre></td></tr></table></figure>
+
+<p><code>biscuit4</code>是個文字檔，提示說<code>Flag = TMCTF&#123;biscuit3_ biscuit5&#125;</code>。</p>
+<p>接著看<code>biscuit3</code> ：</p>
+<p><img src="/biscuit3.jpg"></p>
+<p>恩…一盤餅乾…<br>當然不能只單純看圖片是什麼，要檢查檔案本身有沒有被塞其他東西。我用<a target="_blank" rel="noopener" href="https://github.com/devttys0/binwalk">binwalk</a>來檢查：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ binwalk biscuit3.jpg</span><br><span class="line"></span><br><span class="line">DECIMAL       HEXADECIMAL     DESCRIPTION</span><br><span class="line">--------------------------------------------------------------------------------</span><br><span class="line">0             0x0             JPEG image data, JFIF standard 1.01</span><br><span class="line">382           0x17E           Copyright string: &quot;Copyright (c) 1998 Hewlett-Packard Company&quot;</span><br><span class="line">14253         0x37AD          Zip archive data, at least v1.0 to extract, compressed size: 5, uncompressed size: 5, name: biscuit.txt</span><br><span class="line">14356         0x3814          End of Zip archive</span><br></pre></td></tr></table></figure>
+
+<p>果然在最後<code>14253</code>開始的地方又藏了一個壓縮檔在裡面，利用<code>dd</code>指令把這個壓縮檔分離出來：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ dd if=biscuit3.jpg bs=1 skip=14253 of=biscuit3.zip</span><br></pre></td></tr></table></figure>
+
+<p>解壓縮後是一個純文字檔，終於拿到<code>biscuit3</code>的flag片段：<code>cream</code>。</p>
+<p>最後一個拼圖<code>biscuit5</code>又是個 Windows 執行檔，這次執行後沒有輸出任何提示，只好再次丟到<a target="_blank" rel="noopener" href="https://www.immunityinc.com/products/debugger/">Immunity Debugger</a>想辦法找找線索。剛剛用偷吃步的報應現在馬上就踢到鐵板了，還不太會trace組語的我看了老半天實在是找不到什麼特別的字串。最後就卡在這裡解不出來…</p>
+<p>比賽結束後看了其他人的writeup才注意到trace組語的一些技巧，原來程式大概的實作內容是原先有<code>biscu</code>5個字的字串，會進入迴圈開始做替換的動作，仔細一步一步觀察迴圈做的動作，最後就會得知替換完的字串是<code>choux</code>，相見恨晚啊！這題到這邊就可以把flag湊齊了。</p>
+<h2 id="結論"><a href="#結論" class="headerlink" title="結論"></a>結論</h2><p>反組譯還是要好好練，該看的組語還是要看（切身之痛 QQ<br>找時間再研究IDA的用法，常看到大家搭配IDA來檢視程式運作的流程，比起直接看全部的組語更可以快速掌握一些程式的關鍵點。</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/TMCTF/" rel="tag">TMCTF</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Writeups/" rel="tag">Writeups</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-random/"
+                    data-tooltip="pwnable.kr #random"
+                    aria-label="PREVIOUS: pwnable.kr #random"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    data-tooltip="pwnable.kr #mistake"
+                    aria-label="NEXT: pwnable.kr #mistake"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-random/"
+                    data-tooltip="pwnable.kr #random"
+                    aria-label="PREVIOUS: pwnable.kr #random"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/pwnable-kr/pwnable-kr-mistake/"
+                    data-tooltip="pwnable.kr #mistake"
+                    aria-label="NEXT: pwnable.kr #mistake"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Writeups/TMCTF/TMCTF-2017-Reverse-100/';
+              
+            this.page.identifier = 'Writeups/TMCTF/TMCTF-2017-Reverse-100/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

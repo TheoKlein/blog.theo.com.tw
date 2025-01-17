@@ -1,0 +1,903 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>CLAMBLING - A New Backdoor Base On Dropbox - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="CLAMLING,DRBControl,APT,Dropbox,DLL Side-Loading">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。\n\n本文同步發表在 詮睿科技 Talent-Jump Technologies, Inc.\n\n\n此報告與 趨勢科技 共同研究。\nKenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). Trend Micro. “Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia”\n\nEnglish Version\n\n\n第一階段感染攻擊者利用具備合法數位簽章的 Windows Defender Core Process MsMpEng.exe，搭配 DLL Side-Loading 執行 shellcode，讀取 payload 檔案的內容後最終才會釋放真正的惡意程式完成整個第一階段的感染。\n作為載體的 MsMpEng.exe 在整個調查過程中總共發現有八種 [附錄 1] 不同的檔名且分別位在 C:\\ProgramData\\Microsoft 各自的資料夾內，其主要目的是透過 DLL Side-Loading 呼叫來自 mpsvc.dll 內的 ServiceCrtMain 函式。\n在這裡發現 mpsvc.dll 有新舊版本的差異，其 payload 檔案分別為舊版對應到  English.rtf 以及新版對應到 mpsvc.mui [附錄 2]。舊版 mpsvc.dll 讀取 English.rtf 內容進行解碼後經由 RtlDecompressBuffer 解壓縮釋放。新版 mpsvc.dll 將 shellcode 寫死在其中，經過解碼後執行其 shellcode 內容，進一步從 mpsvc.mui 中讀取後續的 payload。\n圖 1. 舊版 mpsvc.dll\n\n舊版 mpsvc.dll 透過 English.rtf 所釋放的惡意程式是典型且功能完整的 Backdoor，只會連線到固定的 C&amp;C 伺服器 IP。接下來會著重在新版 mpsvc.dll 搭配 mpsvc.mui 所釋放的惡意程式，這可以說是舊版本的升級版，除了將部份原有的功能更新之外，更加上了和 Dropbox API 互動的模組。\n圖 2. 新版 mpsvc.dll\n\n新版 mpsvc.dll 透過寫死的 shellcode 去分配 0x80000 bytes 的記憶體空間、取得目前 mpsvc.dll 的完整路徑並將 dll 複寫為 mui，最後讀取 mpsvc.mui 的內容，再跳至其 base address + 第一個 byte 的位址。\n最終 mpsvc.mui 將其中寫死的 bytes 透過 RtlDecompressBuffer 解壓縮後才會釋放出真正的惡意程式，我們便可以進一步分析該惡意程式究竟具備哪些功能。\n圖 3. mpsvc.dll 裡解碼後的 shellcode\n\n圖 4. 最終在記憶體裡的惡意程式執行檔\n\n樣本分析抽取出來的惡意程式樣本功能完整，以下是各功能的詳細分析。\nUAC 繞過圖 5. 繞過 UAC 的部分程式碼\n此樣本具備了 UAC 繞過的能力，在本次大多數受害者電腦上幾乎都能有效發揮。這並不是一種新的手法，早在 2017 年就已經有相關研究 [1]披露了這種技巧，攻擊者只將 GUID 更改為 9BA94120-7E02-46ee-ADC6-10640B04F93B。\n權限維持有兩種方式，如果執行的當下不具備 Administrator 權限，會在 HKEY_CURRENT_USER\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run 將自己註冊為開機執行程式。\n圖 6. 註冊成為開機自動執行程式\n若具備 Administrator 權限，則會將自己註冊為系統 Service (HKEY_LOCAL_MACHINE\\\\SYSTEM\\\\CurrentControlSet\\\\services)。\n圖 7. 註冊成為系統服務\n資訊收集圖 8. 資訊收集的部分程式碼\n除了一般電腦資訊例如 IP、hostname、username、作業系統版本等，還會檢查受害者電腦是否有 HKEY_CURRENT_USER\\\\Software\\\\Bitcoin\\\\Bitcoin-Qt 的鍵值以及是否有錢包地址資訊，最後以 %Y-%m-%d %H-%M-%S.log 的格式上傳到 Dropbox。下方是 log 檔案內容的範例：\n1234567Lan IP: x.x.x.xComputer: WIN-XXXXXXUserName: AdministratorOS: Win10(X64)Version: 8.0Bit: Not Found !!!Exist: NO\n\n側錄功能圖 9. 進行側錄資料編碼的部分程式碼\n側錄同時包含了鍵盤輸入以及剪貼簿的內容，兩者分別存入 &lt;hash&gt;.pas 和 &lt;hash&gt;.log，並對每一個 byte 有做簡單的編碼。\n另外也具備螢幕側錄的功能，檔案命名格式為 [%y-%m-%d] %H-%M-%S.avi\n回連 C&amp;C 伺服器圖 10. 準備假的 HTTP POST 請求的部分程式碼\n該樣本也具備和指定 C&amp;C 伺服器溝通的功能，透過偽造的 HTTP POST 方法並將資料藉由 POST Body 送出。\nRTTI 資訊此外，該樣本仍保留了 RTTI 資訊，透過 RTTI Class Name 我們可以大致看出該樣本所具備的完整功能。\n\nCHPAvi\nCHPCmd\nCHPExplorer\nCHPHttp\nCHPKeyLog\nCHPNet\nCHPPipe\nCHPPlugin\nCHPProcess\nCHPProxy\nCHPRegedit\nCHPScreen\nCHPService\nCHPTcp\nCHPTelnet\nCHPUdp\n\n與 Dropbox 互動在逆向分析的過程中，我們發現長度固定為 64 個字元的 access token 單純的以 stack string 的方式寫死在樣本之中。\n圖 11. Dropbox API token 字串陣列的部分程式碼\n\n除了可以和攻擊者的 C&amp;C 伺服器建立連線以外，同時也會透過 Dropbox API 上傳以及下載檔案。此處特別的是上傳完 log 檔以後就會嘗試下載 bin.asc 的檔案，並檢查檔案是否具備假的 GIF 檔頭，如果確認無誤就會進行客製的解碼，和一個寫死在樣本之中的 byte 陣列計算對應位址真實的 byte，提供後續作為注入攻擊所使用的 payload。\n圖 12. 與 Dropbox 互動的部分程式碼\n\nDropbox 內的樣貌取得樣本所使用的 Dropbox Token 後，透過 Dropbox 官方完整的 API 功能 [2]，我們可以進一步查看 Dropbox 內的檔案現況，例如建立該 Token 的帳號資訊、完整檔案列表等。\nDropbox 內的檔案目錄結構如下：\n123456/&lt;unique_hash&gt;/%Y-%m-%d\\ %H:%M:%S.log/&lt;unique_hash&gt;/bin.asc/codex64bin.asc/codex86bin.asc/x64bin.asc/x86bin.asc\n\n每一台感染的電腦會有各自獨立的資料夾，資料夾名稱的格式固定為 /[0-9A-Z]&#123;8&#125;/ ，這個 hash 是來自每一台感染電腦各自根據機器碼搭配其他資訊所產生的唯一值。 %Y-%m-%d\\ %H:%M:%S.log 是上傳的 Log 檔，內容為前面所提到資訊收集的部分。bin.asc 是攻擊者置入的檔案，在需要進一步動作時上傳至特定的電腦的資料夾內，提供給樣本上傳 log 完畢以後自動嘗試下載執行作進一步的動作。\n經過整理也能確認目前所有遭受感染且有回傳資訊的電腦清單：\n圖 13. 整理過後的受感染電腦清單\n\n第二階段感染在前面的第一階段感染完畢以後，樣本本身以系統服務或 autorun 的方式常駐在受感染的電腦，除了收集資訊、側錄、和指定 C&amp;C 伺服器建立連線外，最特別的地方在於每一次成功上傳收集的 log 到 Dropbox 以後，便會嘗試下載 bin.asc 。以我們捕捉到所有的 bin.asc 進一步分析來看，大多是進一步要求受感染電腦到 Dropbox 下載 x64bin.asc 。\n進一步分析 x64bin.asc，在這個 payload 之中我們發現了第二把 Dropbox Token，該用途跟第一把完全不同，現在攻擊者準備將 Dropbox 做為一個另類的 C&amp;C 伺服器並且也擁有完整的後門控制功能。\n第二階段感染的樣本額外具備和 Dropbox 互動的命令對照如下：\n|命令代碼|實際動作||:—:|:—\t||  2  |ListDrives\t||  3  |ListFiles\t||  4  |ExecuteFile\t||  5  |ManageFile\t||  6  |UploadFile\t||  7  |DownloadFile\t||  8  |OpenTerminal\t|\n在這些功能中，會有三個關鍵的檔案各自具備不同的用途串連起整個下達、執行命令且回傳執行結果的流程：\n\neLHgZNBH：狀態檔\nyasHPHFJ：命令檔\ncsaujdnc：結果檔\n\n狀態檔包含基本的機器資訊和時間等，定時持續的上傳到 Dropbox。每一次成功上傳後，就會嘗試在該電腦獨立的資料夾內下載 yasHPHFJ 這個命令檔，如果下載成功並執行完畢，就會將執行結果上傳 Dropbox 存為 csaujdnc 檔案：下方這個流程圖簡單的描述了這三個檔案的互動流程。\n圖 14. 三個特殊檔案與 Dropbox 互動的流程圖\n\n透過這樣的方式，攻擊者便可以將 Dropbox 作為 C&amp;C 伺服器的中繼站，即使原先固定連線的 C&amp;C 伺服器 IP 被發現且受到阻擋，仍然可以透過 Dropbox 掌控受害主機，除非阻擋 content.dropboxapi.com 和 api.dropboxapi.com，否則無法有效的完整隔離，但這將會影響所有內部使用者使用  Dropbox 服務。\n因為 Dropbox API 保留了完整且詳盡的檔案、資料夾資訊，例如下方是一個檔案的回傳資訊：\n12345678910111213&#123;    &#x27;.tag&#x27;: &#x27;file&#x27;,    &#x27;name&#x27;: &#x27;Secret_File.txt&#x27;,    &#x27;path_lower&#x27;: &#x27;/secret_file.txt&#x27;,    &#x27;path_display&#x27;: &#x27;/Secret_File.txt&#x27;,    &#x27;id&#x27;: &#x27;id:&lt;UNIQUE_FILE_ID&gt;&#x27;,    &#x27;client_modified&#x27;: &#x27;2019-07-21T02:45:42Z&#x27;,    &#x27;server_modified&#x27;: &#x27;2019-07-21T02:53:04Z&#x27;,    &#x27;rev&#x27;: &#x27;[0-9a-f]&#123;6,&#125;&#x27;,    &#x27;size&#x27;: 125,    &#x27;is_downloadable&#x27;: True,    &#x27;content_hash&#x27;: &#x27;&lt;SHA256_HASH&gt;&#x27;&#125;\n\n我們可以精確地得到本機修改時間、上傳時間，甚至如果該檔案有被覆蓋的歷史版本，透過 rev 參數我們也能列出該檔案所有歷史版本的詳細資訊，並且將這些檔案下載回來。利用這些資訊搭配前面逆向所解析出來的命令對照及參數，匯集每一台電腦的 yasHPHFJ 檔案，我們便可以整理出每台感染電腦過去曾經被執行過的所有命令、參數和時間點列表，下面兩張圖片是兩台電腦實際解析後的結果以時間做排序。\n圖 15. 受感染電腦的命令執行結果清單\n圖 16. 另一台受感染電腦的命令執行結果清單\n\n根據解析出來的這些紀錄，攻擊者在每台電腦都遵循著差不多的動作流程。首先透過 Dropbox 下載額外的攻擊程式，例如 mimikatz 或是嘗試提權、UAC 繞過等工具，之後便開始搜索有價值的檔案，例如側錄的 keylog &#x2F; clipboard log、公司內部文件、設定檔、原始碼、資料庫內容等，全部上傳到 Dropbox。攻擊者找到並竊取了機敏資訊後持續進行橫向擴散，最終近乎完全滲透公司內部、Cloud Server 等各環境。\n將所有的 yasHPHFJ 命令檔解析並整理過後，我們可以大略的統計出攻擊者的作息時間如下圖：\n圖 17. 攻擊者大略的作息時間\n\n總結在分析並取得 Dropbox Token 之後，我們持續監控各 Dropbox APP 內的檔案變化，可以觀察出在 2019 年 7 月 ~ 2019 年 9 月兩個月之中受感染電腦的數量變化。\n圖 18. Dropbox A 的感染電腦數量變化圖\n圖 19. Dropbox B 的感染電腦數量變化圖\n\n最高峰的時期曾經在 Dropbox A 監測到將近 200 台受害電腦回傳資訊，兩者數量皆在 2019&#x2F;08&#x2F;20 這天出現大落差，推測可能是攻擊者在清理 Dropbox 上的資料進行重置，直到 2019&#x2F;09&#x2F;20 所有我們已知的 Dropbox Token 皆失效。\n整個研究過程中總共發現超過 5 把不同的 Dropbox Token，其中主要的兩把就是本文前面所介紹的內容，其他把 Token 觀察下來比較像是攻擊者用來測試或額外分類存放資料所使用的。\n整個和 Dropbox 互動的流程可以描繪成下圖：\n圖 20. 整體感染流程圖\n\n從最一開始的感染點完成第一階段感染以後，同時具備與特定 C&amp;C 伺服器和 Dropbox 的連線，當 C&amp;C 伺服器 IP 受到阻擋或封鎖時，仍然可以透過 Dropbox 持續接收受感染電腦的資訊，並且上傳 bin.asc 對受感染電腦下達其他指令。要求受感染電腦下載 x64bin.asc 後完成第二階段感染，更進一步善用 Dropbox 實現完整且即時的遠端控制能力，持續的竊取資料以及橫向滲透，方法簡單但卻十分有效。\n附錄\n載體列表\n\n33bc14d231a4afaa18f06513766d5f69d8b88f1e697cd127d24fb4b72ad44c7a\nmsmpeng.exe (PE32)\n\n\n99042e895b6c2ea80f3ba65563a12c8eba882e3ad6a21dd8e799b0112c75ddd2\nrsoplicy.exe (PE32+)\nDRM.exe (PE32+)\nFirewall.exe (PE32+)\nKaspe.exe (PE32+)\nRSoPProv.exe (PE32+)\nVideo.exe (PE32+)\nWinDRM.exe (PE32+)\n\n\n\n\nDLL 和搭配 Payload 檔案列表\n\nmpsvc.dll\na58946c10c8325040634f7cd04429b9f1e3715767d0c8aec46b7cba8975e6a69\ne18af309ecc3bc93351b9fa13a451e8b55b71d9edcc4232bc53eb1092bdfa859\n\n\nEnglish.rtf\n52c147c8eadb58d3580b39c023ce4a90dacce76ee5c30c56c56ea39939a56b52\nb5546d4931a0316abd4018c982558ed808b4d0a60233ac18bee601fa09d95ee6\ndd0399970d2dbb5ab8b5869e2fafb83194c992f27bbb244adce35e2fe6ef0d28\n\n\nmpsvc.mui\n0693713f995285e8bd99ebfca2c4f0f1a8e824dafb5a99693442a9256df06e02\n24ebd398be23135a2d8aa7000c2b6a534448b87aa5708b8546089630a8035f7e\n56758c25e3b00957c6f7f76fcea5d0598eff7eda98c63f50b51d1c28f267ac8f\n96282a625a31b6bf646c6e01ad20de96fd63c345881a9c91190940121580059d\n99663b9ba27a36ff9fc64b72213e933067ee0cde38b39d20ae4326a37185811d\n9dd1d21e9431cfe25709a8f26ec0f605ed19cf64ca1922e97fad7b7f2d2e82ea\nb226c8e85a7b1a6d4d29d42fc84bc7f3a32335fc7ba44b455a7716d706660873\ne716506cf54f48d77382d8955512184b45dd7d0b58c22e32424c56d38db24360\n\n\n\n\n\n\n其他 IoCs\nDrop Files\n\n37286285cb0f8305bd23a693b2e7ace71538e4c0b9f13ee6ca4e9e9419657813\nb3581e8611f5838fc205f66bc5ca5edddb0fd895e97ebf8f0c7220cb102ae14b\n79928578cdd646a9724bc6851a1ee77820c81a3100788d62885f9d92b6814085\n7602e2932a10f3750a5d6236f6c1662047d4475c6e1fe6c57118c6620a083cb3\n5b5aff8869ba7f1d3f6ad7711e801b031aedeff287a0dcb8f8ae6d6e4eb468af\n412260ab5d9b2b2aa4471b953fb67ddc1a0fe90c353e391819ca7ac1c6d3146f\nc6064fb44733b5660557e223598d0e4d5c4448ad20b29e41bef469cb5df77da0\n4c08bc1a2f5384c5306edc6f23e4249526517eb21a88763c8180a582438dfa31\na58f2fea8c74c1d25090014c7366db224102daa6c798fcdfb7168b569b7d5ca2\nd201e726fd2a2f4b55ea5ca95f0429d74e2efb918c7c136d55ef392ceac854d6\n5713907c01db40cf54155db19c0c44c046b2c676a492d5ba13d39118c95139bf\nd72c3f5f2f291f7092afd5a0fcaceaf2eaae44d057c9b3b27dd53f2048ed6175\nd62ddac7c4aa152cf6f988db6c7bd0c9dcffa2e890d354b7e9db7f3b843fd270\n28d2637139231c78a6493cd91e8f0d10891cfeb6c5e758540515faa29f54b6b2\n39e69ab52f073f966945fdab214f63368f71175a7ccbea199fae32d51fa6a4e7\n260b64e287d13d04f1f38d956c10d9fdd3cfbff6ba0040a52223fa41605bb975\nc425b73be7394032aa8e756259ebf3662c000afaa286c3d7d957891026f3cbb4\n28d19a23d167db3e1282f1c6039bcda6556798be054994a55e60116827dd0bf1\nc3c1fc6aabbb49d0ee281ba4fc1529d2b9832a67b18e08ce14dbf0e361e5bd85\nfc865a720cb808354923092bac04ab6a75e20ea92db5a343af07365c0cd2b72a\n24f501141af5bf059509145e165302dd7087b1d1c2136bc5e4403f01435f250e\nee5f7e6ad4a344f40b9babada1654ea22333bb5150cfd26bfc239ead28b6528c\nca26a34153972cc73c63d3a9aadd3b12ba35ecdc6e39025b75be56b00c20e0ae\n1951c79f280692a43b7c7cafd45c3f5d7f4f841ae104a6cad814fab4641c79f2\nd5129308ee83a852e6a320ca68c8e66ed6d1eb4ec584dd0c8b5f313a56c49a15\n\n\nIP\n\n103.230.15.130\n104.168.196.80\n104.168.196.85\n104.168.196.88\n139.180.194.173\n167.179.115.228\n207.148.73.58\n43.228.126.172\n43.228.126.56\n45.32.101.238\n45.32.111.228\n45.77.41.49\n47.75.248.237\n66.42.60.107\n\n\nDomains\n\nfn.shopingchina.net\noffice.support.googldevice.com\nsafe.mircosofdevice.com\nserver.correomasivochile.com\nsrv2.mkt-app.com\nstore.microsoftbetastore.com\nupdate.mircosotfdefender.com\n\n\n\n\n\n參考資料\nUAC bypass via elevated .NET applications\nDropbox for HTTP Developers\nKenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). Trend Micro. “Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia”\n\n\nPhoto by Fotis Fotopoulos on Unsplash\n\n","dateCreated":"2020-02-17T13:22:21+00:00","dateModified":"2025-01-17T13:11:16+00:00","datePublished":"2020-02-17T13:22:21+00:00","description":"2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。","headline":"CLAMBLING - A New Backdoor Base On Dropbox","image":["thumb.jpg","cover.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/","keywords":"Malware, APT, IncidentResponse","thumbnailUrl":"thumb.jpg"}</script>
+    
+    <meta name="description" content="2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="CLAMBLING - A New Backdoor Base On Dropbox">
+<meta property="og:url" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/cover.jpg">
+<meta property="article:published_time" content="2020-02-17T13:22:21.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:16.682Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Malware">
+<meta property="article:tag" content="APT">
+<meta property="article:tag" content="IncidentResponse">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/cover.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/thumb.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/thumb.jpg"/>
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/cover.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/cover.jpg"/>
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+        <div class="post-header-cover
+                    text-center
+                    "
+             style="background-image:url('/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/cover.jpg');"
+             data-behavior="2">
+            
+        </div>
+
+            <div id="main" data-behavior="2"
+                 class="hasCover
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            CLAMBLING - A New Backdoor Base On Dropbox
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2020-02-17T13:22:21+00:00">
+	
+		    Feb 17, 2020
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Research/">Research</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>2019 年 7 月，我們發現一個合作的客戶疑似遭受 APT 攻擊並立刻著手調查。調查過程中發現了一種全新的後門樣本，該樣本的特殊之處在於攻擊者利用 Dropbox API 實現了一個具備多種功能的後門惡意程式，並且完美地將 C&amp;C 伺服器建構在 Dropbox 上。透過惡意程式分析，我們獲得了樣本所使用的 Dropbox API Token 並且能夠進一步的深入探討整個架構的運作原理。<span id="more"></span></p>
+<blockquote>
+<p>本文同步發表在 <a target="_blank" rel="noopener" href="http://www.talent-jump.com/article/2020/02/17/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/">詮睿科技 Talent-Jump Technologies, Inc.</a></p>
+</blockquote>
+<blockquote>
+<p>此報告與 <a target="_blank" rel="noopener" href="https://www.trendmicro.com/">趨勢科技</a> 共同研究。</p>
+<p>Kenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). Trend Micro. <a target="_blank" rel="noopener" href="https://www.trendmicro.com/vinfo/us/security/news/cyber-attacks/operation-drbcontrol-uncovering-a-cyberespionage-campaign-targeting-gambling-companies-in-southeast-asia">“Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia”</a></p>
+</blockquote>
+<p><a href="/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en">English Version</a></p>
+<h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E9%9A%8E%E6%AE%B5%E6%84%9F%E6%9F%93"><span class="toc-text">第一階段感染</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A3%E6%9C%AC%E5%88%86%E6%9E%90"><span class="toc-text">樣本分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#UAC-%E7%B9%9E%E9%81%8E"><span class="toc-text">UAC 繞過</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AC%8A%E9%99%90%E7%B6%AD%E6%8C%81"><span class="toc-text">權限維持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B3%87%E8%A8%8A%E6%94%B6%E9%9B%86"><span class="toc-text">資訊收集</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%81%B4%E9%8C%84%E5%8A%9F%E8%83%BD"><span class="toc-text">側錄功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9E%E9%80%A3-C-C-%E4%BC%BA%E6%9C%8D%E5%99%A8"><span class="toc-text">回連 C&amp;C 伺服器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RTTI-%E8%B3%87%E8%A8%8A"><span class="toc-text">RTTI 資訊</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%88%87-Dropbox-%E4%BA%92%E5%8B%95"><span class="toc-text">與 Dropbox 互動</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Dropbox-%E5%85%A7%E7%9A%84%E6%A8%A3%E8%B2%8C"><span class="toc-text">Dropbox 內的樣貌</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E9%9A%8E%E6%AE%B5%E6%84%9F%E6%9F%93"><span class="toc-text">第二階段感染</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B8%BD%E7%B5%90"><span class="toc-text">總結</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E9%8C%84"><span class="toc-text">附錄</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99"><span class="toc-text">參考資料</span></a></li></ol>
+
+<h2 id="第一階段感染"><a href="#第一階段感染" class="headerlink" title="第一階段感染"></a>第一階段感染</h2><p>攻擊者利用具備合法數位簽章的 Windows Defender Core Process <code>MsMpEng.exe</code>，搭配 DLL Side-Loading 執行 shellcode，讀取 payload 檔案的內容後最終才會釋放真正的惡意程式完成整個第一階段的感染。</p>
+<p>作為載體的 <code>MsMpEng.exe</code> 在整個調查過程中總共發現有八種 <sub><a href="#%E9%99%84%E9%8C%84">[附錄 1]</a></sub> 不同的檔名且分別位在 <code>C:\ProgramData\Microsoft</code> 各自的資料夾內，其主要目的是透過 DLL Side-Loading 呼叫來自 <code>mpsvc.dll</code> 內的 <code>ServiceCrtMain</code> 函式。</p>
+<p>在這裡發現 <code>mpsvc.dll</code> 有新舊版本的差異，其 payload 檔案分別為舊版對應到  <code>English.rtf</code> 以及新版對應到 <code>mpsvc.mui</code> <sub><a href="#%E9%99%84%E9%8C%84">[附錄 2]</a></sub>。舊版 <code>mpsvc.dll</code> 讀取 <code>English.rtf</code> 內容進行解碼後經由 <code>RtlDecompressBuffer</code> 解壓縮釋放。新版 <code>mpsvc.dll</code> 將 shellcode 寫死在其中，經過解碼後執行其 shellcode 內容，進一步從 <code>mpsvc.mui</code> 中讀取後續的 payload。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-01.png" title="圖 1. 舊版 mpsvc.dll" data-caption="圖 1. 舊版 mpsvc.dll" data-fancybox="default"><img class="fig-img" src="clambling-01.png" alt="圖 1. 舊版 mpsvc.dll"></a><span class="caption">圖 1. 舊版 mpsvc.dll</span></div>
+
+<p>舊版 <code>mpsvc.dll</code> 透過 <code>English.rtf</code> 所釋放的惡意程式是典型且功能完整的 Backdoor，只會連線到固定的 C&amp;C 伺服器 IP。接下來會著重在新版 <code>mpsvc.dll</code> 搭配 <code>mpsvc.mui</code> 所釋放的惡意程式，這可以說是舊版本的升級版，除了將部份原有的功能更新之外，更加上了和 Dropbox API 互動的模組。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-02.png" title="圖 2. 新版 mpsvc.dll" data-caption="圖 2. 新版 mpsvc.dll" data-fancybox="default"><img class="fig-img" src="clambling-02.png" alt="圖 2. 新版 mpsvc.dll"></a><span class="caption">圖 2. 新版 mpsvc.dll</span></div>
+
+<p>新版 <code>mpsvc.dll</code> 透過寫死的 shellcode 去分配 0x80000 bytes 的記憶體空間、取得目前 <code>mpsvc.dll</code> 的完整路徑並將 <code>dll</code> 複寫為 <code>mui</code>，最後讀取 <code>mpsvc.mui</code> 的內容，再跳至其 base address + 第一個 byte 的位址。</p>
+<p>最終 <code>mpsvc.mui</code> 將其中寫死的 bytes 透過 <code>RtlDecompressBuffer</code> 解壓縮後才會釋放出真正的惡意程式，我們便可以進一步分析該惡意程式究竟具備哪些功能。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-03.png" title="圖 3. mpsvc.dll 裡解碼後的 shellcode" data-caption="圖 3. mpsvc.dll 裡解碼後的 shellcode" data-fancybox="default"><img class="fig-img" src="clambling-03.png" alt="圖 3. mpsvc.dll 裡解碼後的 shellcode"></a><span class="caption">圖 3. mpsvc.dll 裡解碼後的 shellcode</span></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-04.png" title="圖 4. 最終在記憶體裡的惡意程式執行檔" data-caption="圖 4. 最終在記憶體裡的惡意程式執行檔" data-fancybox="default"><img class="fig-img" src="clambling-04.png" alt="圖 4. 最終在記憶體裡的惡意程式執行檔"></a><span class="caption">圖 4. 最終在記憶體裡的惡意程式執行檔</span></div>
+
+<h2 id="樣本分析"><a href="#樣本分析" class="headerlink" title="樣本分析"></a>樣本分析</h2><p>抽取出來的惡意程式樣本功能完整，以下是各功能的詳細分析。</p>
+<h3 id="UAC-繞過"><a href="#UAC-繞過" class="headerlink" title="UAC 繞過"></a>UAC 繞過</h3><div class="figure center" style="width:;"><a class="fancybox" href="clambling-05.png" title="圖 5. 繞過 UAC 的部分程式碼" data-caption="圖 5. 繞過 UAC 的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-05.png" alt="圖 5. 繞過 UAC 的部分程式碼"></a><span class="caption">圖 5. 繞過 UAC 的部分程式碼</span></div>
+<p>此樣本具備了 UAC 繞過的能力，在本次大多數受害者電腦上幾乎都能有效發揮。這並不是一種新的手法，早在 2017 年就已經有相關研究 <sub><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">[1]</a></sub>披露了這種技巧，攻擊者只將 GUID 更改為 <code>9BA94120-7E02-46ee-ADC6-10640B04F93B</code>。</p>
+<h3 id="權限維持"><a href="#權限維持" class="headerlink" title="權限維持"></a>權限維持</h3><p>有兩種方式，如果執行的當下不具備 Administrator 權限，會在 <code>HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run</code> 將自己註冊為開機執行程式。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-06.png" title="圖 6. 註冊成為開機自動執行程式" data-caption="圖 6. 註冊成為開機自動執行程式" data-fancybox="default"><img class="fig-img" src="clambling-06.png" alt="圖 6. 註冊成為開機自動執行程式"></a><span class="caption">圖 6. 註冊成為開機自動執行程式</span></div>
+<p>若具備 Administrator 權限，則會將自己註冊為系統 Service (<code>HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\services</code>)。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-07.png" title="圖 7. 註冊成為系統服務" data-caption="圖 7. 註冊成為系統服務" data-fancybox="default"><img class="fig-img" src="clambling-07.png" alt="圖 7. 註冊成為系統服務"></a><span class="caption">圖 7. 註冊成為系統服務</span></div>
+<h3 id="資訊收集"><a href="#資訊收集" class="headerlink" title="資訊收集"></a>資訊收集</h3><div class="figure center" style="width:;"><a class="fancybox" href="clambling-08.png" title="圖 8. 資訊收集的部分程式碼" data-caption="圖 8. 資訊收集的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-08.png" alt="圖 8. 資訊收集的部分程式碼"></a><span class="caption">圖 8. 資訊收集的部分程式碼</span></div>
+<p>除了一般電腦資訊例如 IP、hostname、username、作業系統版本等，還會檢查受害者電腦是否有 <code>HKEY_CURRENT_USER\\Software\\Bitcoin\\Bitcoin-Qt</code> 的鍵值以及是否有錢包地址資訊，最後以 <code>%Y-%m-%d %H-%M-%S.log</code> 的格式上傳到 Dropbox。下方是 log 檔案內容的範例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Lan IP: x.x.x.x</span><br><span class="line">Computer: WIN-XXXXXX</span><br><span class="line">UserName: Administrator</span><br><span class="line">OS: Win10(X64)</span><br><span class="line">Version: 8.0</span><br><span class="line">Bit: Not Found !!!</span><br><span class="line">Exist: NO</span><br></pre></td></tr></table></figure>
+
+<h3 id="側錄功能"><a href="#側錄功能" class="headerlink" title="側錄功能"></a>側錄功能</h3><div class="figure center" style="width:;"><a class="fancybox" href="clambling-09.png" title="圖 9. 進行側錄資料編碼的部分程式碼" data-caption="圖 9. 進行側錄資料編碼的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-09.png" alt="圖 9. 進行側錄資料編碼的部分程式碼"></a><span class="caption">圖 9. 進行側錄資料編碼的部分程式碼</span></div>
+<p>側錄同時包含了鍵盤輸入以及剪貼簿的內容，兩者分別存入 <code>&lt;hash&gt;.pas</code> 和 <code>&lt;hash&gt;.log</code>，並對每一個 byte 有做簡單的編碼。</p>
+<p>另外也具備螢幕側錄的功能，檔案命名格式為 <code>[%y-%m-%d] %H-%M-%S.avi</code></p>
+<h3 id="回連-C-C-伺服器"><a href="#回連-C-C-伺服器" class="headerlink" title="回連 C&amp;C 伺服器"></a>回連 C&amp;C 伺服器</h3><div class="figure center" style="width:;"><a class="fancybox" href="clambling-10.png" title="圖 10. 準備假的 HTTP POST 請求的部分程式碼" data-caption="圖 10. 準備假的 HTTP POST 請求的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-10.png" alt="圖 10. 準備假的 HTTP POST 請求的部分程式碼"></a><span class="caption">圖 10. 準備假的 HTTP POST 請求的部分程式碼</span></div>
+<p>該樣本也具備和指定 C&amp;C 伺服器溝通的功能，透過偽造的 HTTP POST 方法並將資料藉由 POST Body 送出。</p>
+<h3 id="RTTI-資訊"><a href="#RTTI-資訊" class="headerlink" title="RTTI 資訊"></a>RTTI 資訊</h3><p>此外，該樣本仍保留了 RTTI 資訊，透過 RTTI Class Name 我們可以大致看出該樣本所具備的完整功能。</p>
+<ul>
+<li>CHPAvi</li>
+<li>CHPCmd</li>
+<li>CHPExplorer</li>
+<li>CHPHttp</li>
+<li>CHPKeyLog</li>
+<li>CHPNet</li>
+<li>CHPPipe</li>
+<li>CHPPlugin</li>
+<li>CHPProcess</li>
+<li>CHPProxy</li>
+<li>CHPRegedit</li>
+<li>CHPScreen</li>
+<li>CHPService</li>
+<li>CHPTcp</li>
+<li>CHPTelnet</li>
+<li>CHPUdp</li>
+</ul>
+<h3 id="與-Dropbox-互動"><a href="#與-Dropbox-互動" class="headerlink" title="與 Dropbox 互動"></a>與 Dropbox 互動</h3><p>在逆向分析的過程中，我們發現長度固定為 64 個字元的 access token 單純的以 stack string 的方式寫死在樣本之中。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-11.png" title="圖 11. Dropbox API token 字串陣列的部分程式碼" data-caption="圖 11. Dropbox API token 字串陣列的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-11.png" alt="圖 11. Dropbox API token 字串陣列的部分程式碼"></a><span class="caption">圖 11. Dropbox API token 字串陣列的部分程式碼</span></div>
+
+<p>除了可以和攻擊者的 C&amp;C 伺服器建立連線以外，同時也會透過 Dropbox API 上傳以及下載檔案。此處特別的是上傳完 log 檔以後就會嘗試下載 <code>bin.asc</code> 的檔案，並檢查檔案是否具備假的 <code>GIF</code> 檔頭，如果確認無誤就會進行客製的解碼，和一個寫死在樣本之中的 byte 陣列計算對應位址真實的 byte，提供後續作為注入攻擊所使用的 payload。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-12.png" title="圖 12. 與 Dropbox 互動的部分程式碼" data-caption="圖 12. 與 Dropbox 互動的部分程式碼" data-fancybox="default"><img class="fig-img" src="clambling-12.png" alt="圖 12. 與 Dropbox 互動的部分程式碼"></a><span class="caption">圖 12. 與 Dropbox 互動的部分程式碼</span></div>
+
+<h2 id="Dropbox-內的樣貌"><a href="#Dropbox-內的樣貌" class="headerlink" title="Dropbox 內的樣貌"></a>Dropbox 內的樣貌</h2><p>取得樣本所使用的 Dropbox Token 後，透過 Dropbox 官方完整的 API 功能 [2]，我們可以進一步查看 Dropbox 內的檔案現況，例如建立該 Token 的帳號資訊、完整檔案列表等。</p>
+<p>Dropbox 內的檔案目錄結構如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/&lt;unique_hash&gt;/%Y-%m-%d\ %H:%M:%S.log</span><br><span class="line">/&lt;unique_hash&gt;/bin.asc</span><br><span class="line">/codex64bin.asc</span><br><span class="line">/codex86bin.asc</span><br><span class="line">/x64bin.asc</span><br><span class="line">/x86bin.asc</span><br></pre></td></tr></table></figure>
+
+<p>每一台感染的電腦會有各自獨立的資料夾，資料夾名稱的格式固定為 <code>/[0-9A-Z]&#123;8&#125;/</code> ，這個 hash 是來自每一台感染電腦各自根據機器碼搭配其他資訊所產生的唯一值。 <code>%Y-%m-%d\ %H:%M:%S.log</code> 是上傳的 Log 檔，內容為前面所提到資訊收集的部分。<code>bin.asc</code> 是攻擊者置入的檔案，在需要進一步動作時上傳至特定的電腦的資料夾內，提供給樣本上傳 log 完畢以後自動嘗試下載執行作進一步的動作。</p>
+<p>經過整理也能確認目前所有遭受感染且有回傳資訊的電腦清單：</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-13.png" title="圖 13. 整理過後的受感染電腦清單" data-caption="圖 13. 整理過後的受感染電腦清單" data-fancybox="default"><img class="fig-img" src="clambling-13.png" alt="圖 13. 整理過後的受感染電腦清單"></a><span class="caption">圖 13. 整理過後的受感染電腦清單</span></div>
+
+<h2 id="第二階段感染"><a href="#第二階段感染" class="headerlink" title="第二階段感染"></a>第二階段感染</h2><p>在前面的第一階段感染完畢以後，樣本本身以系統服務或 autorun 的方式常駐在受感染的電腦，除了收集資訊、側錄、和指定 C&amp;C 伺服器建立連線外，最特別的地方在於每一次成功上傳收集的 log 到 Dropbox 以後，便會嘗試下載 <code>bin.asc</code> 。以我們捕捉到所有的 <code>bin.asc</code> 進一步分析來看，大多是進一步要求受感染電腦到 Dropbox 下載 <code>x64bin.asc</code> 。</p>
+<p>進一步分析 <code>x64bin.asc</code>，在這個 payload 之中我們發現了第二把 Dropbox Token，該用途跟第一把完全不同，現在攻擊者準備將 Dropbox 做為一個另類的 C&amp;C 伺服器並且也擁有完整的後門控制功能。</p>
+<p>第二階段感染的樣本額外具備和 Dropbox 互動的命令對照如下：</p>
+<p>|命令代碼|實際動作|<br>|:—:|:—	|<br>|  2  |ListDrives	|<br>|  3  |ListFiles	|<br>|  4  |ExecuteFile	|<br>|  5  |ManageFile	|<br>|  6  |UploadFile	|<br>|  7  |DownloadFile	|<br>|  8  |OpenTerminal	|</p>
+<p>在這些功能中，會有三個關鍵的檔案各自具備不同的用途串連起整個下達、執行命令且回傳執行結果的流程：</p>
+<ul>
+<li><code>eLHgZNBH</code>：狀態檔</li>
+<li><code>yasHPHFJ</code>：命令檔</li>
+<li><code>csaujdnc</code>：結果檔</li>
+</ul>
+<p>狀態檔包含基本的機器資訊和時間等，定時持續的上傳到 Dropbox。每一次成功上傳後，就會嘗試在該電腦獨立的資料夾內下載 <code>yasHPHFJ</code> 這個命令檔，如果下載成功並執行完畢，就會將執行結果上傳 Dropbox 存為 <code>csaujdnc</code> 檔案：下方這個流程圖簡單的描述了這三個檔案的互動流程。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-14.png" title="圖 14. 三個特殊檔案與 Dropbox 互動的流程圖" data-caption="圖 14. 三個特殊檔案與 Dropbox 互動的流程圖" data-fancybox="default"><img class="fig-img" src="clambling-14.png" alt="圖 14. 三個特殊檔案與 Dropbox 互動的流程圖"></a><span class="caption">圖 14. 三個特殊檔案與 Dropbox 互動的流程圖</span></div>
+
+<p>透過這樣的方式，攻擊者便可以將 Dropbox 作為 C&amp;C 伺服器的中繼站，即使原先固定連線的 C&amp;C 伺服器 IP 被發現且受到阻擋，仍然可以透過 Dropbox 掌控受害主機，除非阻擋 <code>content.dropboxapi.com</code> 和 <code>api.dropboxapi.com</code>，否則無法有效的完整隔離，但這將會影響所有內部使用者使用  Dropbox 服務。</p>
+<p>因為 Dropbox API 保留了完整且詳盡的檔案、資料夾資訊，例如下方是一個檔案的回傳資訊：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &#x27;.tag&#x27;: &#x27;file&#x27;,</span><br><span class="line">    &#x27;name&#x27;: &#x27;Secret_File.txt&#x27;,</span><br><span class="line">    &#x27;path_lower&#x27;: &#x27;/secret_file.txt&#x27;,</span><br><span class="line">    &#x27;path_display&#x27;: &#x27;/Secret_File.txt&#x27;,</span><br><span class="line">    &#x27;id&#x27;: &#x27;id:&lt;UNIQUE_FILE_ID&gt;&#x27;,</span><br><span class="line">    &#x27;client_modified&#x27;: &#x27;2019-07-21T02:45:42Z&#x27;,</span><br><span class="line">    &#x27;server_modified&#x27;: &#x27;2019-07-21T02:53:04Z&#x27;,</span><br><span class="line">    &#x27;rev&#x27;: &#x27;[0-9a-f]&#123;6,&#125;&#x27;,</span><br><span class="line">    &#x27;size&#x27;: 125,</span><br><span class="line">    &#x27;is_downloadable&#x27;: True,</span><br><span class="line">    &#x27;content_hash&#x27;: &#x27;&lt;SHA256_HASH&gt;&#x27;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我們可以精確地得到本機修改時間、上傳時間，甚至如果該檔案有被覆蓋的歷史版本，透過 <code>rev</code> 參數我們也能列出該檔案所有歷史版本的詳細資訊，並且將這些檔案下載回來。利用這些資訊搭配前面逆向所解析出來的命令對照及參數，匯集每一台電腦的 <code>yasHPHFJ</code> 檔案，我們便可以整理出每台感染電腦過去曾經被執行過的所有命令、參數和時間點列表，下面兩張圖片是兩台電腦實際解析後的結果以時間做排序。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-15.png" title="圖 15. 受感染電腦的命令執行結果清單" data-caption="圖 15. 受感染電腦的命令執行結果清單" data-fancybox="default"><img class="fig-img" src="clambling-15.png" alt="圖 15. 受感染電腦的命令執行結果清單"></a><span class="caption">圖 15. 受感染電腦的命令執行結果清單</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-16.png" title="圖 16. 另一台受感染電腦的命令執行結果清單" data-caption="圖 16. 另一台受感染電腦的命令執行結果清單" data-fancybox="default"><img class="fig-img" src="clambling-16.png" alt="圖 16. 另一台受感染電腦的命令執行結果清單"></a><span class="caption">圖 16. 另一台受感染電腦的命令執行結果清單</span></div>
+
+<p>根據解析出來的這些紀錄，攻擊者在每台電腦都遵循著差不多的動作流程。首先透過 Dropbox 下載額外的攻擊程式，例如 mimikatz 或是嘗試提權、UAC 繞過等工具，之後便開始搜索有價值的檔案，例如側錄的 keylog &#x2F; clipboard log、公司內部文件、設定檔、原始碼、資料庫內容等，全部上傳到 Dropbox。攻擊者找到並竊取了機敏資訊後持續進行橫向擴散，最終近乎完全滲透公司內部、Cloud Server 等各環境。</p>
+<p>將所有的 <code>yasHPHFJ</code> 命令檔解析並整理過後，我們可以大略的統計出攻擊者的作息時間如下圖：</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-17.png" title="圖 17. 攻擊者大略的作息時間" data-caption="圖 17. 攻擊者大略的作息時間" data-fancybox="default"><img class="fig-img" src="clambling-17.png" alt="圖 17. 攻擊者大略的作息時間"></a><span class="caption">圖 17. 攻擊者大略的作息時間</span></div>
+
+<h2 id="總結"><a href="#總結" class="headerlink" title="總結"></a>總結</h2><p>在分析並取得 Dropbox Token 之後，我們持續監控各 Dropbox APP 內的檔案變化，可以觀察出在 2019 年 7 月 ~ 2019 年 9 月兩個月之中受感染電腦的數量變化。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-18.png" title="圖 18. Dropbox A 的感染電腦數量變化圖" data-caption="圖 18. Dropbox A 的感染電腦數量變化圖" data-fancybox="default"><img class="fig-img" src="clambling-18.png" alt="圖 18. Dropbox A 的感染電腦數量變化圖"></a><span class="caption">圖 18. Dropbox A 的感染電腦數量變化圖</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-19.png" title="圖 19. Dropbox B 的感染電腦數量變化圖" data-caption="圖 19. Dropbox B 的感染電腦數量變化圖" data-fancybox="default"><img class="fig-img" src="clambling-19.png" alt="圖 19. Dropbox B 的感染電腦數量變化圖"></a><span class="caption">圖 19. Dropbox B 的感染電腦數量變化圖</span></div>
+
+<p>最高峰的時期曾經在 Dropbox A 監測到將近 200 台受害電腦回傳資訊，兩者數量皆在 2019&#x2F;08&#x2F;20 這天出現大落差，推測可能是攻擊者在清理 Dropbox 上的資料進行重置，直到 2019&#x2F;09&#x2F;20 所有我們已知的 Dropbox Token 皆失效。</p>
+<p>整個研究過程中總共發現超過 5 把不同的 Dropbox Token，其中主要的兩把就是本文前面所介紹的內容，其他把 Token 觀察下來比較像是攻擊者用來測試或額外分類存放資料所使用的。</p>
+<p>整個和 Dropbox 互動的流程可以描繪成下圖：</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="clambling-20.png" title="圖 20. 整體感染流程圖" data-caption="圖 20. 整體感染流程圖" data-fancybox="default"><img class="fig-img" src="clambling-20.png" alt="圖 20. 整體感染流程圖"></a><span class="caption">圖 20. 整體感染流程圖</span></div>
+
+<p>從最一開始的感染點完成第一階段感染以後，同時具備與特定 C&amp;C 伺服器和 Dropbox 的連線，當 C&amp;C 伺服器 IP 受到阻擋或封鎖時，仍然可以透過 Dropbox 持續接收受感染電腦的資訊，並且上傳 <code>bin.asc</code> 對受感染電腦下達其他指令。要求受感染電腦下載 <code>x64bin.asc</code> 後完成第二階段感染，更進一步善用 Dropbox 實現完整且即時的遠端控制能力，持續的竊取資料以及橫向滲透，方法簡單但卻十分有效。</p>
+<h2 id="附錄"><a href="#附錄" class="headerlink" title="附錄"></a>附錄</h2><ol>
+<li><p>載體列表</p>
+<ul>
+<li><code>33bc14d231a4afaa18f06513766d5f69d8b88f1e697cd127d24fb4b72ad44c7a</code><ul>
+<li><code>msmpeng.exe</code> (PE32)</li>
+</ul>
+</li>
+<li><code>99042e895b6c2ea80f3ba65563a12c8eba882e3ad6a21dd8e799b0112c75ddd2</code><ul>
+<li><code>rsoplicy.exe</code> (PE32+)</li>
+<li><code>DRM.exe</code> (PE32+)</li>
+<li><code>Firewall.exe</code> (PE32+)</li>
+<li><code>Kaspe.exe</code> (PE32+)</li>
+<li><code>RSoPProv.exe</code> (PE32+)</li>
+<li><code>Video.exe</code> (PE32+)</li>
+<li><code>WinDRM.exe</code> (PE32+)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>DLL 和搭配 Payload 檔案列表</p>
+<ul>
+<li><code>mpsvc.dll</code><ul>
+<li><code>a58946c10c8325040634f7cd04429b9f1e3715767d0c8aec46b7cba8975e6a69</code></li>
+<li><code>e18af309ecc3bc93351b9fa13a451e8b55b71d9edcc4232bc53eb1092bdfa859</code></li>
+</ul>
+</li>
+<li><code>English.rtf</code><ul>
+<li><code>52c147c8eadb58d3580b39c023ce4a90dacce76ee5c30c56c56ea39939a56b52</code></li>
+<li><code>b5546d4931a0316abd4018c982558ed808b4d0a60233ac18bee601fa09d95ee6</code></li>
+<li><code>dd0399970d2dbb5ab8b5869e2fafb83194c992f27bbb244adce35e2fe6ef0d28</code></li>
+</ul>
+</li>
+<li><code>mpsvc.mui</code><ul>
+<li><code>0693713f995285e8bd99ebfca2c4f0f1a8e824dafb5a99693442a9256df06e02</code></li>
+<li><code>24ebd398be23135a2d8aa7000c2b6a534448b87aa5708b8546089630a8035f7e</code></li>
+<li><code>56758c25e3b00957c6f7f76fcea5d0598eff7eda98c63f50b51d1c28f267ac8f</code></li>
+<li><code>96282a625a31b6bf646c6e01ad20de96fd63c345881a9c91190940121580059d</code></li>
+<li><code>99663b9ba27a36ff9fc64b72213e933067ee0cde38b39d20ae4326a37185811d</code></li>
+<li><code>9dd1d21e9431cfe25709a8f26ec0f605ed19cf64ca1922e97fad7b7f2d2e82ea</code></li>
+<li><code>b226c8e85a7b1a6d4d29d42fc84bc7f3a32335fc7ba44b455a7716d706660873</code></li>
+<li><code>e716506cf54f48d77382d8955512184b45dd7d0b58c22e32424c56d38db24360</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>其他 IoCs<ul>
+<li><p>Drop Files</p>
+<ul>
+<li><code>37286285cb0f8305bd23a693b2e7ace71538e4c0b9f13ee6ca4e9e9419657813</code></li>
+<li><code>b3581e8611f5838fc205f66bc5ca5edddb0fd895e97ebf8f0c7220cb102ae14b</code></li>
+<li><code>79928578cdd646a9724bc6851a1ee77820c81a3100788d62885f9d92b6814085</code></li>
+<li><code>7602e2932a10f3750a5d6236f6c1662047d4475c6e1fe6c57118c6620a083cb3</code></li>
+<li><code>5b5aff8869ba7f1d3f6ad7711e801b031aedeff287a0dcb8f8ae6d6e4eb468af</code></li>
+<li><code>412260ab5d9b2b2aa4471b953fb67ddc1a0fe90c353e391819ca7ac1c6d3146f</code></li>
+<li><code>c6064fb44733b5660557e223598d0e4d5c4448ad20b29e41bef469cb5df77da0</code></li>
+<li><code>4c08bc1a2f5384c5306edc6f23e4249526517eb21a88763c8180a582438dfa31</code></li>
+<li><code>a58f2fea8c74c1d25090014c7366db224102daa6c798fcdfb7168b569b7d5ca2</code></li>
+<li><code>d201e726fd2a2f4b55ea5ca95f0429d74e2efb918c7c136d55ef392ceac854d6</code></li>
+<li><code>5713907c01db40cf54155db19c0c44c046b2c676a492d5ba13d39118c95139bf</code></li>
+<li><code>d72c3f5f2f291f7092afd5a0fcaceaf2eaae44d057c9b3b27dd53f2048ed6175</code></li>
+<li><code>d62ddac7c4aa152cf6f988db6c7bd0c9dcffa2e890d354b7e9db7f3b843fd270</code></li>
+<li><code>28d2637139231c78a6493cd91e8f0d10891cfeb6c5e758540515faa29f54b6b2</code></li>
+<li><code>39e69ab52f073f966945fdab214f63368f71175a7ccbea199fae32d51fa6a4e7</code></li>
+<li><code>260b64e287d13d04f1f38d956c10d9fdd3cfbff6ba0040a52223fa41605bb975</code></li>
+<li><code>c425b73be7394032aa8e756259ebf3662c000afaa286c3d7d957891026f3cbb4</code></li>
+<li><code>28d19a23d167db3e1282f1c6039bcda6556798be054994a55e60116827dd0bf1</code></li>
+<li><code>c3c1fc6aabbb49d0ee281ba4fc1529d2b9832a67b18e08ce14dbf0e361e5bd85</code></li>
+<li><code>fc865a720cb808354923092bac04ab6a75e20ea92db5a343af07365c0cd2b72a</code></li>
+<li><code>24f501141af5bf059509145e165302dd7087b1d1c2136bc5e4403f01435f250e</code></li>
+<li><code>ee5f7e6ad4a344f40b9babada1654ea22333bb5150cfd26bfc239ead28b6528c</code></li>
+<li><code>ca26a34153972cc73c63d3a9aadd3b12ba35ecdc6e39025b75be56b00c20e0ae</code></li>
+<li><code>1951c79f280692a43b7c7cafd45c3f5d7f4f841ae104a6cad814fab4641c79f2</code></li>
+<li><code>d5129308ee83a852e6a320ca68c8e66ed6d1eb4ec584dd0c8b5f313a56c49a15</code></li>
+</ul>
+</li>
+<li><p>IP</p>
+<ul>
+<li><code>103.230.15.130</code></li>
+<li><code>104.168.196.80</code></li>
+<li><code>104.168.196.85</code></li>
+<li><code>104.168.196.88</code></li>
+<li><code>139.180.194.173</code></li>
+<li><code>167.179.115.228</code></li>
+<li><code>207.148.73.58</code></li>
+<li><code>43.228.126.172</code></li>
+<li><code>43.228.126.56</code></li>
+<li><code>45.32.101.238</code></li>
+<li><code>45.32.111.228</code></li>
+<li><code>45.77.41.49</code></li>
+<li><code>47.75.248.237</code></li>
+<li><code>66.42.60.107</code></li>
+</ul>
+</li>
+<li><p>Domains</p>
+<ul>
+<li><code>fn.shopingchina.net</code></li>
+<li><code>office.support.googldevice.com</code></li>
+<li><code>safe.mircosofdevice.com</code></li>
+<li><code>server.correomasivochile.com</code></li>
+<li><code>srv2.mkt-app.com</code></li>
+<li><code>store.microsoftbetastore.com</code></li>
+<li><code>update.mircosotfdefender.com</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://offsec.provadys.com/UAC-bypass-dotnet.html">UAC bypass via elevated .NET applications</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.dropbox.com/developers/documentation/http/overview">Dropbox for HTTP Developers</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.trendmicro.com/vinfo/us/security/news/cyber-attacks/operation-drbcontrol-uncovering-a-cyberespionage-campaign-targeting-gambling-companies-in-southeast-asia">Kenney Lu, Daniel Lunghi, Cedric Pernet, and Jamz Yaneza. (17 February 2020). <em>Trend Micro</em>. “Operation DRBControl - Uncovering A Cyberespionage Campaign Targeting Gambling Companies In Southeast Asia”</a></li>
+</ol>
+<blockquote>
+<p>Photo by <a target="_blank" rel="noopener" href="https://unsplash.com/@ffstop">Fotis Fotopoulos</a> on <a target="_blank" rel="noopener" href="https://unsplash.com/">Unsplash</a></p>
+</blockquote>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/APT/" rel="tag">APT</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/IncidentResponse/" rel="tag">IncidentResponse</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Malware/" rel="tag">Malware</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/"
+                    data-tooltip="CLAMBLING - A New Backdoor Base On Dropbox (EN)"
+                    aria-label="PREVIOUS: CLAMBLING - A New Backdoor Base On Dropbox (EN)"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/"
+                    data-tooltip="Deploy A Distributed T-Pot System For Personal Research In Budget"
+                    aria-label="NEXT: Deploy A Distributed T-Pot System For Personal Research In Budget"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox-en/"
+                    data-tooltip="CLAMBLING - A New Backdoor Base On Dropbox (EN)"
+                    aria-label="PREVIOUS: CLAMBLING - A New Backdoor Base On Dropbox (EN)"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget/"
+                    data-tooltip="Deploy A Distributed T-Pot System For Personal Research In Budget"
+                    aria-label="NEXT: Deploy A Distributed T-Pot System For Personal Research In Budget"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/';
+              
+            this.page.identifier = 'Research/CLAMBLING-A-New-Backdoor-Base-On-Dropbox/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

